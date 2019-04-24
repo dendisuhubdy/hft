@@ -30,7 +30,7 @@
 Currently, the repository opened the strategy code, exchange api code, backtest code, complementary tools code.
 For the base part of strategy, I just make it as a dynamic library in external, ok to use, but code is not included
 here, the reason is that something i am now still debugging, reconstructing, and thinking. if you have any questions
-on this part, contract me.
+on this part, email me.
 
 ### Author:
 * XinYu Huang
