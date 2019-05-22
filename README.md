@@ -21,7 +21,7 @@
 
 ### Exsited strategy:
 1. Hedged market-making strategy
-2. statistical arbitrage
+2. statistical arbitrage, pair trading
 3. Moving-Average golden death crossing strategy
 4. turtle strategy (on-goinig by ShengRui zhao)
 
