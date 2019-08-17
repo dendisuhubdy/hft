@@ -11,7 +11,7 @@
 #include <common_tools.h>
 #include <base_strategy.h>
 #include <libconfig.h++>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -20,7 +20,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  Strategy(const libconfig::Setting & setting, TimeController tc, std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode = "real");
+  Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & contract_setting, TimeController tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode = "real");
   ~Strategy();
 
   void Start();
@@ -49,27 +49,34 @@ class Strategy : public BaseStrategy {
   void CloseLogic();
 
   void Open(OrderSide::Enum side);
-  void Close(bool force_flat = false);
+  bool Close(bool force_flat = false);
 
   bool TimeUp();
 
   void CalParams();
   bool HitMean();
 
+  void ForceFlat();
+
   bool Spread_Good();
 
   bool IsAlign();
+
+  void UpdateBound(OrderSide::Enum side);
+  void StopLossLogic();
+
   char order_ref[MAX_ORDERREF_SIZE];
   std::string main_ticker;
   std::string hedge_ticker;
   int max_pos;
-  double min_price;
+  double min_price_move;
 
   TimeController this_tc;
-  int cancel_threshhold;
-  std::tr1::unordered_map<std::string, double> mid_map;
+  int cancel_limit;
+  std::unordered_map<std::string, double> mid_map;
   double up_diff;
   double down_diff;
+  double range_width;
   double mean;
   std::vector<double> map_vector;
   int current_pos;
@@ -81,8 +88,19 @@ class Strategy : public BaseStrategy {
   double spread_threshold;
   int closed_size;
   int max_holding_sec;
-  int build_position_time;
+  long int build_position_time;
   double last_valid_mid;
+  double stop_loss_up_line;
+  double stop_loss_down_line;
+  int max_loss_times;
+  double stop_loss_times;
+  double stop_loss_margin;
+  double open_fee_rate;
+  double close_today_fee_rate;
+  double close_fee_rate;
+  double deposit_rate;
+  double round_fee_cost;
+  int max_close_try;
 };
 
 #endif  // STRATEGY_H_

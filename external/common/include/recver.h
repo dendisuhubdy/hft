@@ -14,17 +14,17 @@ using namespace std;
 
 class Recver {
  public:
-  Recver(string name, string mode = "ipc");
+  Recver(const std::string& name, const std::string& mode = "ipc", const std::string& bc = "connect");
 
   ~Recver();
 
-  MarketSnapshot Recv(MarketSnapshot shot);
+  MarketSnapshot Recv(const MarketSnapshot& shot);
 
-  Order Recv(Order order);
+  Order Recv(const Order& order);
 
-  ExchangeInfo Recv(ExchangeInfo i);
+  ExchangeInfo Recv(const ExchangeInfo& i);
 
-  PricerData Recv(PricerData p);
+  PricerData Recv(const PricerData& p);
 
  private:
   zmq::context_t* con;

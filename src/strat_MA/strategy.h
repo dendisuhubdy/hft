@@ -7,7 +7,7 @@
 #include <exchange_info.h>
 #include <order_status.h>
 #include <pricer_data.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -137,10 +137,10 @@ class Strategy {
   Sender* sender;
   MarketSnapshot main_shot;
   MarketSnapshot hedge_shot;
-  tr1::unordered_map<std::string, MarketSnapshot> shot_map;
-  tr1::unordered_map<std::string, tr1::unordered_map<std::string, std::vector<PricerData> > > pricer_map;  // contract:topic:data
-  tr1::unordered_map<std::string, tr1::unordered_map<std::string, Order*> > order_map;
-  tr1::unordered_map<std::string, int> position_map;
+  ::unordered_map<std::string, MarketSnapshot> shot_map;
+  ::unordered_map<std::string, ::unordered_map<std::string, std::vector<PricerData> > > pricer_map;  // contract:topic:data
+  ::unordered_map<std::string, ::unordered_map<std::string, Order*> > order_map;
+  ::unordered_map<std::string, int> position_map;
   int order_ref;
   pthread_mutex_t order_ref_mutex;
   pthread_mutex_t order_map_mutex;
@@ -160,7 +160,7 @@ class Strategy {
   int m_contract_size;
   std::vector<std::string>m_topic_v;
   std::vector<std::string>m_strat_contracts;
-  std::tr1::unordered_map<std::string, bool> IsStratContract;
+  std::unordered_map<std::string, bool> IsStratContract;
   TimeController m_tc;
   std::string m_strat_name;
   int ref_num;

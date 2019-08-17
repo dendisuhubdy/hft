@@ -10,7 +10,7 @@
 #include <order_status.h>
 #include <common_tools.h>
 #include <base_strategy.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -73,8 +73,8 @@ class Strategy : public BaseStrategy {
   int cancel_threshhold;
   bool is_stopped;
   int count;
-  std::tr1::unordered_map<std::string, double> mid_map;
-  std::tr1::unordered_map<std::string, Order*> sleep_order_map;
+  std::unordered_map<std::string, double> mid_map;
+  std::unordered_map<std::string, Order*> sleep_order_map;
   double up_diff;
   double down_diff;
   double mean;

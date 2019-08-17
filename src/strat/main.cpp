@@ -5,7 +5,7 @@
 #include <recver.h>
 #include <sender.h>
 #include <market_snapshot.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <iostream>
 #include <fstream>
@@ -34,9 +34,9 @@ void* RunExchangeListener(void *param) {
 
 int main() {
   std::vector<std::string> sleep_time_v;
-  sleep_time_v.push_back("10:14:00-10:30:00");
-  sleep_time_v.push_back("11:29:20-13:30:00");
-  sleep_time_v.push_back("00:58:20-09:00:00");
+  sleep_time_v.emplace_back("10:14:00-10:30:00");
+  sleep_time_v.emplace_back("11:29:20-13:30:00");
+  sleep_time_v.emplace_back("00:58:20-09:00:00");
   TimeController tc(sleep_time_v, "21:00:00", "14:55:30");
   Recver data_recver("data");
   Strategy s("ni1905", "ni1901", 2, 10, tc, 1, "ni");

@@ -7,7 +7,7 @@
 #include <market_snapshot.h>
 #include <common_tools.h>
 #include <base_strategy.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <iostream>
 #include <fstream>
@@ -38,9 +38,9 @@ void* RunExchangeListener(void *param) {
 
 int main() {
   std::vector<std::string> sleep_time_v;
-  sleep_time_v.push_back("10:14:20-10:30:00");
-  sleep_time_v.push_back("11:29:20-13:30:00");
-  sleep_time_v.push_back("00:58:20-08:55:00");
+  sleep_time_v.emplace_back("10:14:20-10:30:00");
+  sleep_time_v.emplace_back("11:29:20-13:30:00");
+  sleep_time_v.emplace_back("00:58:20-08:55:00");
   TimeController tc(sleep_time_v, "21:00:00", "14:55:30");
   Recver data_recver("data_pub");
   BaseStrategy * s1 = new Strategy("AP907", "AP905", 5, 1, tc, 10, "AP");
@@ -54,16 +54,16 @@ int main() {
   BaseStrategy * s9 = new Strategy("m1905", "m1903", 5, 1, tc, 10, "m");
   BaseStrategy * s10 = new Strategy("i1905", "i1909", 5, 0.5, tc, 100, "i");
   std::vector<BaseStrategy*> s_v;
-  s_v.push_back(s1);
-  s_v.push_back(s2);
-  s_v.push_back(s3);
-  s_v.push_back(s4);
-  s_v.push_back(s5);
-  s_v.push_back(s6);
-  s_v.push_back(s7);
-  s_v.push_back(s8);
-  s_v.push_back(s9);
-  s_v.push_back(s10);
+  s_v.emplace_back(s1);
+  s_v.emplace_back(s2);
+  s_v.emplace_back(s3);
+  s_v.emplace_back(s4);
+  s_v.emplace_back(s5);
+  s_v.emplace_back(s6);
+  s_v.emplace_back(s7);
+  s_v.emplace_back(s8);
+  s_v.emplace_back(s9);
+  s_v.emplace_back(s10);
   pthread_t exchange_thread;
   if (pthread_create(&exchange_thread,
                      NULL,

@@ -1,4 +1,5 @@
 import sys, os
+from copy_header import *
 
 from waflib.Tools.compiler_c import c_compiler
 from waflib.Tools.compiler_cxx import cxx_compiler
@@ -11,6 +12,7 @@ def options(opt):
   opt.load('compiler_cxx')
 
 def configure(conf):
+  Copy()
   conf.load('defaults')
   conf.load('compiler_c')
   conf.load('compiler_cxx')
@@ -20,19 +22,9 @@ def configure(conf):
   #conf.env.CXXFLAGS += [ '-g', '-lpthread', '-ldl']
   conf.check(lib='pthread', uselib_store='pthread')
   conf.check(lib='config++', uselib_store='config++')
-
-  '''
-  conf.check(lib='boost_regex', uselib_store='boost_regex')
-  conf.check(lib='config++', uselib_store='config++')
-  conf.check(lib='dl', uselib_store='dl')
-  conf.check(lib='rt', uselib_store='rt')
-  conf.check(lib='z', uselib_store='z')
-  conf.check(lib='pthread', uselib_store='pthread')
-  conf.check(lib='rt', uselib_store='rt')
-  conf.check(lib='ssl', uselib_store='ssl')
-  conf.check(lib='crypto', uselib_store='crypto')
+  conf.check(lib='python2.7', uselib_store='python2.7')
   conf.check(lib='zmq', uselib_store='zmq')
-  '''
+  conf.check(lib='z', uselib_store='z')
 
 from waflib.Build import BuildContext
 class all_class(BuildContext):
@@ -65,11 +57,18 @@ class simplearb_class(BuildContext):
   cmd = "simplearb"
 class backtest_class(BuildContext):
   cmd = "backtest"
+class dt_class(BuildContext):
+  cmd = "dt"
+class convert_to_binary_data_class(BuildContext):
+  cmd = "convert_to_binary_data"
+class datatools_class(BuildContext):
+  cmd = "datatools"
 class order_matcher_class(BuildContext):
   cmd = "order_matcher"
 class demostrat_class(BuildContext):
   cmd = "demostrat"
-
+class update_active_contract_class(BuildContext):
+  cmd = "update_active_contract"
 from lint import add_lint_ignore
 
 def build(bld):
@@ -120,11 +119,23 @@ def build(bld):
   if bld.cmd == "backtest":
     run_backtest(bld)
     return
+  if bld.cmd == "dt":
+    run_dt(bld)
+    return
+  if bld.cmd == "convert_to_binary_data":
+    run_convert_to_binary_data(bld)
+    return
+  if bld.cmd == "datatools":
+    run_datatools(bld)
+    return
   if bld.cmd == "order_matcher":
     run_order_matcher(bld)
     return
   if bld.cmd == "demostrat":
     run_demostrat(bld)
+    return
+  if bld.cmd == "update_active_contract":
+    run_update_active_contract(bld)
     return
   else:
     print "error! " + str(bld.cmd)
@@ -132,64 +143,53 @@ def build(bld):
 
 def run_strat(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/strat',
     source = ['src/strat/main.cpp',
               'src/strat/strategy.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
 def run_simdata(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/simdata',
     source = ['src/simdata/main.cpp',
               'src/simdata/datagener.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
 def run_simorder(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.program(
     target = 'bin/simorder',
     source = ['src/simorder/main.cpp',
               'src/simorder/orderlistener.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools'
+    use = 'zmq commontools config++'
   )
 def run_ctpdata(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('thostmduserapi', paths=['external/ctp/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/ctpdata',
     source = ['src/ctpdata/main.cpp'],
     includes = ['external/ctp/include', 'external/zeromq/include'],
-    use = 'zmq thostmduserapi commontools pthread'
+    use = 'zmq thostmduserapi commontools pthread config++'
   )
 def run_pricer(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/data_pricer',
     source = ['src/pricer/main.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 def run_ctporder(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('thosttraderapi', paths=['external/ctp/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/ctporder',
     source = ['src/ctporder/main.cpp',
@@ -197,85 +197,73 @@ def run_ctporder(bld):
               'src/ctporder/token_manager.cpp',
               'src/ctporder/message_sender.cpp'],
     includes = ['external/ctp/include', 'external/zeromq/include'],
-    use = 'zmq thosttraderapi commontools pthread'
+    use = 'zmq thosttraderapi commontools pthread config++'
   )
 def run_proxy(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/data_proxy',
     source = ['src/data_proxy/main.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq pthread'
+    use = 'zmq pthread config++'
   )
   bld.program(
     target = 'bin/order_proxy',
     source = ['src/order_proxy/main.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq pthread'
+    use = 'zmq pthread config++'
   )
 
 def run_mid_data(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/mid_data',
     source = ['src/mid_data/main.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
 def run_strat_ma(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/strat_MA',
     source = ['src/strat_MA/main.cpp',
               'src/strat_MA/strategy.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
 def run_getins(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('thosttraderapi', paths=['external/ctp/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/getins',
     includes = ['external/ctp/include', 'external/zeromq/include'],
     source = ['src/GetInstrument/main.cpp'],
-    use = 'zmq commontools thosttraderapi pthread'
+    use = 'zmq commontools thosttraderapi pthread config++'
   )
 
 def run_arbmaker(bld):
   bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/arbmaker',
     source = ['src/arbmaker/main.cpp',
               'src/arbmaker/strategy.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
 def run_simplemaker(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/simplemaker',
     source = ['src/simplemaker/main.cpp',
               'src/simplemaker/strategy.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
 def run_simplearb(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('commontools', paths=['external/common/lib'])
   #bld.read_shlib('simplearb', paths=['external/strategy/simplearb/lib'])
   bld.program(
@@ -291,10 +279,8 @@ def run_simplearb(bld):
   )
 
 def run_backtest(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('commontools', paths=['external/common/lib'])
   #bld.read_shlib('backtest', paths=['external/strategy/backtest/lib'])
-  bld.read_shlib('python2.7', paths=['/root/anaconda2/lib'])
   bld.program(
     target = 'bin/backtest',
     source = ['src/backtest/main.cpp',
@@ -303,16 +289,43 @@ def run_backtest(bld):
              ],
     includes = [
                 #'external/strategy/backtest/include',
-                '/root/anaconda2/include/python2.7',
                 'external/zeromq/include'
-               ],
-    use = 'zmq commontools pthread config++ python2.7'# backtest'
+                ],
+    use = 'zmq commontools pthread config++ python2.7 z' # backtest'
+  )
+
+def run_dt(bld):
+  bld.read_shlib('commontools', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/dt',
+    source = ['src/dt/main.cpp'
+             ],
+    use = 'zmq commontools pthread config++ python2.7'
+  )
+
+
+def run_convert_to_binary_data(bld):
+  bld.read_shlib('commontools', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/convert_to_binary_data',
+    source = ['src/convert_to_binary_data/main.cpp'
+             ],
+    includes = [
+                'external/zeromq/include'],
+    use = 'zmp commontools pthread config++'
+  )
+
+def run_datatools(bld):
+  bld.read_shlib('commontools', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/datatool',
+    source = ['src/datatools/main.cpp'
+             ],
+    use = 'commontools pthread config++'
   )
 
 def run_order_matcher(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/order_matcher',
     source = ['src/order_matcher/main.cpp',
@@ -322,17 +335,22 @@ def run_order_matcher(bld):
   )
 
 def run_demostrat(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
   bld.read_shlib('commontools', paths=['external/common/lib'])
-  #bld.read_shlib('pthread', paths=['/lib64'])
   bld.program(
     target = 'bin/demostrat',
     source = ['src/demostrat/main.cpp',
               'src/demostrat/strategy.cpp'],
     includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread'
+    use = 'zmq commontools pthread config++'
   )
 
+def run_update_active_contract(bld):
+  bld.program(
+    target = 'bin/update_active_contract',
+    source = ['src/update_active_contract/main.cpp'
+             ],
+    use = 'config++ python2.7 pthread config++'
+  )
 
 def run_all(bld):
   run_strat(bld)
@@ -348,8 +366,11 @@ def run_all(bld):
   #run_arbmaker(bld)
   run_simplearb(bld)
   run_backtest(bld)
+  run_dt(bld)
+  #run_new_backtest(bld)
   run_order_matcher(bld)
   run_demostrat(bld)
   run_simplemaker(bld)
-  return
-
+  run_update_active_contract(bld)
+  run_convert_to_binary_data(bld)
+  run_datatools(bld)

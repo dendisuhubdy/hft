@@ -63,14 +63,14 @@ class Listener : public CThostFtdcTraderSpi {
       int request_id,
       bool is_last) {
     std::vector<std::string> entry;
-    entry.push_back(instrument->InstrumentID);
+    entry.emplace_back(instrument->InstrumentID);
     char buf[500];
     snprintf(buf, sizeof(buf), "%s/%d/%lf",
       instrument->ExchangeID,
       instrument->VolumeMultiple,
       instrument->PriceTick);
-    entry.push_back(buf);
-    instruments.push_back(entry);
+    entry.emplace_back(buf);
+    instruments.emplace_back(entry);
 
     printf("%c", is_last ? '\n' : '.');
     fflush(stdout);
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
   user_api->SubscribePrivateTopic(THOST_TERT_RESTART);
   user_api->SubscribePublicTopic(THOST_TERT_RESTART);
 
-  std::string counterparty_host = "tcp://180.168.146.187:10000";
+  std::string counterparty_host = "tcp://180.168.146.187:10100";
   user_api->RegisterFront(const_cast<char*>(counterparty_host.c_str()));
   user_api->Init();
 

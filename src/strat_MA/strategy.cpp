@@ -97,11 +97,11 @@ void Strategy::NewOrder(std::string contract, OrderSide::Enum side, PriceMode pm
 
 
 void Strategy::ModerateOrders(std::string contract, ModMode mmode) {
-  tr1::unordered_map<std::string, tr1::unordered_map<std::string, Order*> >::iterator it = order_map.find(contract);
+  ::unordered_map<std::string, ::unordered_map<std::string, Order*> >::iterator it = order_map.find(contract);
   if (it == order_map.end()) {
     return;
   }
-  tr1::unordered_map<std::string, Order*> temp_map = it->second;
+  ::unordered_map<std::string, Order*> temp_map = it->second;
   switch (mmode) {
     case TradeOrCancel:
      ClearAllByContract(contract);
@@ -141,7 +141,7 @@ void Strategy::Run(std::string ticker) {
 }
 
 void Strategy::UpdateData(PricerData pd) {
-  pricer_map[pd.ticker][pd.topic].push_back(pd);
+  pricer_map[pd.ticker][pd.topic].emplace_back(pd);
   shot_map[pd.ticker] = pd.shot;
   if (!IsStratContract[pd.ticker]) {
     return;
@@ -156,13 +156,13 @@ bool Strategy::DataReady(std::string ticker, std::vector<std::string>topic_v) {
   if (topic_v.empty()) {
     return false;
   }
-  tr1::unordered_map<std::string, tr1::unordered_map<std::string, std::vector<PricerData> > >::iterator p_i = pricer_map.find(ticker);
+  ::unordered_map<std::string, ::unordered_map<std::string, std::vector<PricerData> > >::iterator p_i = pricer_map.find(ticker);
   if (p_i == pricer_map.end()) {
     printf("contract %s not found in pricer_map\n", ticker.c_str());
     return false;
   }
-  tr1::unordered_map<std::string, std::vector<PricerData> > topic_map = p_i->second;
-  tr1::unordered_map<std::string, std::vector<PricerData> >::iterator it = topic_map.find(topic_v.front());
+  ::unordered_map<std::string, std::vector<PricerData> > topic_map = p_i->second;
+  ::unordered_map<std::string, std::vector<PricerData> >::iterator it = topic_map.find(topic_v.front());
   if (it == topic_map.end()) {
     printf("topic %s not found in topic_map\n", topic_v.front().c_str());
     return false;
@@ -184,13 +184,13 @@ bool Strategy::DataReady(std::string ticker, std::vector<std::string>topic_v) {
 
 void Strategy::ClearAllByContract(std::string contract) {
   printf("Enter Cancel ALL for %s\n", contract.c_str());
-  tr1::unordered_map<std::string, std::tr1::unordered_map<std::string, Order*> >::iterator itr = order_map.find(contract);
+  ::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator itr = order_map.find(contract);
   if (itr == order_map.end()) {
     return;
   }
-  std::tr1::unordered_map<std::string, Order*> temp_map = itr->second;
+  std::unordered_map<std::string, Order*> temp_map = itr->second;
   pthread_mutex_lock(&mod_mutex);
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = temp_map.begin(); it != temp_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = temp_map.begin(); it != temp_map.end(); it++) {
     Order* o = it->second;
     if (o->Valid()) {
       o->action = OrderAction::CancelOrder;
@@ -216,13 +216,13 @@ void ClearAll() {
 
 void Strategy::DelOrder(std::string contract, std::string ref) {
   pthread_mutex_lock(&order_map_mutex);
-  std::tr1::unordered_map<std::string, std::tr1::unordered_map<std::string, Order*> >::iterator it = order_map.find(contract);
+  std::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator it = order_map.find(contract);
   if (it == order_map.end()) {
     printf("delete error:tickererror not found %s order %s\n", contract.c_str(), ref.c_str());
     return;
   }
-  std::tr1::unordered_map<std::string, Order*> &temp_map = it->second;
-  std::tr1::unordered_map<std::string, Order*>::iterator itr = temp_map.find(ref);
+  std::unordered_map<std::string, Order*> &temp_map = it->second;
+  std::unordered_map<std::string, Order*>::iterator itr = temp_map.find(ref);
   if (itr == temp_map.end()) {
     printf("delete error:orderreferror not found %s order %s\n", contract.c_str(), ref.c_str());
     return;
@@ -283,12 +283,12 @@ void Strategy::UpdateExchangeInfo(ExchangeInfo info) {
     return;
   }
 
-  std::tr1::unordered_map<std::string, std::tr1::unordered_map<std::string, Order*> >::iterator it = order_map.find(info.contract);
+  std::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator it = order_map.find(info.contract);
   if (it == order_map.end()) {
     printf("unknown ticker %s for ordermap! %s\n", info.contract, info.order_ref);
     return;
   }
-  std::tr1::unordered_map<std::string, Order*>::iterator itr = it->second.find(info.order_ref);
+  std::unordered_map<std::string, Order*>::iterator itr = it->second.find(info.order_ref);
   if (itr == it->second.end()) {
     printf("unknown ref %s for %s in ordermap\n", info.order_ref, info.contract);
     return;

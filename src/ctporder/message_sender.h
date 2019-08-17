@@ -4,12 +4,13 @@
 #include <ThostFtdcTraderApi.h>
 #include <order_side.h>
 #include <order.h>
-#include <tr1/unordered_map>
+#include <common_tools.h>
+#include <unordered_map>
 
 #include <stdexcept>
 #include <string>
 
-#include "ctporder/token_manager.h"
+#include "./token_manager.h"
 
 class MessageSender {
  public:
@@ -18,8 +19,9 @@ class MessageSender {
                 const std::string & user_id,
                 const std::string & password,
                 bool use_arbitrage_orders,
-                std::tr1::unordered_map<int, int>*id_map,
-                TokenManager* tm);
+                std::unordered_map<int, int>*id_map,
+                TokenManager* tm,
+                const std::unordered_map<std::string, std::string>& e_map);
 
   void SetFrontId(int front_id) { front_id_ = front_id; }
   void SetSessionId(int session_id) { session_id_ = session_id; }
@@ -49,9 +51,10 @@ class MessageSender {
 
   int ctp_order_ref;
   bool use_arbitrage_orders_;
-  std::tr1::unordered_map<int, int>* order_id_map;  // strat id vs ctp id
-  std::tr1::unordered_map<int, Order> order_map;  // ctp id vs Order
+  std::unordered_map<int, int>* order_id_map;  // strat id vs ctp id
+  std::unordered_map<int, Order> order_map;  // ctp id vs Order
   TokenManager* t_m;
+  std::unordered_map<std::string, std::string> exchange_map;
 };
 
 #endif  // SRC_CTPORDER_MESSAGE_SENDER_H_

@@ -73,7 +73,7 @@ void TokenManager::RegisterOrderRef(Order o) {
   OrderRefStruct os = SplitOrderRef(o.order_ref);
   if (os.ref_num == 0) {
     // order_id_map.clear();
-    for (std::tr1::unordered_map<std::string, int>::iterator it = order_id_map.begin(); it != order_id_map.end(); it++) {
+    for (std::unordered_map<std::string, int>::iterator it = order_id_map.begin(); it != order_id_map.end(); it++) {
       OrderRefStruct temp = SplitOrderRef(it->first);
       if (temp.strat_name == os.strat_name) {
         order_id_map.erase(it);
@@ -85,7 +85,7 @@ void TokenManager::RegisterOrderRef(Order o) {
 }
 
 int TokenManager::GetCtpId(Order o) {
-  std::tr1::unordered_map<std::string, int>::iterator it = order_id_map.find(o.order_ref);
+  std::unordered_map<std::string, int>::iterator it = order_id_map.find(o.order_ref);
   if (it == order_id_map.end()) {
     printf("ctporderref not found for %s\n", o.order_ref);
     return -1;
@@ -94,7 +94,7 @@ int TokenManager::GetCtpId(Order o) {
 }
 
 std::string TokenManager::GetOrderRef(int ctp_id) {
-  for (std::tr1::unordered_map<std::string, int>::iterator it = order_id_map.begin(); it != order_id_map.end(); it++) {
+  for (std::unordered_map<std::string, int>::iterator it = order_id_map.begin(); it != order_id_map.end(); it++) {
     if (it->second == ctp_id) {
       return it->first;
     }
@@ -104,7 +104,7 @@ std::string TokenManager::GetOrderRef(int ctp_id) {
 }
 
 Order TokenManager::GetOrder(int ctp_order_ref) {
-  std::tr1::unordered_map<int, Order>::iterator it = ctpid_order_map.find(ctp_order_ref);
+  std::unordered_map<int, Order>::iterator it = ctpid_order_map.find(ctp_order_ref);
   if (it == ctpid_order_map.end()) {
     printf("order not found for ctpref %d\n", ctp_order_ref);
   }

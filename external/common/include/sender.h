@@ -14,20 +14,24 @@ using namespace std;
 
 class Sender {
  public:
-  Sender(string name, std::string bs_mode = "bind", std::string mode = "ipc");
+  Sender(const std::string& name, const std::string & bs_mode = "bind", const std::string & mode = "ipc", std::ofstream* shot_recorder = nullptr, std::ofstream* order_recorder = nullptr, std::ofstream* info_recorder = nullptr);
 
   ~Sender();
+  void Bind(const std::string & address);
 
-  void Send(MarketSnapshot shot);
-  void Send(Order order);
-  void Send(ExchangeInfo info);
-  void Send(PricerData p);
+  void Send(const MarketSnapshot& shot);
+  void Send(const Order& order);
+  void Send(const ExchangeInfo& info);
+  void Send(const PricerData& p);
   void Send(const char* s);
 
  private:
   zmq::context_t* con;
   zmq::socket_t* sock;
   pthread_mutex_t mutex;
+  std::ofstream* shoter;
+  std::ofstream* orderer;
+  std::ofstream* infoer;
 };
 
 #endif // SENDER_H_

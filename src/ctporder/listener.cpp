@@ -1,7 +1,7 @@
 #include <ThostFtdcTraderApi.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <algorithm>
 #include <map>
@@ -15,7 +15,7 @@
 Listener::Listener(const std::string & exchange_info_address,
                    MessageSender* message_sender,
                    const std::string & error_list,
-                   std::tr1::unordered_map<int, int>*id_map,
+                   std::unordered_map<int, int>*id_map,
                    TokenManager* tm,
                    bool enable_stdout,
                    bool enable_file)
@@ -99,8 +99,8 @@ bool Listener::CheckError(const std::string & location,
                           const std::string & extra_info) {
   bool is_error = info && info->ErrorID != 0;
   if (is_error) {
-    printf("Error %d at %s:%s, Msg: %s\n",
-      info->ErrorID, location.c_str(), extra_info.c_str(), error_list_[info->ErrorID].c_str());
+    printf("Error %d at %s:%s, Msg: %s %s\n",
+      info->ErrorID, location.c_str(), extra_info.c_str(), error_list_[info->ErrorID].c_str(), info->ErrorMsg);
   }
   return is_error;
 }
@@ -354,6 +354,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
   }
 
   // printf("%s, Ydposition is %d, position is %d, positioncost is %lf, opencost is %lf\n", investor_position->InstrumentID, investor_position->YdPosition, investor_position->Position, investor_position->PositionCost, investor_position->OpenCost);
+  // std::cout << investor_position->InstrumentID << " Ydposition is " << investor_position->InstrumentID <<" position is  " << investor_position->Position << " positioncost is " << investor_position->PositionCost << " opencost is " << investor_position->OpenCost << endl;
 
   /*
   if (initialized_) {

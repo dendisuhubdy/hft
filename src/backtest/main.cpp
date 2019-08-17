@@ -1,4 +1,5 @@
 #include <string.h>
+#include <zlib.h>
 #include <stdio.h>
 #include <zmq.hpp>
 #include <libconfig.h++>
@@ -6,11 +7,14 @@
 #include <define.h>
 #include <recver.h>
 #include <sender.h>
+#include <Dater.h>
+#include <Contractor.h>
 #include <market_snapshot.h>
 #include <common_tools.h>
 #include <base_strategy.h>
 #include <sys/time.h>
-#include <tr1/unordered_map>
+#include <sys/sysinfo.h>
+#include <unordered_map>
 
 #include <iostream>
 #include <cctype>
@@ -31,7 +35,7 @@ void PrintResult() {
 }
 
 void* RunExchangeListener(void *param) {
-  std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
+  std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
@@ -44,12 +48,35 @@ void* RunExchangeListener(void *param) {
   return NULL;
 }
 
+void* RunCtpOrderListener(void *param) {
+  Recver* r = new Recver("order_pub");
+  std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
+  while (true) {
+    Order o;
+    o = r->Recv(o);
+    sender.get()->Send(o);
+  }
+  return NULL;
+}
+
+void* RunProxy(void *param) {
+  zmq::context_t context(1);
+  zmq::socket_t sub(context, ZMQ_XSUB);
+  sub.bind("ipc://order_sub");
+  zmq::socket_t pub(context, ZMQ_XPUB);
+  pub.bind("ipc://order_pub");
+  zmq::proxy(sub, pub, NULL);
+  return NULL;
+}
+
 void* RunOrderListener(void *param) {
   OrderHandler *oh = reinterpret_cast<OrderHandler*>(param);
   Recver recver("order_pub");
+  std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
     o = recver.Recv(o);
+    sender.get()->Send(o);
     if (!oh->Handle(o)) {
       printf("order failed!\n");
       o.Show(stdout);
@@ -59,18 +86,53 @@ void* RunOrderListener(void *param) {
   return NULL;
 }
 
+void Load_history(std::string file_name) {
+  std::unique_ptr<Sender> sender(new Sender("*:33336", "bind", "tcp"));
+  std::ifstream raw_file;
+  raw_file.open(file_name.c_str(), ios::in|ios::binary);
+  if (!raw_file) {
+    printf("%s is not existed!", file_name.c_str());
+    return;
+  }
+  MarketSnapshot shot;
+  while (raw_file.read(reinterpret_cast<char *>(&shot), sizeof(shot))) {
+    sender.get()->Send(shot);
+  }
+  MarketSnapshot fshot;
+  snprintf(fshot.ticker, sizeof(fshot.ticker), "%s", "load_end");
+  sender.get()->Send(fshot);
+  printf("Load_history finished!\n");
+}
+
+void* RunCommandListener(void *param) {
+  std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
+  Recver recver("*:33334", "tcp", "bind");
+  while (true) {
+    MarketSnapshot shot;
+    shot = recver.Recv(shot);
+    printf("command recved!\n");
+    shot.Show(stdout);
+    std::string ticker = Split(shot.ticker, "|").front();
+    if (ticker == "load_history") {
+      Load_history("mid.dat");
+    }
+    std::vector<BaseStrategy*> sv = (*sv_map)[ticker];
+    for (auto v : sv) {
+      v->HandleCommand(shot);
+    }
+  }
+  return NULL;
+}
+
 int main() {
+  std::string default_path = GetDefaultPath();
   libconfig::Config param_cfg;
   libconfig::Config contract_cfg;
-  std::string param_config_path = "/root/hft/config/backtest/backtest.config";
-  std::string contract_config_path = "/root/hft/config/backtest/contract.config";
+  std::string param_config_path = default_path + "/hft/config/backtest/backtest.config";
+  std::string contract_config_path = default_path + "/hft/config/backtest/contract.config";
   param_cfg.readFile(param_config_path.c_str());
   contract_cfg.readFile(contract_config_path.c_str());
   try {
-    // const libconfig::Setting & param_root = param_cfg.getRoot();
-    // const libconfig::Setting & contract_root = contract_cfg.getRoot();
-    // int a = param_cfg.lookup("asd");
-    // printf("%d\n", a);
     const libconfig::Setting &sleep_time = param_cfg.lookup("time_controller")["sleep_time"];
     const libconfig::Setting &close_time = param_cfg.lookup("time_controller")["close_time"];
     const libconfig::Setting &force_close_time = param_cfg.lookup("time_controller")["force_close_time"];
@@ -86,43 +148,74 @@ int main() {
     for (int i = 0; i < force_close_time.getLength(); i++) {
       force_close_time_v.push_back(force_close_time[i]);
     }
-    clock_t main_start = clock();
-    std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-    TimeController tc(sleep_time_v, close_time_v, force_close_time_v, "data");
+    std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
+    TimeController tc(sleep_time_v, close_time_v, force_close_time_v, "test");
     Recver data_recver("data_pub");
-    std::vector<BaseStrategy*> sv;
 
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
     const libconfig::Setting & contract_setting_map = contract_cfg.lookup("map");
 
-    std::tr1::unordered_map<std::string, int> contract_index_map;
+    std::unordered_map<std::string, int> contract_index_map;
     for (int i = 0; i < contract_setting_map.getLength(); i++) {
       const libconfig::Setting & setting = contract_setting_map[i];
       contract_index_map[setting["ticker"]] = i;
     }
-
-    for (int i = 0; i < strategies.getLength(); i++) {
-      const libconfig::Setting & param_setting = strategies[i];
-      std::string con = param_setting["unique_name"];
-      const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
-      sv.push_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, "test"));
-    }
-
-    printf("start exchange thread\n");
-    pthread_t exchange_thread;
-    if (pthread_create(&exchange_thread,
-                       NULL,
-                       &RunExchangeListener,
-                       &ticker_strat_map) != 0) {
-      perror("exchange_pthread_create");
-      exit(1);
-    }
-    sleep(1);
+    std::string order_file_path = param_cfg.lookup("order_file");
+    std::string exchange_file_path = param_cfg.lookup("exchange_file");
+    std::string strat_file_path = param_cfg.lookup("strat_file");
+    std::ofstream order_file(order_file_path.c_str(), ios::out | ios::binary);
+    std::ofstream exchange_file(order_file_path.c_str(), ios::out | ios::binary);
+    std::ofstream strat_file(strat_file_path.c_str(), ios::out | ios::binary);
 
     std::string matcher_mode = param_cfg.lookup("matcher_mode");
-    OrderHandler oh;
-    pthread_t order_thread;
+    pthread_t command_thread;
+    if (pthread_create(&command_thread,
+                       NULL,
+                       &RunCommandListener,
+                       &ticker_strat_map) != 0) {
+      perror("command_pthread_create");
+      exit(1);
+    }
+    /*
+    pthread_t loadui_thread;
+    if (pthread_create(&loadui_thread,
+                       NULL,
+                       &RunUiListener,
+                       NULL) != 0) {
+      perror("ui_pthread_create");
+      exit(1);
+    }
+    */
+    pthread_t proxy_thread;
+    if (pthread_create(&proxy_thread,
+                       NULL,
+                       &RunProxy,
+                       NULL) != 0) {
+      perror("ui_pthread_create");
+      exit(1);
+    }
+    pthread_t ctporder_thread;
+    if (pthread_create(&ctporder_thread,
+                       NULL,
+                       &RunCtpOrderListener,
+                       NULL) != 0) {
+      perror("ui_pthread_create");
+      exit(1);
+    }
     if (matcher_mode == "c++") {
+      OrderHandler oh;
+      printf("start exchange thread\n");
+      pthread_t exchange_thread;
+      if (pthread_create(&exchange_thread,
+                         NULL,
+                         &RunExchangeListener,
+                         &ticker_strat_map) != 0) {
+        perror("exchange_pthread_create");
+        exit(1);
+      }
+      sleep(1);
+
+      pthread_t order_thread;
       if (pthread_create(&order_thread,
                          NULL,
                          &RunOrderListener,
@@ -132,70 +225,89 @@ int main() {
       }
     }
     sleep(1);
-    sv.back()->SendPlainText("param_config_path", param_config_path);
-    sv.back()->SendPlainText("contract_config_path", contract_config_path);
-    const libconfig::Setting & file_set = param_cfg.lookup("data_file");
-    int line = param_cfg.lookup("message_line");
-    char buffer[SIZE_OF_SNAPSHOT];
-    Sender* data_sender = new Sender("backtest_data");
-    for (int i = 0; i < file_set.getLength(); i++) {
-      for (auto v : sv) {
-        v->Clear();
+    // sv.back()->SendPlainText("param_config_path", param_config_path);
+    // sv.back()->SendPlainText("contract_config_path", contract_config_path);
+    // const libconfig::Setting & file_set = param_cfg.lookup("data_file");
+    std::string start_date = param_cfg.lookup("start_date");
+    int period = param_cfg.lookup("period");
+    Dater dt;
+    std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
+    // PrintVector(file_v);
+    std::cout << file_v[0] << "\n";
+    std::cout << "valid date is " << dt.GetValidFile(start_date, -40) << "\n";
+    Contractor ct(dt.GetValidFile(start_date, -40));
+    PrintVector(ct.GetAllTick());
+    std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp"));
+    std::vector<BaseStrategy*> sv;
+    // while (true) {
+      sv.clear();
+      for (int i = 0; i < strategies.getLength(); i++) {
+        const libconfig::Setting & param_setting = strategies[i];
+        std::string con = param_setting["unique_name"];
+        const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
+        sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, true));
       }
-      std::string file_name = file_set[i];
-      printf("handling %s\n", file_name.c_str());
-      sv.back()->SendPlainText("data_path", file_name);
-      std::ifstream raw_file;
-      int count = 0;
-      clock_t start = clock();
-      raw_file.open(file_name.c_str(), ios::in);
-      if (!raw_file) {
-        printf("%s is not existed!", file_name.c_str());
-        continue;
+      tc.StartTimer();
+      for (auto file_name : file_v) {
+        for (auto v : sv) {
+          v->Clear();
+          v->UpdateCT(ct);
+        }
+        printf("handling %s\n", file_name.c_str());
+        std::string file_mode = Split(file_name, ".").back();
+        if (file_mode == "gz") {
+          gzFile gzfp = gzopen(file_name.c_str(), "rb");
+          if (!gzfp) {
+            printf("gzfile open failed!%s\n", file_name.c_str());
+            continue;
+          }
+          unsigned char buf[SIZE_OF_SNAPSHOT];
+          MarketSnapshot* shot;
+          while (gzread(gzfp, buf, sizeof(*shot)) > 0) {
+            shot = reinterpret_cast<MarketSnapshot*>(buf);
+            if (!shot->IsGood()) {
+              continue;
+            }
+            ct.UpdateByShot(*shot);
+            shot->is_initialized = true;
+            std::vector<BaseStrategy*> ticker_sv = ticker_strat_map[shot->ticker];
+            for (auto v : ticker_sv) {
+              v->UpdateData(*shot);
+            }
+          }
+          gzclose(gzfp);
+        } else if (file_mode == "dat") {
+          std::ifstream raw_file;
+          raw_file.open(file_name.c_str(), ios::in|ios::binary);
+          if (!raw_file) {
+            printf("%s is not existed!", file_name.c_str());
+            continue;
+          }
+          MarketSnapshot shot;
+          while (raw_file.read(reinterpret_cast<char *>(&shot), sizeof(shot))) {
+            if (!shot.IsGood()) {
+              continue;
+            }
+            ct.UpdateByShot(shot);
+            // data_sender->Send(shot.Copy().c_str());
+            shot.is_initialized = true;
+            std::vector<BaseStrategy*> ticker_sv = ticker_strat_map[shot.ticker];
+            for (auto v : ticker_sv) {
+              v->UpdateData(shot);
+            }
+          }
+          raw_file.close();
+        } else {
+          printf("unknown file_mode %s\n", file_name.c_str());
+        }
       }
-      while (!raw_file.eof()) {
-        raw_file.getline(buffer, SIZE_OF_SNAPSHOT);
-        MarketSnapshot shot = HandleSnapshot(buffer);
-        if (!shot.IsGood()) {
-          continue;
-        }
-        data_sender->Send(shot.Copy().c_str());
-        if ((++count) % line == 0) {
-          printf("line %d~%d  cost %lf second\n", count-line, count, (static_cast<double>(clock()) - start) / CLOCKS_PER_SEC);
-          start = clock();
-        }
-        if (buffer[0] == '\0') {
-          break;
-        }
-        shot.is_initialized = true;
-        std::vector<BaseStrategy*> ticker_sv = ticker_strat_map[shot.ticker];
-        for (auto v : ticker_sv) {
-          v->UpdateData(shot);
-        }
-      }
-      raw_file.close();
-      sv.back()->SendPlainText("day_end", "");
-    }
+      tc.EndTimer();
+      printf("repeat!!!!\n");
+    // }
+    order_file.close();
+    exchange_file.close();
+    strat_file.close();
     printf("backtest over!\n");
-    sleep(1);
-    std::string legend = param_cfg.lookup("legend");
-    sv.back()->SendPlainText("legend", legend);
-    sleep(1);
-    sv.back()->SendPlainText("backtest_end", "");
-    sv.back()->SendPlainText("plot", "");
-    data_sender->Send("End\n");
-    printf("backtest cost %lf second\n", (static_cast<double>(clock()) - main_start) / CLOCKS_PER_SEC);
-    HandleLeft();
-    PrintResult();
-    printf("here reached!\n");
-    sleep(5);
-    /*
-    while (pthread_cancel(exchange_thread) != 0) {
-      while (pthread_cancel(order_thread) != 0) {
-      }
-    }
-    */
-    // while (true);
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
     exit(1);
@@ -206,5 +318,4 @@ int main() {
     printf("EXCEPTION: %s\n", ex.what());
     exit(1);
   }
-  return 0;
 }

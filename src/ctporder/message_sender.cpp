@@ -1,15 +1,16 @@
 #include <string.h>
 #include <string>
 
-#include "ctporder/message_sender.h"
+#include "./message_sender.h"
 
 MessageSender::MessageSender(CThostFtdcTraderApi* user_api,
                              const std::string & broker_id,
                              const std::string & user_id,
                              const std::string & password,
                              bool use_arbitrage_orders,
-                             std::tr1::unordered_map<int, int>*id_map,
-                             TokenManager* tm)
+                             std::unordered_map<int, int>*id_map,
+                             TokenManager* tm,
+                             const std::unordered_map<std::string, std::string>& e_map)
   : user_api_(user_api),
     broker_id_(broker_id),
     user_id_(user_id),
@@ -18,7 +19,8 @@ MessageSender::MessageSender(CThostFtdcTraderApi* user_api,
     ctp_order_ref(0),
     use_arbitrage_orders_(use_arbitrage_orders),
     order_id_map(id_map),
-    t_m(tm) {
+    t_m(tm),
+    exchange_map(e_map) {
 }
 
 void MessageSender::SendLogin() {
@@ -122,6 +124,14 @@ bool MessageSender::NewOrder(const Order& order) {
   strncpy(req.InvestorID, user_id_.c_str(), sizeof(req.InvestorID));
 
   strncpy(req.InstrumentID, order.contract, sizeof(req.InstrumentID));
+  std::string con = GetCon(order.contract);
+  if (exchange_map.find(con) == exchange_map.end()) {
+    printf("%s %s not found exchange", con.c_str(), order.contract);
+    PrintMap(exchange_map);
+    return false;
+  }
+
+  strncpy(req.ExchangeID, exchange_map[con].c_str(), sizeof(req.InstrumentID));
 
   snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", t_m->GetCtpId(order));
 
@@ -184,6 +194,24 @@ bool MessageSender::NewOrder(const Order& order) {
   }
   */
   req.CombOffsetFlag[0] = t.OffsetFlag;
+  switch (order.offset) {
+    case Offset::UNINITED:
+      break;
+    case Offset::OPEN:
+      req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+      break;
+    case Offset::CLOSE:
+      req.CombOffsetFlag[0] = THOST_FTDC_OF_CloseYesterday;
+      break;
+    case Offset::CLOSE_TODAY:
+      req.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;
+      break;
+    case Offset::NO_TODAY:
+      if (req.CombOffsetFlag[0] == THOST_FTDC_OF_CloseToday) {
+        req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+      }
+      break;
+  }
   int result = user_api_->ReqOrderInsert(&req, ++request_id_);
 
   printf("SubmitNew %s %s %d@%lf %s %c\n",

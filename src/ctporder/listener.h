@@ -3,7 +3,7 @@
 
 #include <ThostFtdcTraderApi.h>
 #include <stdint.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <exchange_info.h>
 #include <info_type.h>
 #include <sender.h>
@@ -20,7 +20,7 @@ class Listener : public CThostFtdcTraderSpi {
   Listener(const std::string & order_update_path,
            MessageSender* message_sender,
            const std::string & error_list,
-           tr1::unordered_map<int, int>* id_map,
+           ::unordered_map<int, int>* id_map,
            TokenManager* tm,
            bool enable_stdout = true,
            bool enable_file = true);
@@ -101,7 +101,7 @@ class Listener : public CThostFtdcTraderSpi {
   std::map<std::string, int> startup_positions_;
 
   std::map<int, std::string> error_list_;
-  tr1::unordered_map<int, int>* order_id_map;
+  ::unordered_map<int, int>* order_id_map;
   TokenManager* t_m;
   FILE* exchange_file;
   bool e_s;

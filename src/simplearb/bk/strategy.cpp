@@ -5,7 +5,7 @@
 
 #include "simplearb/strategy.h"
 
-Strategy::Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos, double tick_size, TimeController tc, int contract_size, std::string strat_name, std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map)
+Strategy::Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos, double tick_size, TimeController tc, int contract_size, std::string strat_name, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map)
   : main_ticker(main_ticker),
     hedge_ticker(hedge_ticker),
     max_pos(maxpos),
@@ -18,9 +18,9 @@ Strategy::Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos
     current_pos(0),
     min_profit(3*tick_size),
     min_train_sample(60) {
-  (*ticker_strat_map)[main_ticker].push_back(this);
-  (*ticker_strat_map)[hedge_ticker].push_back(this);
-  (*ticker_strat_map)["positionend"].push_back(this);
+  (*ticker_strat_map)[main_ticker].emplace_back(this);
+  (*ticker_strat_map)[hedge_ticker].emplace_back(this);
+  (*ticker_strat_map)["positionend"].emplace_back(this);
   m_contract_size = contract_size;
   m_strat_name = strat_name;
   MarketSnapshot shot;
@@ -194,7 +194,7 @@ void Strategy::DoOperationAfterUpdateData(MarketSnapshot shot) {
     mid_map[shot.ticker] = (shot.bids[0]+shot.asks[0]) / 2;
     if (IsAlign()) {
       printf("[%s, %s]mid_diff is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
-      map_vector.push_back(mid_map[main_ticker]-mid_map[hedge_ticker]);
+      map_vector.emplace_back(mid_map[main_ticker]-mid_map[hedge_ticker]);
     }
   } else {
     printf("received bad shot!\n");
@@ -210,7 +210,7 @@ void Strategy::Train() {
     mid_map[shot.ticker] = (shot.bids[0]+shot.asks[0]) / 2;
     if (IsAlign()) {
       printf("[%s, %s]mid_diff is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
-      map_vector.push_back(mid_map[main_ticker]-mid_map[hedge_ticker]);
+      map_vector.emplace_back(mid_map[main_ticker]-mid_map[hedge_ticker]);
     }
   } else {
     printf("received bad shot!\n");
@@ -238,7 +238,7 @@ bool Strategy::Ready() {
 }
 
 void Strategy::ModerateOrders(std::string contract) {
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, hedge_ticker.c_str()) || !strcmp(it->second->contract, main_ticker.c_str())) {
       MarketSnapshot shot = shot_map[contract];
       Order* o = it->second;

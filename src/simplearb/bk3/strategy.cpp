@@ -7,7 +7,7 @@
 
 #define MAXINT 999999999
 
-Strategy::Strategy(const libconfig::Setting & setting, TimeController tc, std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode)
+Strategy::Strategy(const libconfig::Setting & setting, TimeController tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode)
   : this_tc(tc),
     current_pos(0),
     mode(mode),
@@ -38,9 +38,9 @@ Strategy::Strategy(const libconfig::Setting & setting, TimeController tc, std::t
   spread_threshold = spread_threshold_int*min_price;
   max_holding_sec = setting["max_holding_sec"];
   increment = add_margin*min_price;
-  (*ticker_strat_map)[main_ticker].push_back(this);
-  (*ticker_strat_map)[hedge_ticker].push_back(this);
-  (*ticker_strat_map)["positionend"].push_back(this);
+  (*ticker_strat_map)[main_ticker].emplace_back(this);
+  (*ticker_strat_map)[hedge_ticker].emplace_back(this);
+  (*ticker_strat_map)["positionend"].emplace_back(this);
   if (mode == "test") {
     position_ready = true;
   }
@@ -281,7 +281,7 @@ void Strategy::DoOperationAfterUpdateData(MarketSnapshot shot) {
     printf("%ld [%s, %s]mid_diff is %lf\n", shot.time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
     double mid = (shot_map[main_ticker].bids[0]+shot_map[main_ticker].asks[0])/2
                - (shot_map[hedge_ticker].bids[0]+shot_map[hedge_ticker].asks[0])/2;
-    map_vector.push_back(mid);
+    map_vector.emplace_back(mid);
   }
 }
 
@@ -311,7 +311,7 @@ bool Strategy::Ready() {
 
 void Strategy::ModerateOrders(std::string contract) {
   if (mode == "real") {
-    for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+    for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
       if (!strcmp(it->second->contract, hedge_ticker.c_str()) || !strcmp(it->second->contract, main_ticker.c_str())) {
         MarketSnapshot shot = shot_map[it->second->contract];
         Order* o = it->second;

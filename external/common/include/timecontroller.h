@@ -8,7 +8,7 @@
 #include "order_status.h"
 #include "useful_function.h"
 #include "time_status.h"
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <sys/time.h>
 
 #include <cmath>
@@ -18,17 +18,22 @@
 
 class TimeController {
  public:
-  explicit TimeController(std::vector<std::string>sleep_time, std::vector<std::string> close_time, std::vector<std::string> force_close, std::string mode="run");
+  explicit TimeController(std::vector<std::string>sleep_time, std::vector<std::string> close_time, std::vector<std::string> force_close, const std::string & mode="real");
+  TimeController();
   TimeController(const TimeController & t);
 
   ~TimeController();
 
-  TimeStatus::Enum CheckCurrentTime(MarketSnapshot shot);
+  TimeStatus::Enum CheckCurrentTime(const MarketSnapshot& shot);
 
-  TimeStatus::Enum CheckTime(int check_time);
+  TimeStatus::Enum CheckTime(int check_time) const;
 
-  int GetCurrentSec();
-  bool IsMix(int s1, int e1, int s2, int e2);
+  int GetTodaySec();
+  int GetSec(timeval t = {0,0}) const;
+  bool IsMix(int s1, int e1, int s2, int e2) const;
+  void StartTimer();
+  void EndTimer(const std::string & label="");
+  int GetStratSec(timeval t = {0, 0}) const;
 
  private:
   int last_sec;
@@ -40,9 +45,12 @@ class TimeController {
   std::vector<int>force_close_start;
   std::vector<int>force_close_stop;
   std::string mode;
+  long int timer_sec;
+  long int timer_usec;
+  bool is_timer_on;
 
-  int Translate(std::string time);
-  bool Check();
+  int Translate(const std::string & time) const;
+  bool Check() const;
   void Push(std::vector<std::string> timestr, std::vector<int>& a, std::vector<int>& b);
 };
 

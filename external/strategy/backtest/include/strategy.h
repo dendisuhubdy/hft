@@ -11,7 +11,7 @@
 #include <common_tools.h>
 #include <base_strategy.h>
 #include <libconfig.h++>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -20,7 +20,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  Strategy(const libconfig::Setting & setting, TimeController tc, std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode = "real");
+  Strategy(const libconfig::Setting & setting, TimeController tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode = "real");
   ~Strategy();
 
   void Start();
@@ -67,7 +67,7 @@ class Strategy : public BaseStrategy {
 
   TimeController this_tc;
   int cancel_threshhold;
-  std::tr1::unordered_map<std::string, double> mid_map;
+  std::unordered_map<std::string, double> mid_map;
   double up_diff;
   double down_diff;
   double mean;

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+export LD_LIBRARY_PATH=/usr/local/lib
 
 ~/deploy/stop.sh
 
@@ -26,12 +27,17 @@ fi
 cd /running/$date_string
 
 cd ~/deploy
-cp -f ctpdata ctporder strat easy_strat mid_data order_proxy data_proxy /running/$date_string/bin/
-cp -f BuildRunEnv.sh stop.sh  StartData.sh StartOrder.sh StartStrat.sh StartData_night.sh StartOrder_night.sh StartStrat_night.sh zip_data.sh /running/$date_string/scripts/
+cp -f ctpdata ctporder strat easy_strat mid_data order_proxy data_proxy getins simplearb /running/$date_string/bin/
+cp -f BuildRunEnv.sh stop.sh  StartData.sh StartOrder.sh StartStrat.sh StartData_night.sh StartOrder_night.sh StartStrat_night.sh StartSimpleArb.sh StartSimpleArb_night.sh zip_data.sh /running/$date_string/scripts/
 cp -f instruments.conf /running/$date_string
 cp -f libcommontools.so /usr/local/lib
 
 rm /today
 ln -s  /running/$date_string /today
 
-yum -y install zsh
+#yum -y install sh
+cd /today
+./bin/getins &!
+sleep 5
+
+pkill -u root getins

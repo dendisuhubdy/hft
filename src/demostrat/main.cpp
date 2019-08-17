@@ -7,7 +7,7 @@
 #include <market_snapshot.h>
 #include <common_tools.h>
 #include <base_strategy.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <iostream>
 #include <fstream>
@@ -25,7 +25,7 @@ void PrintResult() {
 
 
 void* RunExchangeListener(void *param) {
-  std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
+  std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
@@ -39,10 +39,10 @@ void* RunExchangeListener(void *param) {
 }
 
 int main() {
-  std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
+  std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   Recver data_recver("data_pub");
   std::vector<BaseStrategy*> sv;
-  sv.push_back(new Strategy(&ticker_strat_map));
+  sv.emplace_back(new Strategy(&ticker_strat_map));
   pthread_t exchange_thread;
   if (pthread_create(&exchange_thread,
                      NULL,

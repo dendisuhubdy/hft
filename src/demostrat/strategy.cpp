@@ -4,32 +4,26 @@
 
 #include "demostrat/strategy.h"
 
-Strategy::Strategy(std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map) {
-  e_s = true;
+Strategy::Strategy(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map) {
   main_ticker = "ni1905";
   hedge_ticker = "IC1906";
-  (*ticker_strat_map)[main_ticker].push_back(this);
-  (*ticker_strat_map)[hedge_ticker].push_back(this);
-  (*ticker_strat_map)["positionend"].push_back(this);
+  (*ticker_strat_map)[main_ticker].emplace_back(this);
+  (*ticker_strat_map)[hedge_ticker].emplace_back(this);
+  (*ticker_strat_map)["positionend"].emplace_back(this);
 }
 
 Strategy::~Strategy() {
   delete m_tc;
-  fclose(order_file);
-  fclose(exchange_file);
 }
 
 void Strategy::Stop() {
   CancelAll();
 }
 
-void Strategy::InitTicker() {
+void Strategy::Init() {
   ticker_map[main_ticker] = true;
   ticker_map[hedge_ticker] = true;
   ticker_map["positionend"] = true;
-}
-
-void Strategy::InitTimer() {
   std::vector<string> sleep_time_v;
   std::vector<string> close_time_v;
   std::vector<string> force_close_time_v;
@@ -63,7 +57,7 @@ void Strategy::DoOperationAfterCancelled(Order* o) {
   }
 }
 
-double Strategy::OrderPrice(std::string contract, OrderSide::Enum side, bool control_price) {
+double Strategy::OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) {
   // this is a logic to make order use market price
   return (side == OrderSide::Buy)?shot_map[contract].asks[0]:shot_map[contract].bids[0];
 }
@@ -75,12 +69,12 @@ void Strategy::Start() {
   NewOrder(main_ticker, OrderSide::Sell, 1000, false, false, "");
 }
 
-void Strategy::DoOperationAfterUpdateData(MarketSnapshot shot) {
+void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
   // shot.Show(stdout);
 }
 
-void Strategy::ModerateOrders(std::string contract) {
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+void Strategy::ModerateOrders(const std::string & contract) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     Order* o = it->second;
     MarketSnapshot shot = shot_map[o->contract];
     if (o->Valid()) {
@@ -94,8 +88,8 @@ void Strategy::ModerateOrders(std::string contract) {
   }
 }
 
-void Strategy::DoOperationAfterUpdatePos(Order* o, ExchangeInfo info) {
+void Strategy::DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) {
 }
 
-void Strategy::DoOperationAfterFilled(Order* o, ExchangeInfo info) {
+void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
 }

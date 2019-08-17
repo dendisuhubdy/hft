@@ -7,7 +7,7 @@
 #include <exchange_info.h>
 #include <order_status.h>
 #include <common_tools.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -58,10 +58,10 @@ class Strategy {
   Sender* sender;
   std::string main_ticker;
   std::string hedge_ticker;
-  tr1::unordered_map<std::string, MarketSnapshot> shot_map;
-  tr1::unordered_map<std::string, Order*> order_map;
-  tr1::unordered_map<std::string, int> position_map;
-  tr1::unordered_map<std::string, double> avgcost_map;
+  ::unordered_map<std::string, MarketSnapshot> shot_map;
+  ::unordered_map<std::string, Order*> order_map;
+  ::unordered_map<std::string, int> position_map;
+  ::unordered_map<std::string, double> avgcost_map;
   char order_ref[MAX_ORDERREF_SIZE];
   int ref_num;
   pthread_mutex_t order_ref_mutex;

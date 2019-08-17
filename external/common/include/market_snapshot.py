@@ -9,6 +9,7 @@ class MarketSnapshot:
     self.ask_sizes = [-1.0] * depth
     self.last_trade = -1.0
     self.last_trade_size = -1
+    self.is_trade_update = False
     self.volume = -1
     self.turnover = -1.0
     self.open_interest = -1.0
@@ -17,6 +18,11 @@ class MarketSnapshot:
     self.depth = depth
     self.time_str = ''
     self.time_check = time_check
+
+  def Filter(self):
+    self.ticker = self.ticker.split('\0')[0]
+    self.time_str = self.time_str.split('\0')[0]
+    return self
 
   def construct(self, string):
     space_count = 0 
@@ -32,15 +38,15 @@ class MarketSnapshot:
     #for i in range(dash_count):
       #content.remove('|')
     if len(content) != 46:
-      print "wrong data for line"
-      print string
+      print("wrong data for line")
+      print(string)
       return False
     time_sec = int(content[0])
     time_usec = float('0.'+content[1])
     self.time = time_sec+time_usec
     topic = content[2]
     self.ticker = content[3]
-    for i in range(5):
+    for i in range(self.depth):
       self.bids[i] = float(content[5+7*i])
       self.asks[i] = float(content[6+7*i])
       self.bid_sizes[i] = float(content[8+7*i])
@@ -57,12 +63,6 @@ class MarketSnapshot:
     if len(content) != 8:
       return False
     ticker, time, bids, asks, bsize, asize, last_trade, volume = content
-    '''
-    if ticker == 'ticker':
-      return
-    if float(bids) <= 0.1:
-      return
-    '''
     time = int(time)
     bids = float(bids)
     asks = float(asks)
@@ -104,7 +104,7 @@ class MarketSnapshot:
     return self.Check()
 
   def Check(self):
-    if self.bid_sizes[0] < 0.1 or self.ask_sizes[0] < 0.1 or self.last_trade < 0.1 or self.bids[0] < 0.1 or self.asks[0] < 0.1:
+    if self.bid_sizes[0] < 0.1 or self.ask_sizes[0] < 0.1 or self.last_trade < 0.1 or self.bids[0] < 0.1 or self.asks[0] < 0.1 or len(self.ticker) > 10:
       return False
     if self.ticker == 'ticker':
       return False
@@ -123,7 +123,6 @@ class MarketSnapshot:
       mit = int(time_s[3:5])
       sec = int(time_s[6:8])
       time_sec = hour*3600+mit*60+sec
-      #print time_s + '->' + str(time_sec)
     else:
       time_sec = (self.time+8*3600)%(24*2600)
     for pair in valid_time:
@@ -133,7 +132,8 @@ class MarketSnapshot:
         continue
       return True
 
-  def Show(self):
+  def Show(self, f=None):
+    self = self.Filter()
     split_char = ' '
     show_content = ""
     if self.time == -1:
@@ -162,7 +162,64 @@ class MarketSnapshot:
     show_content += split_char
     show_content += str(self.open_interest)
     show_content += split_char
+    if f != None:
+      f.write(show_content+'\n')
+
+  def get_columns(self):
+    c = []
+    c.append('ticker')
+    c.extend(['bids[0]','bids[1]','bids[2]','bids[3]','bids[4]'])
+    c.extend(['asks[0]','asks[1]','asks[2]','asks[3]','asks[4]'])
+    c.extend(['bid_sizes[0]','bid_sizes[1]','bid_sizes[2]','bid_sizes[3]','bid_sizes[4]'])
+    c.extend(['ask_sizes[0]','ask_sizes[1]','ask_sizes[2]','ask_sizes[3]','ask_sizes[4]'])
+    c.extend(['last_trade','last_trade_size','volume','turnover','open_interest'])
+    c.extend(['is_trade_update','time_sec','is_initialized'])
+    return c
+
+  def ShowCSV(self, f=None):
+    self = self.Filter()
+    if f != None:
+      f.write(self.to_csv()+'\n')
+
+  def to_csv(self):
+    self = self.Filter()
+    split_char = ','
+    show_content = ""
+    show_content += self.ticker
+    show_content += split_char
+    for i in range(self.depth):
+      show_content += str(self.bids[i]) + split_char
+    for i in range(self.depth):
+      show_content += str(self.asks[i]) + split_char
+    for i in range(self.depth):
+      show_content += str(self.bid_sizes[i]) + split_char
+    for i in range(self.depth):
+      show_content += str(self.ask_sizes[i]) + split_char
+      # + str(self.asks[i]) + split_char + str(self.bid_sizes[i]) +split_char + str(self.ask_sizes[i])
+    show_content += str(self.last_trade)
+    show_content += split_char
+    show_content += str(self.last_trade_size)
+    show_content += split_char
+    show_content += str(self.volume)
+    show_content += split_char
+    show_content += str(self.turnover)
+    show_content += split_char
+    show_content += str(self.open_interest)
+    show_content += split_char
+    show_content += str(self.is_trade_update)
+    show_content += split_char
+    show_content += str(self.time)
+    show_content += split_char
+    show_content += str(self.is_initialized)
     print(show_content)
+    '''
+    if self.time == -1:
+      show_content += self.time_str.replace(' ', '*')
+    else:
+      show_content += repr(self.time).replace('.', ' ')
+    show_content += split_char
+    '''
+    return show_content
 
 '''
 def main():

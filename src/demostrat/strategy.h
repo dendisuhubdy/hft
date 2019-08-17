@@ -9,7 +9,7 @@
 #include <order_status.h>
 #include <common_tools.h>
 #include <base_strategy.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -18,33 +18,32 @@
 
 class Strategy : public BaseStrategy {
  public:
-  Strategy(std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map);
+  explicit Strategy(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map);
   ~Strategy();
 
   // must realize
-  void Start();
-  void Stop();
+  void Start() override;
+  void Stop() override;
  private:
   // not must realize, but usually, it should
-  void DoOperationAfterUpdatePos(Order* o, ExchangeInfo info);
-  void DoOperationAfterUpdateData(MarketSnapshot shot);
-  void DoOperationAfterFilled(Order* o, ExchangeInfo info);
-  void DoOperationAfterCancelled(Order* o);
+  void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
+  void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
+  void DoOperationAfterFilled(Order* o, const ExchangeInfo& info) override;
+  void DoOperationAfterCancelled(Order* o) override;
 
   // not must
-  void ModerateOrders(std::string contract);
+  void ModerateOrders(const std::string & contract) override;
 
-  void InitTicker();
-  void InitTimer();
-  bool Ready();
-  void Pause();
-  void Resume();
-  void Run();
-  void Train();
-  void Flatting();
+  void Init() override;
+  bool Ready() override;
+  void Pause() override;
+  void Resume() override;
+  void Run() override;
+  void Train() override;
+  void Flatting() override;
 
   // must realize, define the order price logic when send an order
-  double OrderPrice(std::string contract, OrderSide::Enum side, bool control_price);
+  double OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) override;
 
   std::string main_ticker;
   std::string hedge_ticker;

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+export LD_LIBRARY_PATH=/usr/local/lib
 
 pkill -u developer ctpdata
 pkill -u developer ctporder

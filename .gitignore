@@ -23,3 +23,4 @@ backend/tools/.*
 src/build-*
 *.pro.user
 core.*
+external/common/include/*.cpp

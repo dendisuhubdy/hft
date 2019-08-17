@@ -6,7 +6,7 @@
 #include <sender.h>
 #include <exchange_info.h>
 #include <order_status.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <sys/time.h>
 
 #include <cmath>
@@ -30,8 +30,8 @@ class TimeController {
         printf("time error, stoptime < starttime! it's %s\n", sleep_time[i].c_str());
         exit(1);
       }
-      sleep_start.push_back(Translate(tv[0]));
-      sleep_stop.push_back(Translate(tv[1]));
+      sleep_start.emplace_back(Translate(tv[0]));
+      sleep_stop.emplace_back(Translate(tv[1]));
     }
   }
 
@@ -73,7 +73,7 @@ class TimeController {
 
 int main() {
   std::vector<std::string>time;
-  time.push_back("22:00:00-23:00:00");
+  time.emplace_back("22:00:00-23:00:00");
   TimeController tc(time);
   std::cout << tc.TimeValid() << endl;
 }

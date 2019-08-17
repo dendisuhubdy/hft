@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+export LD_LIBRARY_PATH=/usr/local/lib
 
 ~/deploy/test_stop.sh
 
@@ -26,10 +27,12 @@ fi
 cd ~/running/$date_string
 
 cd ~/deploy
-cp -f ctpdata ctporder mid_data order_proxy data_proxy simplearb ~/running/$date_string/bin/
+cp -f ctpdata ctporder mid_data order_proxy data_proxy simplearb getins ~/running/$date_string/bin/
 cp -f test_BuildRunEnv.sh test_stop.sh  test_StartData.sh test_StartOrder.sh test_StartData_night.sh test_StartOrder_night.sh test_zip_data.sh test_StartSimpleArb.sh test_StartSimpleArb_night.sh ~/running/$date_string/scripts/
 cp -f instruments.conf ~/running/$date_string
 #cp -f libcommontools.so /usr/local/lib
 
 rm ~/today
 ln -s  ~/running/$date_string ~/today
+cd ~/today
+./bin/getins

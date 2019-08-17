@@ -4,38 +4,44 @@
 #include <market_snapshot.h>
 #include <strategy_status.h>
 #include <timecontroller.h>
+#include <Contractor.h>
 #include <order.h>
 #include <sender.h>
+#include <caler.h>
 #include <exchange_info.h>
 #include <order_status.h>
 #include <common_tools.h>
 #include <base_strategy.h>
 #include <libconfig.h++>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <memory>
 
 class Strategy : public BaseStrategy {
- // friend class libconfig::Setting;
  public:
-  Strategy(const libconfig::Setting& setting, TimeController tc, std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, std::string mode = "real");
+  explicit Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & contract_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode = "real", std::ofstream* order_file = nullptr, std::ofstream* exchange_file = nullptr, std::ofstream* strat_file = nullptr);
   ~Strategy();
 
   void Start();
   void Stop();
 
   void Clear();
-  void Print();
+  void HandleCommand(const MarketSnapshot& shot);
  private:
-  void DoOperationAfterUpdateData(MarketSnapshot shot);
-  void DoOperationAfterUpdatePos(Order* o, ExchangeInfo info);
-  void DoOperationAfterFilled(Order* o, ExchangeInfo info);
+  void ClearPositionRecord();
+  void DoOperationAfterUpdateData(const MarketSnapshot& shot);
+  void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info);
+  void DoOperationAfterFilled(Order* o, const ExchangeInfo& info);
   void DoOperationAfterCancelled(Order* o);
-  void ModerateOrders(std::string contract);
-  void InitTicker();
-  void InitTimer();
+  void ModerateOrders(const std::string & contract);
+  // void InitTicker();
+  // void InitTimer();
+  // void InitFile();
+  void Init();
   bool Ready();
   void Pause();
   void Resume();
@@ -43,34 +49,44 @@ class Strategy : public BaseStrategy {
   void Train();
   void Flatting();
 
-  double OrderPrice(std::string contract, OrderSide::Enum side, bool control_price);
+  void UpdateBuildPosTime();
+
+  double OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price);
 
   OrderSide::Enum OpenLogicSide();
   bool OpenLogic();
   void CloseLogic();
 
   void Open(OrderSide::Enum side);
-  void Close(bool force_flat = false);
-
-  bool TimeUp();
+  bool Close(bool force_flat = false);
 
   void CalParams();
   bool HitMean();
 
+  double GetPairMid();
+
+  void ForceFlat();
+
   bool Spread_Good();
 
   bool IsAlign();
+
+  void UpdateBound(OrderSide::Enum side);
+  void StopLossLogic();
+  void HandleTestOrder(Order *o);
+
   char order_ref[MAX_ORDERREF_SIZE];
   std::string main_ticker;
   std::string hedge_ticker;
   int max_pos;
-  double min_price;
+  double min_price_move;
 
   TimeController this_tc;
-  int cancel_threshhold;
-  std::tr1::unordered_map<std::string, double> mid_map;
+  int cancel_limit;
+  std::unordered_map<std::string, double> mid_map;
   double up_diff;
   double down_diff;
+  double range_width;
   double mean;
   std::vector<double> map_vector;
   int current_pos;
@@ -81,8 +97,25 @@ class Strategy : public BaseStrategy {
   std::string mode;
   double spread_threshold;
   int closed_size;
-  int max_holding_sec;
-  int build_position_time;
   double last_valid_mid;
+  double stop_loss_up_line;
+  double stop_loss_down_line;
+  int max_loss_times;
+  double stop_loss_times;
+  double stop_loss_margin;
+  double open_fee_rate;
+  double close_today_fee_rate;
+  double close_fee_rate;
+  double deposit_rate;
+  double round_fee_cost;
+  int max_close_try;
+  double current_spread;
+  std::ofstream* this_order_file;
+  std::ofstream* this_exchange_file;
+  std::ofstream* this_strat_file;
+  CALER * caler;
+  bool is_started;
+  Sender* data_sender;
 };
+
 #endif  // SRC_BACKTEST_STRATEGY_H_

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <sender.h>
 #include <sys/time.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <market_snapshot.h>
 #include <common_tools.h>
 
@@ -12,11 +12,11 @@
 
 class Listener : public CThostFtdcMdSpi {
  public:
-  Listener(const std::string name,
-           CThostFtdcMdApi* user_api,
+  Listener(CThostFtdcMdApi* user_api,
            const std::string & broker_id,
            const std::string & user_id,
            const std::string & password,
+           bool binary_record = true,
            bool show_stdout = true,
            bool file_record = false)
     : user_api_(user_api),
@@ -25,16 +25,21 @@ class Listener : public CThostFtdcMdSpi {
       password_(password),
       request_id_(0),
       is_publishing_(false),
+      record_binary(binary_record),
       record_stdout(show_stdout),
       record_file(file_record) {
-    sender = new Sender(name);
+    sender = new Sender("data_source");
     data_file = fopen("data.txt", "w");
+    binary_file.open("data_binary.dat", ios::app | ios::out | ios::binary);
   }
   ~Listener() {
-    delete sender;
     if (record_file) {
       fclose(data_file);
     }
+    if (record_binary) {
+        binary_file.close();
+    }
+    delete sender;
   }
 
   virtual void OnRspError(CThostFtdcRspInfoField* info, int request_id, bool is_last) {
@@ -42,6 +47,7 @@ class Listener : public CThostFtdcMdSpi {
   }
 
   virtual void OnFrontConnected() {
+    printf("on front connected\n");
     SendLogin();
   }
 
@@ -55,6 +61,7 @@ class Listener : public CThostFtdcMdSpi {
                               CThostFtdcRspInfoField* info,
                               int request_id,
                               bool is_last) {
+    printf("rsp login called!\n");
     Subscribe();
   }
 
@@ -129,13 +136,14 @@ class Listener : public CThostFtdcMdSpi {
       snapshot.bids[i] = 0;
       snapshot.asks[i] = 0;
     }
-    if (record_stdout) {
-      snapshot.Show(stdout, 5);
-    }
+    snapshot.Show(stdout, 5);
+    sender->Send(snapshot);
     if (record_file) {
       snapshot.Show(data_file, 5);
     }
-    sender->Send(snapshot);
+    if (record_binary) {
+      snapshot.Show(binary_file, 5);
+    }
   }
 
  private:
@@ -148,8 +156,8 @@ class Listener : public CThostFtdcMdSpi {
     strncpy(request.Password, password_.c_str(), sizeof(request.Password));
 
     int result = user_api_->ReqUserLogin(&request, ++request_id_);
+    printf("Logging in as %s", user_id_.c_str());
 
-    // printf("Logging in as %s", user_id_.c_str());
     if (result != 0) {
       printf("SendLogin failed! (%d)", result);
       exit(1);
@@ -190,6 +198,7 @@ class Listener : public CThostFtdcMdSpi {
         g_pInstrumentID[count] = a[count];
         count++;
       }
+      printf("sending %s\n", g_pInstrumentID[0]);
       int result = user_api_->SubscribeMarketData(g_pInstrumentID, count);
       if (result != 0) {
         printf("sub failed!");
@@ -206,7 +215,6 @@ class Listener : public CThostFtdcMdSpi {
     return is_error;
   }
 
-  Sender* sender;
   CThostFtdcMdApi* user_api_;
 
   std::string broker_id_;
@@ -218,25 +226,25 @@ class Listener : public CThostFtdcMdSpi {
   bool is_publishing_;
 
   FILE* data_file;
+  bool record_binary;
   bool record_stdout;
   bool record_file;
+  std::ofstream binary_file;
+  Sender* sender;
 };
 
 int main() {
   CThostFtdcMdApi* user_api = CThostFtdcMdApi::CreateFtdcMdApi();
 
   Listener listener(
-    "data_source",
     user_api,
     "6000",
     "03290028",
-    "ftzc@991",
-    true,
-    false);
+    "ftzc@991");
 
   user_api->RegisterSpi(&listener);
 
-  std::string front = "tcp://180.166.132.66:41213";
+  std::string front = "tcp://180.168.146.187:10110";
   user_api->RegisterFront(const_cast<char*>(front.c_str()));
 
   user_api->Init();

@@ -5,7 +5,7 @@
 #include <recver.h>
 #include <sender.h>
 #include <market_snapshot.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <iostream>
 #include <fstream>
@@ -34,20 +34,20 @@ void* RunExchangeListener(void *param) {
 
 int main() {
   std::vector<std::string> sleep_time_v;
-  sleep_time_v.push_back("10:14:00-10:30:00");
-  sleep_time_v.push_back("11:29:20-13:30:00");
-  sleep_time_v.push_back("00:58:20-09:00:00");
+  sleep_time_v.emplace_back("10:14:00-10:30:00");
+  sleep_time_v.emplace_back("11:29:20-13:30:00");
+  sleep_time_v.emplace_back("00:58:20-09:00:00");
   TimeController tc(sleep_time_v, "21:00:00", "14:55:30");
   Recver pd_recver("pricer_sub");
   std::vector<std::string> strat_contracts;
   std::vector<std::string> topic_v;
-  strat_contracts.push_back("ni1811");
-  strat_contracts.push_back("hc1810");
-  strat_contracts.push_back("ni1901");
-  strat_contracts.push_back("zn1808");
-  strat_contracts.push_back("zn1810");
-  topic_v.push_back("MA10");
-  topic_v.push_back("MA30");
+  strat_contracts.emplace_back("ni1811");
+  strat_contracts.emplace_back("hc1810");
+  strat_contracts.emplace_back("ni1901");
+  strat_contracts.emplace_back("zn1808");
+  strat_contracts.emplace_back("zn1810");
+  topic_v.emplace_back("MA10");
+  topic_v.emplace_back("MA30");
   Strategy s(strat_contracts, topic_v, tc, "ma");
   pthread_t exchange_thread;
   if (pthread_create(&exchange_thread,

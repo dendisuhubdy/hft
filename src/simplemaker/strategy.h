@@ -10,7 +10,7 @@
 #include <order_status.h>
 #include <common_tools.h>
 #include <base_strategy.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <cmath>
 #include <vector>
@@ -19,24 +19,24 @@
 
 class Strategy : public BaseStrategy {
  public:
-  Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos, double tick_size, TimeController tc, int contract_size, std::string strat_name, std::tr1::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, bool enable_stdout = true, bool enable_file = true);
+  explicit Strategy(const std::string & main_ticker, const std::string & hedge_ticker, int maxpos, double tick_size, TimeController tc, int contract_size, const std::string & strat_name, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, bool enable_stdout = true, bool enable_file = true);
   ~Strategy();
 
-  void Start();
-  void Stop();
-  void Flatting();
+  void Start() override;
+  void Stop() override;
+  void Flatting() override;
  private:
-  void DoOperationAfterUpdatePos(Order* o, ExchangeInfo info);
-  void DoOperationAfterUpdateData(MarketSnapshot shot);
-  void DoOperationAfterFilled(Order* o, ExchangeInfo info);
-  void DoOperationAfterCancelled(Order* o);
-  double OrderPrice(std::string contract, OrderSide::Enum side, bool control_price);
+  void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
+  void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
+  void DoOperationAfterFilled(Order* o, const ExchangeInfo& info) override;
+  void DoOperationAfterCancelled(Order* o) override;
+  double OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) override;
 
-  bool Ready();
-  void Run();
-  void Train();
-  void Resume();
-  void Pause();
+  bool Ready() override;
+  void Run() override;
+  void Train() override;
+  void Resume() override;
+  void Pause() override;
 
   bool IsHedged();
   bool MidBuy();
@@ -46,25 +46,24 @@ class Strategy : public BaseStrategy {
   bool IsParamOK();
   bool Spread_Good();
   void ModerateHedgeOrders();
-  void ModerateOrders(std::string contract, double edurance);
-  // void ModerateOrders(std::string contract);
+  void ModerateOrders(const std::string & contract, double edurance);
+  // void ModerateOrders(const std::string & contract);
 
-  void InitTicker();
-  void InitTimer();
+  void Init();
 
   double CalBalancePrice();
 
-  bool TradeClose(std::string contract, int size);
+  bool TradeClose(const std::string & contract, int size);
 
   bool PriceChange(double current_price, double reasonable_price, OrderSide::Enum side, double edurance);
 
   void AddCloseOrderSize(OrderSide::Enum side);
   void CheckStatus();
-  void ModerateAllValid(std::string contract, OrderSide::Enum side);
+  void ModerateAllValid(const std::string & contract, OrderSide::Enum side);
 
-  void ModerateOrders(std::string contract);
+  void ModerateOrders(const std::string & contract) override;
 
-  void OpenOrder(OrderSide::Enum sd, std::string info);
+  void OpenOrder(OrderSide::Enum sd, const std::string & info);
   char order_ref[MAX_ORDERREF_SIZE];
   std::string main_ticker;
   std::string hedge_ticker;
@@ -77,8 +76,8 @@ class Strategy : public BaseStrategy {
 
   pthread_mutex_t add_size_mutex;
   int cancel_threshhold;
-  std::tr1::unordered_map<std::string, double> mid_map;
-  std::tr1::unordered_map<std::string, Order*> sleep_order_map;
+  std::unordered_map<std::string, double> mid_map;
+  std::unordered_map<std::string, Order*> sleep_order_map;
   double up_diff;
   double down_diff;
   std::vector<double> map_vector;

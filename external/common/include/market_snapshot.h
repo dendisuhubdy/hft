@@ -1,14 +1,14 @@
-#ifndef EXTERNAL_COMMON_MARKET_SNAPSHOT_H_
-#define EXTERNAL_COMMON_MARKET_SNAPSHOT_H_
+#ifndef MARKET_SNAPSHOT_H_
+#define MARKET_SNAPSHOT_H_
 
 #include <stdio.h>
 #include <sys/time.h>
+// #include "common_tools.h"
+#include "define.h"
 
 #include <algorithm>
 #include <iostream>
-
-#define MARKET_DATA_DEPTH 5
-#define MAX_TICKER_LENGTH 32
+#include <fstream>
 
 struct MarketSnapshot {
   char ticker[MAX_TICKER_LENGTH];
@@ -44,6 +44,23 @@ struct MarketSnapshot {
     }
   }
 
+  void Show(std::ofstream &stream, int depth = MARKET_DATA_DEPTH) const {
+    stream.write((char*)this, sizeof(*this));
+  }
+
+  void ShowCsv(FILE* stream, int depth = MARKET_DATA_DEPTH) const {
+    char time_s[32];
+    snprintf(time_s, sizeof(time_s), "%ld.%ld", time.tv_sec, time.tv_usec);
+    double time_sec = atof(time_s);
+    // double time_sec = TransTime(time);
+    fprintf(stream, "%s,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%lf,%d,%d,%lf,%lf,%d,%lf,%d\n", ticker,bids[0],bids[1],bids[2],bids[3],bids[4],
+                   asks[0],asks[1],asks[2],asks[3],asks[4],
+                   bid_sizes[0],bid_sizes[1],bid_sizes[2],bid_sizes[3],bid_sizes[4],
+                   ask_sizes[0],ask_sizes[1],ask_sizes[2],ask_sizes[3],ask_sizes[4],
+                   last_trade,last_trade_size,volume,turnover,open_interest,
+                   is_trade_update,time_sec,is_initialized);
+  }
+
   void Show(FILE* stream, int depth = MARKET_DATA_DEPTH) const {
     fprintf(stream, "%ld %04ld SNAPSHOT %s |",
             time.tv_sec, time.tv_usec, ticker);
@@ -62,7 +79,7 @@ struct MarketSnapshot {
       fprintf(stream, " %.12g %d %d M %.12g %.12g\n", last_trade, last_trade_size, volume, turnover, open_interest);
     }
   }
-  std::string Copy(int depth = MARKET_DATA_DEPTH) {
+  std::string Copy(int depth = MARKET_DATA_DEPTH) const {
     std::string s;
     char temp[1024];
     snprintf(temp, sizeof(temp),  "%ld %04ld SNAPSHOT %s |",
@@ -87,50 +104,12 @@ struct MarketSnapshot {
     return s;
   }
 
-  bool IsGood() {
+  bool IsGood() const {
     if (bids[0] < 0.001 || asks[0] < 0.001 || ask_sizes[0] <=0 || bid_sizes[0] <= 0) {
       return false;
     }
     return true;
   }
-  // checks for invalid / inconsistent sizes, empty market, crossed
-  // market, not initialized, or inconsistent market depth
-  // check_depth specifies if you care about the consistency in
-  // market depth (set to false if you only care about top of book)
-  /*
-  bool IsGood(bool check_depth = true) const {
-    if (bid_sizes[0] <= 0 || ask_sizes[0] <= 0) {
-      return false;
-    }
-
-    // crossed market
-    if (bids[0] - EPS > asks[0]) {
-      return false;
-    }
-
-    if (!is_initialized) {
-      return false;
-    }
-
-    // check consistent market depth
-    if (check_depth) {
-      for (int i = 1; i < MARKET_DATA_DEPTH; ++i) {
-        if (bid_sizes[i] > 0 && bids[i] > bids[i-1] - EPS) {
-          return false;
-        }
-        if (ask_sizes[i] > 0 && asks[i] < asks[i-1] + EPS) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-  */
 };
 
-// Used to indicate to tools reading snapshots from disk that the snapshot is stored
-// in binary format
-const int SnapshotBinarySignature = 0xDA;
-
-#endif  // EXTERNAL_COMMON_MARKET_SNAPSHOT_H_
+#endif // MARKET_SNAPSHOT_H_

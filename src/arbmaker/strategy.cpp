@@ -146,7 +146,7 @@ bool Strategy::PriceChange(double current_price, double reasonable_price, OrderS
 void Strategy::AddCloseOrderSize(OrderSide::Enum side) {
   pthread_mutex_lock(&add_size_mutex);
   Order * reverse_order = NULL;
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, main_ticker.c_str())) {
       if (it->second->Valid() && it->second->side == side) {
         reverse_order = it->second;
@@ -308,7 +308,7 @@ void Strategy::DoOperationAfterUpdateData(MarketSnapshot shot) {
     if ((shot.ticker == main_ticker || shot.ticker == hedge_ticker) && IsReady() && IsAlign()) {
       if (Spread_Good()) {
         printf("[%s %s]mid_diff is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
-        map_vector.push_back(mid_map[main_ticker]-mid_map[hedge_ticker]);
+        map_vector.emplace_back(mid_map[main_ticker]-mid_map[hedge_ticker]);
       }
     }
   }
@@ -347,7 +347,7 @@ void Strategy::DoOperationAfterUpdateData(MarketSnapshot shot) {
 }
 
 void Strategy::ModerateHedgeOrders() {
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, hedge_ticker.c_str())) {
       MarketSnapshot hedge_shot = shot_map[hedge_ticker];
       Order* o = it->second;
@@ -372,7 +372,7 @@ void Strategy::ModerateHedgeOrders() {
 }
 
 void Strategy::ModerateOrders(std::string contract, double edurance) {
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, contract.c_str())) {
       Order* o = it->second;
       if (o->Valid()) {

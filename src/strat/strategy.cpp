@@ -117,7 +117,7 @@ bool Strategy::PriceChange(double current_price, double reasonable_price, OrderS
 void Strategy::AddCloseOrderSize(OrderSide::Enum side) {
   pthread_mutex_lock(&add_size_mutex);
   Order * reverse_order = NULL;
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, main_ticker.c_str())) {
       if (it->second->Valid() && it->second->side == side) {
         reverse_order = it->second;
@@ -250,7 +250,7 @@ void Strategy::Start() {
 }
 
 void Strategy::ModerateMainOrders() {
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, main_ticker.c_str())) {
       Order* o = it->second;
       if (o->Valid()) {
@@ -273,7 +273,7 @@ void Strategy::ModerateMainOrders() {
 }
 
 void Strategy::ModerateHedgeOrders() {
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, hedge_ticker.c_str())) {
       Order* o = it->second;
       if (o->Valid()) {
@@ -370,7 +370,7 @@ bool Strategy::IsReady() {
 void Strategy::CancelAllMain() {
   printf("Enter Cancel ALL Main\n");
   pthread_mutex_lock(&mod_mutex);
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, main_ticker.c_str())) {
       Order* o = it->second;
       if (o->Valid()) {
@@ -396,7 +396,7 @@ void Strategy::CancelAllMain() {
 void Strategy::CancelAllHedge() {
   printf("Enter Cancel ALL Hedge\n");
   pthread_mutex_lock(&mod_mutex);
-  for (std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
+  for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     if (!strcmp(it->second->contract, hedge_ticker.c_str())) {
       Order* o = it->second;
       if (o->Valid()) {
@@ -425,7 +425,7 @@ void Strategy::ClearValidOrder() {
 }
 
 void Strategy::DelOrder(std::string ref) {
-  std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.find(ref);
+  std::unordered_map<std::string, Order*>::iterator it = order_map.find(ref);
   if (it != order_map.end()) {
     order_map.erase(it);
   } else {
@@ -528,7 +528,7 @@ void Strategy::UpdateExchangeInfo(ExchangeInfo info) {
     position_map[info.contract] += info.trade_size;
     return;
   }
-  std::tr1::unordered_map<std::string, Order*>::iterator it = order_map.find(info.order_ref);
+  std::unordered_map<std::string, Order*>::iterator it = order_map.find(info.order_ref);
   if (it == order_map.end()) {  // not main
       printf("unknown orderref!%s\n", info.order_ref);
       return;

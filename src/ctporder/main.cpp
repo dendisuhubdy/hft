@@ -1,27 +1,48 @@
 #include <stdio.h>
 #include <zmq.hpp>
 #include <recver.h>
+#include <sender.h>
 #include <ThostFtdcTraderApi.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <memory>
 
-#include "ctporder/message_sender.h"
-#include "ctporder/listener.h"
-#include "ctporder/token_manager.h"
+#include "./message_sender.h"
+#include "./listener.h"
+#include "./token_manager.h"
 
 FILE* order_file;
 bool enable_stdout = true;
 bool enable_file = true;
 
+std::unordered_map<std::string, std::string> RegisterExchange() {
+  std::unordered_map<std::string, std::vector<std::string> > exchange_contract;
+  exchange_contract["SHFE"] = {"cu", "ni", "au"};
+  exchange_contract["CFFEX"] = {"IH", "IC", "IF", "T"};
+  exchange_contract["CZCE"] = {};
+  exchange_contract["DCE"] = {};
+  std::unordered_map<std::string, std::string> contract_exchange;
+  for (auto i : exchange_contract) {
+    std::vector<std::string> c_v = i.second;
+    for (auto j : c_v) {
+      contract_exchange[j] = i.first;
+    }
+  }
+  return contract_exchange;
+}
+
 void* RunOrderCommandListener(void *param) {
   // Recver* r = reinterpret_cast<Recver*>(param);
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
   Recver* r = new Recver("order_pub");
+  std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
     o = r->Recv(o);
+    sender.get()->Send(o);
     if (enable_stdout) {
       o.Show(stdout);
     }
@@ -30,6 +51,7 @@ void* RunOrderCommandListener(void *param) {
     }
     // check order's correct
     if (!message_sender->Handle(o)) {
+      printf("Handle Order %s failed!\n", o.order_ref);
       // handle error
     }
   }
@@ -52,16 +74,18 @@ int main() {
   std::string username = "115686";
   std::string password = "fz567789";
   */
-  tr1::unordered_map<int, int> order_id_map;
+  ::unordered_map<int, int> order_id_map;
 
   TokenManager tm;
+  std::unordered_map<std::string, std::string> exchange_map = RegisterExchange();
   MessageSender message_sender(user_api,
                                broker,
                                username,
                                password,
                                false,
                                &order_id_map,
-                               &tm);
+                               &tm,
+                               exchange_map);
 
   Listener listener("exchange_info",
                     &message_sender,
@@ -85,7 +109,7 @@ int main() {
 
   user_api->SubscribePrivateTopic(THOST_TERT_QUICK);
   user_api->SubscribePublicTopic(THOST_TERT_QUICK);
-  std::string counterparty_host = "tcp://180.168.146.187:10000";
+  std::string counterparty_host = "tcp://180.168.146.187:10100";
   user_api->RegisterFront(const_cast<char*>(counterparty_host.c_str()));
   user_api->Init();
   if (enable_file) {

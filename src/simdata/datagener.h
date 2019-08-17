@@ -21,6 +21,7 @@ class DataGener {
  private:
   // MarketSnapshot HandleSnapshot(std::string raw_shot);
   std::ifstream raw_file;
+  std::ifstream save_file;
   std::string file_name;
   zmq::context_t* context;
   zmq::socket_t* socket;

@@ -7,7 +7,7 @@
 #include <ThostFtdcUserApiDataType.h>
 #include <common_tools.h>
 
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <string>
 #include <cctype>
 
@@ -72,15 +72,15 @@ class TokenManager {
   void PrintToken();
 
  private:
-  std::tr1::unordered_map<std::string, int> buy_token;
-  std::tr1::unordered_map<std::string, int> sell_token;
-  std::tr1::unordered_map<std::string, int> yes_buy_token;
-  std::tr1::unordered_map<std::string, int> yes_sell_token;
-  std::tr1::unordered_map<std::string, int> order_id_map;
-  std::tr1::unordered_map<int, Order> ctpid_order_map;
-  std::tr1::unordered_map<int, bool> is_close;
-  std::tr1::unordered_map<int, bool> is_yes_close;
-  std::tr1::unordered_map<int, CloseType> ref_close;
+  std::unordered_map<std::string, int> buy_token;
+  std::unordered_map<std::string, int> sell_token;
+  std::unordered_map<std::string, int> yes_buy_token;
+  std::unordered_map<std::string, int> yes_sell_token;
+  std::unordered_map<std::string, int> order_id_map;
+  std::unordered_map<int, Order> ctpid_order_map;
+  std::unordered_map<int, bool> is_close;
+  std::unordered_map<int, bool> is_yes_close;
+  std::unordered_map<int, CloseType> ref_close;
   pthread_mutex_t token_mutex;
   int ctp_id;
 };

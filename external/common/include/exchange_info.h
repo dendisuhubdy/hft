@@ -2,6 +2,8 @@
 #define EXCHANGE_INFO_H_
 
 #include <sys/time.h>
+#include <fstream>
+#include <stdio.h>
 #include "define.h"
 #include "info_type.h"
 #include "order_side.h"
@@ -18,6 +20,19 @@ struct ExchangeInfo {
   ExchangeInfo()
     : trade_size(0),
       trade_price(-1) {
+  }
+
+  void Show(std::ofstream &stream) const {
+    stream.write((char*)this, sizeof(*this));
+  }
+
+  void ShowCsv(FILE* stream) const {
+    /*
+    char time_s[32];
+    snprintf(time_s, sizeof(time_s), "%ld.%ld", time.tv_sec, time.tv_usec);
+    double time_sec = atof(time_s);
+    */
+    fprintf(stream, "%s,%s,%s,%d,%lf,%s,%s\n", InfoType::ToString(type),contract,order_ref,trade_size,trade_price,reason,OrderSide::ToString(side));
   }
 
   void Show(FILE* stream) const {

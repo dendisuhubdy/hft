@@ -3,7 +3,7 @@
 
 #include <order_side.h>
 #include <order.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <common_tools.h>
 
 #include <libconfig.h++>
@@ -23,13 +23,13 @@ class OrderHandler {
   void HandleCancel(const Order & order);
   void HandleMod(const Order & order);
   void GenReport();
-  std::tr1::unordered_map<std::string, double> fozen_capital_map;
-  std::tr1::unordered_map<std::string, double> avgcost_map;
-  std::tr1::unordered_map<std::string, double> realized_pnl_map;
-  std::tr1::unordered_map<std::string, int> current_pos_map;
+  std::unordered_map<std::string, double> fozen_capital_map;
+  std::unordered_map<std::string, double> avgcost_map;
+  std::unordered_map<std::string, double> realized_pnl_map;
+  std::unordered_map<std::string, int> current_pos_map;
   int closed_size;
-  std::tr1::unordered_map<std::string, std::string> contract_strat_map;
-  std::tr1::unordered_map<std::string, double> strat_pnl_map;
+  std::unordered_map<std::string, std::string> contract_strat_map;
+  std::unordered_map<std::string, double> strat_pnl_map;
 };
 
 #endif  // SRC_ORDER_MATCHER_ORDER_HANDLER_H_
