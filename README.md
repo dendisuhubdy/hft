@@ -46,6 +46,6 @@ any questions or suggestions are welcome, please contract me with:huangxy17@fuda
 * Jian Sun: professor of school of Economics, Fudan university. Fund-supporter and strategy idea consultant.
 * Wei Sun: systems consultant.
 
-### exsiting problem:
+### Exsiting problem:
 1. ctporder: query position interface error, because ctp changed recently. need more research
 2. ui: load history
