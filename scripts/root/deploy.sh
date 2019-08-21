@@ -16,4 +16,5 @@ scp -i ~/.ssh/ali_key BuildRunEnv.sh stop.sh StartData.sh StartOrder.sh StartStr
 scp -i ~/.ssh/ali_key ~/hft/external/common/lib/libcommontools.so root@127.0.0.1:~/deploy
 cd ~/hft/build/bin
 ./getins &!
+sleep 2
 scp -i ~/.ssh/ali_key instruments.conf root@127.0.0.1:~/deploy

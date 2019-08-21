@@ -12,7 +12,6 @@ build/*
 *.log
 *.out
 tools/waf-plugins/*
-backend/*
 backend/tools/waf-plugins/*.pyc
 backend/tools/*
 *.swp
