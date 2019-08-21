@@ -14,9 +14,13 @@
   this project used zeromq to do ipc, version 4.1.2
 * complie command:
   in the path of yourhomepath/hft, run "make", you will get binary file in build/bin
+  
+### Have a quick view ###
 * How to run it
-  just run it, as a start, you can run ctpdata, if network is good, and time is in the trading session(9:00-11:30 13:30-3:00), you can see marketdata come out in your screen.
-* Deployment instructions
+  As a start, you can run ctpdata (after 'make', ./build/bin/ctpdata), if network is good, and time is in the trading session(9:00-11:30 13:30-3:00), you can see marketdata come out in your screen.
+* ui
+you can find the frontend ui: https://github.com/nickhuangxinyu/Gallery/blob/master/TradingMonitor.rar
+you can open it in trading time, it's a monitor of spread.
 
 
 ### Exsited strategy:
@@ -41,3 +45,7 @@ any questions or suggestions are welcome, please contract me with:huangxy17@fuda
 * ShengRui zhao: most active products getting tools on futures market, fill the detail config for all contracts.
 * Jian Sun: professor of school of Economics, Fudan university. Fund-supporter and strategy idea consultant.
 * Wei Sun: systems consultant.
+
+### Exsiting problem:
+1. ctporder: query position interface error, because ctp changed recently. need more research
+2. ui: load history
