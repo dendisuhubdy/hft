@@ -33,7 +33,7 @@ struct Order {
   }
 
   bool Valid() const {
-    if (status == OrderStatus::SubmitNew || status == OrderStatus::New) {
+    if (status == OrderStatus::SubmitNew || status == OrderStatus::New || status == OrderStatus::CancelRej) {
       return true;
     }
     return false;

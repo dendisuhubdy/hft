@@ -53,6 +53,7 @@ void* RunCommandListener(void *param) {
     std::string ticker = Split(shot.ticker, "|").front();
     if (ticker == "load_history") {
       Load_history("mid.dat");
+      continue;
     }
     std::vector<BaseStrategy*> sv = (*sv_map)[ticker];
     for (auto v : sv) {

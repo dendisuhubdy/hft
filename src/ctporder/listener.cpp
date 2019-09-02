@@ -167,6 +167,14 @@ void Listener::OnRspOrderAction(CThostFtdcInputOrderActionField* order_action,
 
   if (!CheckError("OnRspOrderAction", info, order_action->OrderRef)) {
     printf("Got unexpected OnRspOrderAction %s", order_action->OrderRef);
+  } else {
+    int ctp_order_ref = atoi(order_action->OrderRef);
+    Order o = t_m->GetOrder(ctp_order_ref);
+    ExchangeInfo exchangeinfo;
+    exchangeinfo.type = InfoType::CancelRej;
+    snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", o.order_ref);
+    snprintf(exchangeinfo.contract, sizeof(exchangeinfo.contract), "%s", o.contract);
+    SendExchangeInfo(exchangeinfo);
   }
 }
 

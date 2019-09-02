@@ -132,6 +132,7 @@ bool MessageSender::NewOrder(const Order& order) {
   }
 
   strncpy(req.ExchangeID, exchange_map[con].c_str(), sizeof(req.InstrumentID));
+  printf("order %s exchangeid is %s\n", order.order_ref, exchange_map[con].c_str());
 
   snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", t_m->GetCtpId(order));
 
@@ -238,6 +239,16 @@ void MessageSender::CancelOrder(const Order& order) {
   snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", ctp_order_ref);
 
   strncpy(req.InstrumentID, o.contract, sizeof(req.InstrumentID));
+
+  std::string con = GetCon(order.contract);
+  if (exchange_map.find(con) == exchange_map.end()) {
+    printf("cancel %s %s not found exchange", con.c_str(), order.contract);
+    PrintMap(exchange_map);
+    return;
+  }
+
+  strncpy(req.ExchangeID, exchange_map[con].c_str(), sizeof(req.InstrumentID));
+  printf("cancel order %s exchangeid is %s\n", order.order_ref, exchange_map[con].c_str());
 
   req.FrontID = front_id_;
   req.SessionID = session_id_;
