@@ -224,7 +224,7 @@ bool Strategy::Close(bool force_flat) {
     }
     return true;
   } else {
-    printf("block order exsited! no close\n");
+    printf("[%s %s]block order exsited! no close\n", main_ticker.c_str(), hedge_ticker.c_str());
     PrintMap(order_map);
     // exit(1);
     return false;
