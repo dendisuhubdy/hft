@@ -43,8 +43,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Se
     max_holding_sec = param_setting["max_holding_sec"];
     range_width = param_setting["range_width"];
     std::string con = GetCon(main_ticker);
-    cancel_map[main_ticker] = contract_setting["cancel_limit"];
-    cancel_map[hedge_ticker] = contract_setting["cancel_limit"];
+    cancel_limit = contract_setting["cancel_limit"];
     printf("[%s %s] try over!\n", main_ticker.c_str(), hedge_ticker.c_str());
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
