@@ -155,7 +155,7 @@ void Strategy::CalParams() {
   std /= min_train_sample;
   std = sqrt(std);
   FeePoint main_point = caler->CalFeePoint(main_ticker, GetMid(main_ticker), 1, GetMid(main_ticker), 1, no_close_today);
-  FeePoint hedge_point = caler->CalFeePoint(main_ticker, GetMid(main_ticker), 1, GetMid(main_ticker), 1, no_close_today);
+  FeePoint hedge_point = caler->CalFeePoint(hedge_ticker, GetMid(hedge_ticker), 1, GetMid(hedge_ticker), 1, no_close_today);
   round_fee_cost = main_point.open_fee_point + main_point.close_fee_point + hedge_point.open_fee_point + hedge_point.close_fee_point;
   double margin = std::max(range_width * std, min_range) + round_fee_cost;
   up_diff = avg + margin;
