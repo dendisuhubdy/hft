@@ -1,4 +1,5 @@
 # High Frequency Trading Solution #
+* running on china futures market and cryptocurrency market
 
 ### What is this repository for? ###
 * automatic algorithm trading system
