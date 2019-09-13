@@ -244,8 +244,12 @@ int main() {
       for (int i = 0; i < strategies.getLength(); i++) {
         const libconfig::Setting & param_setting = strategies[i];
         std::string con = param_setting["unique_name"];
+        bool no_close_today = false;
+        if (param_setting.exists("no_close_today")) {
+          no_close_today = param_setting["no_close_today"];
+        }
         const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
-        sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, true));
+        sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
       }
       tc.StartTimer();
       for (auto file_name : file_v) {
