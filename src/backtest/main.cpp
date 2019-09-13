@@ -228,9 +228,15 @@ int main() {
     // sv.back()->SendPlainText("param_config_path", param_config_path);
     // sv.back()->SendPlainText("contract_config_path", contract_config_path);
     // const libconfig::Setting & file_set = param_cfg.lookup("data_file");
-    std::string start_date = param_cfg.lookup("start_date");
-    int period = param_cfg.lookup("period");
     Dater dt;
+    std::string start_date = param_cfg.lookup("start_date");
+    if (start_date == "today") {
+      start_date = dt.GetDate();
+    }
+    if (start_date == "yesterday") {
+      start_date = dt.GetDate("", -1);
+    }
+    int period = param_cfg.lookup("period");
     std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
     // PrintVector(file_v);
     std::cout << file_v[0] << "\n";

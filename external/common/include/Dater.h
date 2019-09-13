@@ -19,6 +19,7 @@ class Dater {
   std::vector<std::string> GetDataFilesNameByDate(const std::string & start_date, int num_days, bool reverse = false) const;
   std::string GetCurrentDate() const;
   std::string GetValidFile(const std::string & start_date, int num_days = 20) const;
+  std::string GetDate(std::string start_date = "", int diff = 0) const;
  private:
   std::string TransDateFormat(const std::string & date, char split_c = '-') const;
   bool CheckDateLegal(const std::string & year, const std::string & month, const std::string & day) const;
