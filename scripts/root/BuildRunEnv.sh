@@ -27,8 +27,8 @@ fi
 cd /running/$date_string
 
 cd ~/deploy
-cp -f ctpdata ctporder strat easy_strat mid_data order_proxy data_proxy getins simplearb /running/$date_string/bin/
-cp -f BuildRunEnv.sh stop.sh  StartData.sh StartOrder.sh StartStrat.sh StartData_night.sh StartOrder_night.sh StartStrat_night.sh StartSimpleArb.sh StartSimpleArb_night.sh zip_data.sh /running/$date_string/scripts/
+cp -f ctpdata ctporder strat easy_strat mid_data order_proxy data_proxy getins simplearb backtest /running/$date_string/bin/
+cp -f BuildRunEnv.sh stop.sh  StartData.sh StartOrder.sh StartStrat.sh StartData_night.sh StartOrder_night.sh StartStrat_night.sh StartSimpleArb.sh StartSimpleArb_night.sh StartBacktest.sh zip_data.sh /running/$date_string/scripts/
 cp -f instruments.conf /running/$date_string
 cp -f libcommontools.so /usr/local/lib
 
