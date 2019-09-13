@@ -82,9 +82,9 @@ int main() {
   std::string default_path = GetDefaultPath();
   libconfig::Config param_cfg;
   libconfig::Config contract_cfg;
-  std::string config_path = default_path + "/hft/config/backtest/backtest.config";
-  std::string contract_config_path = default_path + "/hft/config/backtest/contract.config";
-  printf("path is %s\n", config_path.c_str());
+  std::string config_path = default_path + "/hft/config/prod/prod.config";
+  std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
+  // printf("config path is %s\n", config_path.c_str());
   param_cfg.readFile(config_path.c_str());
   contract_cfg.readFile(contract_config_path.c_str());
   const libconfig::Setting &sleep_time = param_cfg.lookup("time_controller")["sleep_time"];

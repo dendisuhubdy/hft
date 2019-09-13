@@ -19,10 +19,8 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Se
   try {
     std::string unique_name = param_setting["unique_name"];
     m_strat_name = unique_name;
-    std::string ticker1 = param_setting["pairs"][0];
-    std::string ticker2 = param_setting["pairs"][1];
     std::vector<std::string> v = ct.GetTicker(unique_name);
-    PrintVector(v);
+    // PrintVector(v);
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];
@@ -33,7 +31,6 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Se
     printf("[%s, %s] mpv is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), min_price_move);
     min_profit = m_p * min_price_move;
     min_range = m_r * min_price_move;
-    // current_spread = 0.0;
     double add_margin = param_setting["add_margin"];
     increment = add_margin*min_price_move;
     double spread_threshold_int = param_setting["spread_threshold"];

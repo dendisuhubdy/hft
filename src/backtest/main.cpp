@@ -129,7 +129,7 @@ int main() {
   libconfig::Config param_cfg;
   libconfig::Config contract_cfg;
   std::string param_config_path = default_path + "/hft/config/backtest/backtest.config";
-  std::string contract_config_path = default_path + "/hft/config/backtest/contract.config";
+  std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
   param_cfg.readFile(param_config_path.c_str());
   contract_cfg.readFile(contract_config_path.c_str());
   try {
