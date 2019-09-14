@@ -282,7 +282,6 @@ int main() {
             if ((shot->time.tv_sec+8*3600) % (24*3600) >= 15*3600-10 && !is_cut) {
               for (auto v : sv) {
                 v->Clear();
-                v->UpdateCT(ct);
               }
               is_cut = true;
             }
@@ -310,7 +309,6 @@ int main() {
             if ((shot.time.tv_sec+8*3600) % (24*3600) >= 15*3600-10 && !is_cut) {
               for (auto v : sv) {
                 v->Clear();
-                v->UpdateCT(ct);
               }
               is_cut = true;
             }
