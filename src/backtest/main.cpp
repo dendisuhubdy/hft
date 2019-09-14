@@ -273,10 +273,18 @@ int main() {
           }
           unsigned char buf[SIZE_OF_SNAPSHOT];
           MarketSnapshot* shot;
+          bool is_cut = false;
           while (gzread(gzfp, buf, sizeof(*shot)) > 0) {
             shot = reinterpret_cast<MarketSnapshot*>(buf);
             if (!shot->IsGood()) {
               continue;
+            }
+            if ((shot->time.tv_sec+8*3600) % (24*3600) >= 15*3600-10 && !is_cut) {
+              for (auto v : sv) {
+                v->Clear();
+                v->UpdateCT(ct);
+              }
+              is_cut = true;
             }
             ct.UpdateByShot(*shot);
             shot->is_initialized = true;
@@ -294,9 +302,17 @@ int main() {
             continue;
           }
           MarketSnapshot shot;
+          bool is_cut = false;
           while (raw_file.read(reinterpret_cast<char *>(&shot), sizeof(shot))) {
             if (!shot.IsGood()) {
               continue;
+            }
+            if ((shot.time.tv_sec+8*3600) % (24*3600) >= 15*3600-10 && !is_cut) {
+              for (auto v : sv) {
+                v->Clear();
+                v->UpdateCT(ct);
+              }
+              is_cut = true;
             }
             ct.UpdateByShot(shot);
             // data_sender->Send(shot.Copy().c_str());

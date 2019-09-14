@@ -85,10 +85,10 @@ class BaseStrategy {
   StrategyStatus::Enum ss;
   std::unordered_map<std::string, bool> ticker_map;
   MarketSnapshot last_shot;
-  bool init_ticker;
   long int build_position_time;
   int max_holding_sec;
   Contractor m_ct;
+  bool init_ticker;
  private:
   virtual void DoOperationAfterCancelled(Order* o);
   virtual void Run() = 0;
