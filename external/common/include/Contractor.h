@@ -43,6 +43,7 @@ class Contractor {
   void LoadFile(std::string file_path);
 
   void GenConCSV();
+  void EnReady();
  private:
   void CheckReady();
   void create_file(std::string file_name);

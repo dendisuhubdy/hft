@@ -9,6 +9,7 @@
 #include "useful_function.h"
 #include "time_status.h"
 #include <unordered_map>
+#include <time.h>
 #include <sys/time.h>
 
 #include <cmath>
@@ -34,6 +35,7 @@ class TimeController {
   void StartTimer();
   void EndTimer(const std::string & label="");
   int GetStratSec(timeval t = {0, 0}) const;
+  std::string TimeToStr(timeval t = {0, 0}, bool show_time = false) const;
 
  private:
   int last_sec;

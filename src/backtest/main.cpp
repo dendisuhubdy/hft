@@ -8,6 +8,7 @@
 #include <recver.h>
 #include <sender.h>
 #include <Dater.h>
+#include <pthread.h>
 #include <Contractor.h>
 #include <market_snapshot.h>
 #include <common_tools.h>
@@ -91,7 +92,7 @@ void Load_history(std::string file_name) {
   std::ifstream raw_file;
   raw_file.open(file_name.c_str(), ios::in|ios::binary);
   if (!raw_file) {
-    printf("%s is not existed!", file_name.c_str());
+    printf("%s is not existed!\n", file_name.c_str());
     return;
   }
   MarketSnapshot shot;
@@ -110,7 +111,6 @@ void* RunCommandListener(void *param) {
   while (true) {
     MarketSnapshot shot;
     shot = recver.Recv(shot);
-    printf("command recved!\n");
     shot.Show(stdout);
     std::string ticker = Split(shot.ticker, "|").front();
     if (ticker == "load_history") {
@@ -225,9 +225,6 @@ int main() {
       }
     }
     sleep(1);
-    // sv.back()->SendPlainText("param_config_path", param_config_path);
-    // sv.back()->SendPlainText("contract_config_path", contract_config_path);
-    // const libconfig::Setting & file_set = param_cfg.lookup("data_file");
     Dater dt;
     std::string start_date = param_cfg.lookup("start_date");
     if (start_date == "today") {
@@ -238,11 +235,8 @@ int main() {
     }
     int period = param_cfg.lookup("period");
     std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
-    // PrintVector(file_v);
-    std::cout << file_v[0] << "\n";
-    std::cout << "valid date is " << dt.GetValidFile(start_date, -40) << "\n";
     Contractor ct(dt.GetValidFile(start_date, -40));
-    PrintVector(ct.GetAllTick());
+    // PrintVector(ct.GetAllTick());
     std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp"));
     std::vector<BaseStrategy*> sv;
     // while (true) {
@@ -259,11 +253,11 @@ int main() {
       }
       tc.StartTimer();
       for (auto file_name : file_v) {
-        for (auto v : sv) {
-          v->Clear();
-          v->UpdateCT(ct);
+        printf("This file's tsm");
+        for (auto a:ticker_strat_map) {
+          cout << a.first << " ";
         }
-        printf("handling %s\n", file_name.c_str());
+        printf("\n");
         std::string file_mode = Split(file_name, ".").back();
         if (file_mode == "gz") {
           gzFile gzfp = gzopen(file_name.c_str(), "rb");
@@ -271,6 +265,7 @@ int main() {
             printf("gzfile open failed!%s\n", file_name.c_str());
             continue;
           }
+          printf("handling %s\n", file_name.c_str());
           unsigned char buf[SIZE_OF_SNAPSHOT];
           MarketSnapshot* shot;
           bool is_cut = false;
@@ -279,13 +274,16 @@ int main() {
             if (!shot->IsGood()) {
               continue;
             }
+            ct.UpdateByShot(*shot);
+            if (ticker_strat_map.find(shot->ticker) == ticker_strat_map.end()) {
+              continue;
+            }
             if ((shot->time.tv_sec+8*3600) % (24*3600) >= 15*3600-10 && !is_cut) {
               for (auto v : sv) {
                 v->Clear();
               }
               is_cut = true;
             }
-            ct.UpdateByShot(*shot);
             shot->is_initialized = true;
             std::vector<BaseStrategy*> ticker_sv = ticker_strat_map[shot->ticker];
             for (auto v : ticker_sv) {
@@ -297,13 +295,18 @@ int main() {
           std::ifstream raw_file;
           raw_file.open(file_name.c_str(), ios::in|ios::binary);
           if (!raw_file) {
-            printf("%s is not existed!", file_name.c_str());
+            printf("%s is not existed!\n", file_name.c_str());
             continue;
           }
+          printf("handling %s\n", file_name.c_str());
           MarketSnapshot shot;
           bool is_cut = false;
           while (raw_file.read(reinterpret_cast<char *>(&shot), sizeof(shot))) {
             if (!shot.IsGood()) {
+              continue;
+            }
+            ct.UpdateByShot(shot);
+            if (ticker_strat_map.find(shot.ticker) == ticker_strat_map.end()) {
               continue;
             }
             if ((shot.time.tv_sec+8*3600) % (24*3600) >= 15*3600-10 && !is_cut) {
@@ -312,7 +315,6 @@ int main() {
               }
               is_cut = true;
             }
-            ct.UpdateByShot(shot);
             // data_sender->Send(shot.Copy().c_str());
             shot.is_initialized = true;
             std::vector<BaseStrategy*> ticker_sv = ticker_strat_map[shot.ticker];
@@ -323,7 +325,15 @@ int main() {
           raw_file.close();
         } else {
           printf("unknown file_mode %s\n", file_name.c_str());
+          continue;
         }
+        for (auto v : sv) {
+          v->Clear();
+          v->UpdateCT(ct);
+          v->UpdateTicker();
+        }
+        ct.Clear();
+        ct.EnReady();
       }
       tc.EndTimer();
       printf("repeat!!!!\n");

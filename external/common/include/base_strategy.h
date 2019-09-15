@@ -43,6 +43,7 @@ class BaseStrategy {
   void debug() const;
   double GetMid(const std::string & ticker);
   void UpdateCT(const Contractor& ct);
+  virtual void UpdateTicker();
   virtual void HandleCommand(const MarketSnapshot& shot);
  protected:
   void UpdateAvgCost(const std::string & contract, double trade_price, int size);
@@ -66,11 +67,11 @@ class BaseStrategy {
   bool position_ready;
   Sender* order_sender;
   Sender* ui_sender;
-  ::unordered_map<std::string, MarketSnapshot> shot_map;
-  ::unordered_map<std::string, Order*> order_map;
-  ::unordered_map<std::string, Order*> sleep_order_map;
-  ::unordered_map<std::string, int> position_map;
-  ::unordered_map<std::string, double> avgcost_map;
+  unordered_map<std::string, MarketSnapshot> shot_map;
+  unordered_map<std::string, Order*> order_map;
+  unordered_map<std::string, Order*> sleep_order_map;
+  unordered_map<std::string, int> position_map;
+  unordered_map<std::string, double> avgcost_map;
   int ref_num;
   pthread_mutex_t cancel_mutex;
   pthread_mutex_t order_ref_mutex;

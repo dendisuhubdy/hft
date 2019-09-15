@@ -31,6 +31,7 @@ class Strategy : public BaseStrategy {
 
   void Clear() override;
   void HandleCommand(const MarketSnapshot& shot) override;
+  void UpdateTicker() override;
  private:
   void ClearPositionRecord();
   void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
@@ -82,6 +83,7 @@ class Strategy : public BaseStrategy {
   double min_price_move;
 
   TimeController this_tc;
+  std::unordered_map<std::string, std::vector<BaseStrategy*> >*tsm;
   int cancel_limit;
   std::unordered_map<std::string, double> mid_map;
   double up_diff;
@@ -117,6 +119,8 @@ class Strategy : public BaseStrategy {
   bool is_started;
   Sender* data_sender;
   bool no_close_today;
+  int open_count;
+  int close_count;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_
