@@ -156,7 +156,7 @@ class Listener : public CThostFtdcMdSpi {
     strncpy(request.Password, password_.c_str(), sizeof(request.Password));
 
     int result = user_api_->ReqUserLogin(&request, ++request_id_);
-    printf("Logging in as %s", user_id_.c_str());
+    printf("Logging in as %s\n", user_id_.c_str());
 
     if (result != 0) {
       printf("SendLogin failed! (%d)", result);

@@ -253,7 +253,7 @@ int main() {
       }
       tc.StartTimer();
       for (auto file_name : file_v) {
-        printf("This file's tsm");
+        printf("This file's tsm: ");
         for (auto a:ticker_strat_map) {
           cout << a.first << " ";
         }

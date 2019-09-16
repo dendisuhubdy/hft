@@ -129,6 +129,10 @@ void Strategy::Clear() {
     printf("[%s %s]not flat in %s when cleared, open_close %d %d\n",
                main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimeToStr(shot_map[main_ticker].time).c_str(),
                open_count, close_count);
+  } else {
+    printf("[%s %s] no position in %s when cleared, open %d\n",
+               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimeToStr(shot_map[main_ticker].time).c_str(),
+               open_count);
   }
   printf("[%s %s] open_close max is %d\n", main_ticker.c_str(), hedge_ticker.c_str(), open_count);
   open_count = close_count = 0;
