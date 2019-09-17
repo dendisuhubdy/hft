@@ -430,6 +430,9 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
       shot.Show(*this_strat_file);
     }
     map_vector.emplace_back(mid);  // map_vector saved the aligned mid, all the elements here are safe to trade
+    if (map_vector.size() > min_train_sample && map_vector.size() % (2*min_train_sample) == 1) {
+      CalParams();
+    }
     ui_sender->Send(shot);
   }
 }
