@@ -48,5 +48,4 @@ any questions or suggestions are welcome, please contract me with:huangxy17@fuda
 * Wei Sun: systems consultant.
 
 ### Exsiting problem:
-1. ctporder: query position interface error, because ctp changed recently. need more research
-2. ui: load history
+1. ui: load history
