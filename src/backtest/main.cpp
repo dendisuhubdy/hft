@@ -236,20 +236,29 @@ int main() {
     int period = param_cfg.lookup("period");
     std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
     Contractor ct(dt.GetValidFile(start_date, -40));
-    // PrintVector(ct.GetAllTick());
+    PrintVector(ct.GetAllTick());
     std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp"));
     std::vector<BaseStrategy*> sv;
     // while (true) {
       sv.clear();
       for (int i = 0; i < strategies.getLength(); i++) {
         const libconfig::Setting & param_setting = strategies[i];
-        std::string con = param_setting["unique_name"];
         bool no_close_today = false;
         if (param_setting.exists("no_close_today")) {
           no_close_today = param_setting["no_close_today"];
         }
-        const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
-        sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+        if (param_setting.exists("strategy_list")) {
+          const libconfig::Setting &s_list = param_setting["strategy_list"];
+          for (int j = 0; j < s_list.getLength(); j++) {
+            std::string con = s_list[j];
+            const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
+            sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+          }
+        } else {
+          std::string con = param_setting["unique_name"];
+          const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
+          sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+        }
       }
       tc.StartTimer();
       for (auto file_name : file_v) {

@@ -16,7 +16,7 @@ public:
     ThreadPool(size_t);
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args) 
-        -> std::future<typename std::result_of<F(Args...)>::type>;
+        -> std::future<typename std::result_of<F(Args...)>::type>;  // -> apparently define return type is future
     ~ThreadPool();
 private:
     // need to keep track of threads so we can join them
@@ -35,7 +35,7 @@ inline ThreadPool::ThreadPool(size_t threads)
     :   stop(false)
 {
     for(size_t i = 0;i<threads;++i)
-        workers.emplace_back(
+        workers.emplace_back(  // thread variable, emplace back just pass in a function for thread to construct
             [this]
             {
                 for(;;)
@@ -46,9 +46,11 @@ inline ThreadPool::ThreadPool(size_t threads)
                         std::unique_lock<std::mutex> lock(this->queue_mutex);
                         this->condition.wait(lock,
                             [this]{ return this->stop || !this->tasks.empty(); });
-                        if(this->stop && this->tasks.empty())
+                             // wait stop true or task not empty
+                        if(this->stop && this->tasks.empty())  // only on stop and empty task, perfect exit
                             return;
-                        task = std::move(this->tasks.front());
+                        // if only stop, still will hanle left task
+                        task = std::move(this->tasks.front());  // get the first task
                         this->tasks.pop();
                     }
 

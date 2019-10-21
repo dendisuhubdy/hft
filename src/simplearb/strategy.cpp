@@ -21,7 +21,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Se
   caler = new CALER(contract_setting);
   try {
     m_ct = ct;
-    std::string unique_name = param_setting["unique_name"];
+    std::string unique_name = contract_setting["ticker"];
     m_strat_name = unique_name;
     std::vector<std::string> v = m_ct.GetTicker(unique_name);
     // PrintVector(v);
