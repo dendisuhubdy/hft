@@ -1,8 +1,7 @@
-order_ref issue
-1. make neworder and moderateorder as a pair, using the same component - OrderPrice
-2. OrderPrice provide several modes:
-   i) Best
-   ii) Market
-   iii) NoLossBest
-   one selective parameters: edurance->bool, and a num of edurance
-3. ModerateOrder as one function, parmater list->(map, mode, bool, int)
+1.order show still be 4k align, even use flush every time
+2.encapsulate config handler
+3.deconstructor release resource
+4.backtest framework need simlify
+5.Data interface
+6.Time performance test
+7.more complex backtest function in
