@@ -496,11 +496,11 @@ void Strategy::ModerateOrders(const std::string & contract) {
           continue;
         }
         if (ticker == main_ticker) {
-          CancelOrder(o);
           printf("[%s %s]Abandon this oppounity because main ticker price change %lf->%lf mpv=%lf\n", main_ticker.c_str(), hedge_ticker.c_str(), o->price, reasonable_price, min_price_move);
+          CancelOrder(o);
         } else if (ticker == hedge_ticker) {
-          ModOrder(o);
           printf("[%s %s]Slip point for :modify %s order %s: %lf->%lf mpv=%lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(o->side), o->order_ref, o->price, reasonable_price, min_price_move);
+          ModOrder(o);
         } else {
           continue;
         }
