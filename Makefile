@@ -36,14 +36,14 @@ ctporder:
 getins:
 	$(WAF) configure getins $(PARAMS)
 
-arbmaker:
-	$(WAF) configure arbmaker $(PARAMS)
-
 simplemaker:
 	$(WAF) configure simplemaker $(PARAMS)
 
 simplearb:
 	$(WAF) configure simplearb $(PARAMS)
+
+newsimplearb:
+	$(WAF) configure newsimplearb $(PARAMS)
 
 demostrat:
 	$(WAF) configure demostrat $(PARAMS)

@@ -142,7 +142,7 @@ class Listener : public CThostFtdcMdSpi {
       snapshot.Show(data_file, 5);
     }
     if (record_binary) {
-      snapshot.Show(binary_file, 5);
+      SaveBin(binary_file, snapshot);
     }
   }
 

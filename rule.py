@@ -49,12 +49,12 @@ class ctporder_class(BuildContext):
   cmd = "ctporder"
 class getins_class(BuildContext):
   cmd = "get_ins"
-class arbmaker_class(BuildContext):
-  cmd = "arbmaker"
 class simplemaker_class(BuildContext):
   cmd = "simplemaker"
 class simplearb_class(BuildContext):
   cmd = "simplearb"
+class newsimplearb_class(BuildContext):
+  cmd = "newsimplearb"
 class backtest_class(BuildContext):
   cmd = "backtest"
 class dt_class(BuildContext):
@@ -107,14 +107,14 @@ def build(bld):
   if bld.cmd == "getins":
     run_getins(bld)
     return
-  if bld.cmd == "arbmaker":
-    run_arbmaker(bld)
-    return
   if bld.cmd == "simplemaker":
     run_simplemaker(bld)
     return
   if bld.cmd == "simplearb":
     run_simplearb(bld)
+    return
+  if bld.cmd == "newsimplearb":
+    run_newsimplearb(bld)
     return
   if bld.cmd == "backtest":
     run_backtest(bld)
@@ -242,17 +242,6 @@ def run_getins(bld):
     use = 'zmq commontools thosttraderapi pthread config++'
   )
 
-def run_arbmaker(bld):
-  bld.read_shlib('zmq', paths=['external/zeromq/lib'])
-  bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/arbmaker',
-    source = ['src/arbmaker/main.cpp',
-              'src/arbmaker/strategy.cpp'],
-    includes = ['external/zeromq/include'],
-    use = 'zmq commontools pthread config++'
-  )
-
 def run_simplemaker(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
   bld.program(
@@ -276,6 +265,19 @@ def run_simplearb(bld):
                 'external/zeromq/include'
                ],
     use = 'zmq commontools pthread config++' # simplearb'
+  )
+
+def run_newsimplearb(bld):
+  bld.read_shlib('commontools', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/newsimplearb',
+    source = ['src/newsimplearb/main.cpp',
+              'src/newsimplearb/strategy.cpp'
+             ],
+    includes = [
+                'external/zeromq/include'
+               ],
+    use = 'zmq commontools pthread config++' # newsimplearb'
   )
 
 def run_backtest(bld):
@@ -363,8 +365,8 @@ def run_all(bld):
   run_ctpdata(bld)
   run_ctporder(bld)
   run_getins(bld)
-  #run_arbmaker(bld)
   run_simplearb(bld)
+  run_newsimplearb(bld)
   run_backtest(bld)
   run_dt(bld)
   #run_new_backtest(bld)

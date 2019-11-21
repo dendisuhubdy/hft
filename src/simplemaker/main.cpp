@@ -29,8 +29,8 @@ void* RunExchangeListener(void *param) {
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
-    info = recver.Recv(info);
-    std::vector<BaseStrategy*> sv = (*sv_map)[info.contract];
+    recver.Recv(info);
+    std::vector<BaseStrategy*> sv = (*sv_map)[info.ticker];
     for (auto v : sv) {
       v->UpdateExchangeInfo(info);
     }
@@ -79,7 +79,7 @@ int main() {
   printf("send query position ok!\n");
   while (true) {
     MarketSnapshot shot;
-    shot = data_recver.Recv(shot);
+    data_recver.Recv(shot);
     shot.is_initialized = true;
     std::vector<BaseStrategy*> sv = ticker_strat_map[shot.ticker];
     for (auto v : sv) {

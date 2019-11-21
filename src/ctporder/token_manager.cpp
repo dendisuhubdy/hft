@@ -38,34 +38,34 @@ void TokenManager::Restore(Order order) {
   CloseType t = ref_close[ctporderref];
   if (order.side == OrderSide::Buy) {
     pthread_mutex_lock(&token_mutex);
-    yes_buy_token[order.contract] += t.yes_size;
-    buy_token[order.contract] += t.tod_size;
+    yes_buy_token[order.ticker] += t.yes_size;
+    buy_token[order.ticker] += t.tod_size;
     pthread_mutex_unlock(&token_mutex);
   } else {
     pthread_mutex_lock(&token_mutex);
-    yes_sell_token[order.contract] += t.yes_size;
-    sell_token[order.contract] += t.tod_size;
+    yes_sell_token[order.ticker] += t.yes_size;
+    sell_token[order.ticker] += t.tod_size;
     pthread_mutex_unlock(&token_mutex);
   }
 }
 
-void TokenManager::RegisterToken(std::string contract, int num, OrderSide::Enum side) {
+void TokenManager::RegisterToken(std::string ticker, int num, OrderSide::Enum side) {
   // TODO(nick): add lock
-  printf("Register token %s %s %d\n", contract.c_str(), OrderSide::ToString(side), num);
+  printf("Register token %s %s %d\n", ticker.c_str(), OrderSide::ToString(side), num);
   if (side == OrderSide::Buy) {
-    sell_token[contract] += num;
+    sell_token[ticker] += num;
   } else {
-    buy_token[contract] += num;
+    buy_token[ticker] += num;
   }
 }
 
-void TokenManager::RegisterYesToken(std::string contract, int num, OrderSide::Enum side) {
+void TokenManager::RegisterYesToken(std::string ticker, int num, OrderSide::Enum side) {
   // TODO(nick): add lock
-  printf("Register yesterday token %s %s %d\n", contract.c_str(), OrderSide::ToString(side), num);
+  printf("Register yesterday token %s %s %d\n", ticker.c_str(), OrderSide::ToString(side), num);
   if (side == OrderSide::Buy) {
-    yes_sell_token[contract] += num;
+    yes_sell_token[ticker] += num;
   } else {
-    yes_buy_token[contract] += num;
+    yes_buy_token[ticker] += num;
   }
 }
 
@@ -112,17 +112,17 @@ Order TokenManager::GetOrder(int ctp_order_ref) {
 }
 
 CloseType TokenManager::CheckOffset(Order order) {
-  printf("check offset for order %s: size is %d, side is %s, and token is: buy %d, sell %d, yesbuy %d, yessell %d\n", order.order_ref, order.size, OrderSide::ToString(order.side), buy_token[order.contract], sell_token[order.contract], yes_buy_token[order.contract], yes_sell_token[order.contract]);
+  printf("check offset for order %s: size is %d, side is %s, and token is: buy %d, sell %d, yesbuy %d, yessell %d\n", order.order_ref, order.size, OrderSide::ToString(order.side), buy_token[order.ticker], sell_token[order.ticker], yes_buy_token[order.ticker], yes_sell_token[order.ticker]);
   int ctp_order_ref = GetCtpId(order);
   int pos;
   int yes_pos;
   CloseType t;
   if (order.side == OrderSide::Buy) {
-    pos = buy_token[order.contract];
-    yes_pos = yes_buy_token[order.contract];
+    pos = buy_token[order.ticker];
+    yes_pos = yes_buy_token[order.ticker];
   } else if (order.side == OrderSide::Sell) {
-    pos = sell_token[order.contract];
-    yes_pos = yes_sell_token[order.contract];
+    pos = sell_token[order.ticker];
+    yes_pos = yes_sell_token[order.ticker];
   } else {
     printf("token unknown side!\n");
     exit(1);
@@ -144,13 +144,13 @@ CloseType TokenManager::CheckOffset(Order order) {
   }
   if (order.side == OrderSide::Buy) {
     pthread_mutex_lock(&token_mutex);
-    yes_buy_token[order.contract] -= t.yes_size;
-    buy_token[order.contract] -= t.tod_size;
+    yes_buy_token[order.ticker] -= t.yes_size;
+    buy_token[order.ticker] -= t.tod_size;
     pthread_mutex_unlock(&token_mutex);
   } else {
     pthread_mutex_lock(&token_mutex);
-    yes_sell_token[order.contract] -= t.yes_size;
-    sell_token[order.contract] -= t.tod_size;
+    yes_sell_token[order.ticker] -= t.yes_size;
+    sell_token[order.ticker] -= t.tod_size;
     pthread_mutex_unlock(&token_mutex);
   }
   ref_close[ctp_order_ref] = t;
@@ -163,13 +163,13 @@ void TokenManager::HandleFilled(Order o) {
   printf("tokenmanager handling filled order %s, isclose is %d\n", o.order_ref, is_close[ctp_order_ref]);
   if (o.side == OrderSide::Buy && !is_close[ctp_order_ref] && !is_yes_close[ctp_order_ref]) {
     pthread_mutex_lock(&token_mutex);
-    sell_token[o.contract] += o.size;
-    printf("sell token added for %s, now is %d\n", o.contract, sell_token[o.contract]);
+    sell_token[o.ticker] += o.size;
+    printf("sell token added for %s, now is %d\n", o.ticker, sell_token[o.ticker]);
     pthread_mutex_unlock(&token_mutex);
   } else if (o.side == OrderSide::Sell && !is_close[ctp_order_ref] && !is_yes_close[ctp_order_ref]) {
     pthread_mutex_lock(&token_mutex);
-    buy_token[o.contract] += o.size;
-    printf("buy token added for %s, now is %d\n", o.contract, buy_token[o.contract]);
+    buy_token[o.ticker] += o.size;
+    printf("buy token added for %s, now is %d\n", o.ticker, buy_token[o.ticker]);
     pthread_mutex_unlock(&token_mutex);
   } else {
     // printf("unknown side!listener 251\n");
@@ -182,25 +182,25 @@ void TokenManager::HandleCancelled(Order o) {
   if (o.side == OrderSide::Buy) {
     if (is_close[ctp_order_ref]) {
       pthread_mutex_lock(&token_mutex);
-      buy_token[o.contract] += o.size;
-      printf("cancel buy token added for %s, now is %d\n", o.contract, buy_token[o.contract]);
+      buy_token[o.ticker] += o.size;
+      printf("cancel buy token added for %s, now is %d\n", o.ticker, buy_token[o.ticker]);
       pthread_mutex_unlock(&token_mutex);
     } else if (is_yes_close[ctp_order_ref]) {
       pthread_mutex_lock(&token_mutex);
-      yes_buy_token[o.contract] += o.size;
-      printf("cancel yesbuy token added for %s, now is %d\n", o.contract, yes_buy_token[o.contract]);
+      yes_buy_token[o.ticker] += o.size;
+      printf("cancel yesbuy token added for %s, now is %d\n", o.ticker, yes_buy_token[o.ticker]);
       pthread_mutex_unlock(&token_mutex);
     }
   } else if (o.side == OrderSide::Sell) {
     if (is_close[ctp_order_ref]) {
       pthread_mutex_lock(&token_mutex);
-      sell_token[o.contract] += o.size;
-      printf("cancel sell token added for %s, now is %d\n", o.contract, sell_token[o.contract]);
+      sell_token[o.ticker] += o.size;
+      printf("cancel sell token added for %s, now is %d\n", o.ticker, sell_token[o.ticker]);
       pthread_mutex_unlock(&token_mutex);
     } else if (is_yes_close[ctp_order_ref]) {
       pthread_mutex_lock(&token_mutex);
-      yes_sell_token[o.contract] += o.size;
-      printf("cancel yessell token added for %s, now is %d\n", o.contract, yes_sell_token[o.contract]);
+      yes_sell_token[o.ticker] += o.size;
+      printf("cancel yessell token added for %s, now is %d\n", o.ticker, yes_sell_token[o.ticker]);
       pthread_mutex_unlock(&token_mutex);
     }
   } else {

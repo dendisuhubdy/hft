@@ -8,6 +8,7 @@
 #include <market_snapshot.h>
 #include <common_tools.h>
 #include <base_strategy.h>
+#include <thread>
 #include <unordered_map>
 
 #include <iostream>
@@ -42,7 +43,7 @@ void Load_history(std::string file_name) {
   printf("Load_history finished!\n");
 }
 
-void* RunCommandListener(void *param) {
+void RunCommandListener(void *param) {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
   Recver recver("*:33334", "tcp", "bind");
   while (true) {
@@ -60,7 +61,7 @@ void* RunCommandListener(void *param) {
       v->HandleCommand(shot);
     }
   }
-  return NULL;
+  // return NULL;
 }
 
 void* RunExchangeListener(void *param) {
@@ -139,6 +140,7 @@ int main() {
   }
 
   printf("strategy init all ok!\n");
+  /*
   pthread_t command_thread;
   if (pthread_create(&command_thread,
                      NULL,
@@ -147,6 +149,8 @@ int main() {
     perror("command_pthread_create");
     exit(1);
   }
+  */
+  std::thread(RunCommandListener, &ticker_strat_map);
 
   pthread_t exchange_thread;
   if (pthread_create(&exchange_thread,

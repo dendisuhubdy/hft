@@ -44,10 +44,6 @@ struct MarketSnapshot {
     }
   }
 
-  void Show(std::ofstream &stream, int depth = MARKET_DATA_DEPTH) const {
-    stream.write((char*)this, sizeof(*this));
-  }
-
   void ShowCsv(FILE* stream, int depth = MARKET_DATA_DEPTH) const {
     char time_s[32];
     snprintf(time_s, sizeof(time_s), "%ld.%ld", time.tv_sec, time.tv_usec);

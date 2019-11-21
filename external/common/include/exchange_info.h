@@ -11,7 +11,7 @@
 
 struct ExchangeInfo {
   InfoType::Enum type;
-  char contract[MAX_CONTRACT_LENGTH];
+  char ticker[MAX_CONTRACT_LENGTH];
   char order_ref[MAX_ORDERREF_SIZE];
   int trade_size;
   double trade_price;
@@ -23,17 +23,13 @@ struct ExchangeInfo {
       trade_price(-1) {
   }
 
-  void Show(std::ofstream &stream) const {
-    stream.write((char*)this, sizeof(*this));
-  }
-
   void ShowCsv(FILE* stream) const {
     /*
     char time_s[32];
     snprintf(time_s, sizeof(time_s), "%ld.%ld", time.tv_sec, time.tv_usec);
     double time_sec = atof(time_s);
     */
-    fprintf(stream, "%s,%s,%s,%d,%lf,%s,%s\n", InfoType::ToString(type),contract,order_ref,trade_size,trade_price,reason,OrderSide::ToString(side));
+    fprintf(stream, "%s,%s,%s,%d,%lf,%s,%s\n", InfoType::ToString(type),ticker,order_ref,trade_size,trade_price,reason,OrderSide::ToString(side));
   }
 
   void Show(FILE* stream) const {
@@ -42,7 +38,7 @@ struct ExchangeInfo {
     fprintf(stream, "%ld %06ld exchangeinfo %s |",
             time.tv_sec, time.tv_usec, order_ref);
 
-    fprintf(stream, " %lf@%d %s %s %s\n", trade_price, trade_size, InfoType::ToString(type), contract, OrderSide::ToString(side));
+    fprintf(stream, " %lf@%d %s %s %s\n", trade_price, trade_size, InfoType::ToString(type), ticker, OrderSide::ToString(side));
   }
 };
 

@@ -26,7 +26,7 @@ void* RunExchangeListener(void *param) {
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
-    info = recver.Recv(info);
+    recver.Recv(info);
     st->UpdateExchangeInfo(info);
   }
   return NULL;
@@ -50,7 +50,7 @@ int main() {
   }
   while (true) {
     MarketSnapshot shot;
-    shot = data_recver.Recv(shot);
+    data_recver.Recv(shot);
     // shot.Show(stdout, 1);
     shot.is_initialized = true;
     // ExecuteStrat(shot);

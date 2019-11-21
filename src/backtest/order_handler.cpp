@@ -6,7 +6,7 @@
 
 OrderHandler::OrderHandler() {
   sender = new Sender("exchange_info");
-  caler = new CALER("/root/hft/config/backtest/contract.config");
+  caler = new CALER("/root/hft/config/backtest/ticker.config");
 }
 
 OrderHandler::~OrderHandler() {
@@ -16,11 +16,11 @@ OrderHandler::~OrderHandler() {
 
 bool OrderHandler::Handle(const Order & order) {
   if (order.action == OrderAction::PlainText) {
-    std::string flag = order.contract;
+    std::string flag = order.ticker;
     std::string tbd = order.tbd;
     if (flag == "param_config_path") {
       HandleConfig(order);
-    } else if (flag == "contract_config_path") {
+    } else if (flag == "ticker_config_path") {
       order.Show(record_file);
       HandleContractConfig(order);
     } else if (flag == "data_path") {
@@ -80,8 +80,8 @@ void OrderHandler::HandleConfig(const Order & order) {
       std::string ticker2 = setting["pairs"][1];
       main_ticker = ticker1;
       hedge_ticker = ticker2;
-      contract_strat_map[ticker1] = unique_name;
-      contract_strat_map[ticker2] = unique_name;
+      ticker_strat_map[ticker1] = unique_name;
+      ticker_strat_map[ticker2] = unique_name;
     }
     std::string output_file = cfg.lookup("backtest_out_file");
     record_file = fopen(output_file.c_str(), "w");
@@ -117,7 +117,7 @@ void OrderHandler::HandleContractConfig(const Order & order) {
       std::string ticker = setting["ticker"];
       min_price_move_map[ticker] = setting["min_price_move"];
       deposit_rate_map[ticker] = setting["deposit_rate"];
-      contract_size_map[ticker] = setting["contract_size"];
+      ticker_size_map[ticker] = setting["ticker_size"];
       is_fixed_open_fee_rate_map[ticker] = setting["is_fixed_open_fee_rate"];
       if (is_fixed_open_fee_rate_map[ticker]) {
         open_fee_map[ticker] = setting["open_fee"];
@@ -152,7 +152,7 @@ void OrderHandler::HandleContractConfig(const Order & order) {
 void OrderHandler::SendFakeFilledInfoBack(const Order & order) {
   ExchangeInfo exchangeinfo;
   exchangeinfo.side = order.side;
-  snprintf(exchangeinfo.contract, sizeof(exchangeinfo.contract), "%s", order.contract);
+  snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", order.ticker);
   snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", order.order_ref);
   exchangeinfo.type = InfoType::Filled;
   exchangeinfo.trade_price = order.price;
@@ -163,8 +163,8 @@ void OrderHandler::SendFakeFilledInfoBack(const Order & order) {
 
 void OrderHandler::HandleNew(const Order & order) {
   SendFakeFilledInfoBack(order);
-  std::string ticker = order.contract;
-  std::string product = contract_strat_map[order.contract];
+  std::string ticker = order.ticker;
+  std::string product = ticker_strat_map[order.ticker];
   order.Show(record_file);
   order.Show(stdout);
   // int pre_pos = current_pos_map[ticker];
@@ -179,7 +179,7 @@ void OrderHandler::HandleNew(const Order & order) {
     Fee f = caler->CalFee(ticker, avgcost_map[ticker], current_pos_map[ticker]-trade_size, order.price, order.size);
     fee = f.close_fee + f.open_fee;
     // update pnl
-    double gross_pnl = (avgcost_map[ticker] - order.price) * trade_size*contract_size_map[product];
+    double gross_pnl = (avgcost_map[ticker] - order.price) * trade_size*ticker_size_map[product];
     product_gross_pnl_map[product] += gross_pnl;
     gross_pnl_map[ticker] += gross_pnl;
     double net_pnl = gross_pnl - fee;
@@ -189,12 +189,12 @@ void OrderHandler::HandleNew(const Order & order) {
       avgcost_map[ticker] = 0.0;
     }
     printf("close %d %s open_fee:%lf, close_fee:%lf\n", trade_size, ticker.c_str(), f.open_fee, f.close_fee);
-    // printf("%s close_fee %lf,size = %d,price=%lf,deposit=%lf,close_rate=%lf,con_size=%d\n", ticker.c_str(), fee, order.size, order.price, deposit_rate_map[product], close_today_fee_rate_map[product], contract_size_map[product]);
+    // printf("%s close_fee %lf,size = %d,price=%lf,deposit=%lf,close_rate=%lf,con_size=%d\n", ticker.c_str(), fee, order.size, order.price, deposit_rate_map[product], close_today_fee_rate_map[product], ticker_size_map[product]);
     fee_map[ticker] += f.close_fee;
   } else {
     Fee f = caler->CalFee(ticker, order.price, order.size, 0, 0);
     printf("open %d %s open_fee:%lf\n", trade_size, ticker.c_str(), f.open_fee);
-    // printf("%s open_fee %lf,size = %d,price=%lf,deposit=%lf,close_rate=%lf,con_size=%d\n", ticker.c_str(), fee, order.size, order.price, deposit_rate_map[product], open_fee_rate_map[product], contract_size_map[product]);
+    // printf("%s open_fee %lf,size = %d,price=%lf,deposit=%lf,close_rate=%lf,con_size=%d\n", ticker.c_str(), fee, order.size, order.price, deposit_rate_map[product], open_fee_rate_map[product], ticker_size_map[product]);
     fee_map[ticker] += f.open_fee;
   }
   // gross_pnl_map[ticker] -= fee;
@@ -251,17 +251,17 @@ void OrderHandler::GenBackTestReport() {
 /*
 Fee OrderHandler::CalFee(std::string ticker, double open_price, double close_price, int close_size) {
   Fee fee;
-  std::string product = contract_strat_map[ticker];
+  std::string product = ticker_strat_map[ticker];
   double open_fee, close_fee;
   if (is_fixed_open_fee_rate_map[product]) {
     open_fee = open_fee_map[product] * abs(close_size);
   } else {
-    open_fee = open_fee_rate_map[product] * open_price * abs(close_size) * contract_size_map[product];
+    open_fee = open_fee_rate_map[product] * open_price * abs(close_size) * ticker_size_map[product];
   }
   if (is_fixed_close_today_fee_rate_map[product]) {
     close_fee = close_fee_map[product] * abs(close_size);
   } else {
-    close_fee = close_today_fee_rate_map[product] * close_price * abs(close_size) * contract_size_map[product];
+    close_fee = close_today_fee_rate_map[product] * close_price * abs(close_size) * ticker_size_map[product];
   }
   fee.open_fee = open_fee;
   fee.close_fee = close_fee;
@@ -305,7 +305,7 @@ void OrderHandler::HandleLeft() {
   // update cum_avgcost and cum_left_pos
   for (auto m : current_pos_map) {
     std::string con = m.first;
-    std::string product = contract_strat_map[con];
+    std::string product = ticker_strat_map[con];
     int thisday_pos = m.second;
     int pre_pos = cum_left_pos_map[con];
     cum_left_pos_map[con] += thisday_pos;
@@ -322,8 +322,8 @@ void OrderHandler::HandleLeft() {
         fprintf(record_file, "%s %d %d %lf %lf\n", "today left close historical pos , gross_pnl , net_pnl is ", thisday_pos, pre_pos, gross_pnl, net_pnl);
         cum_gross_pnl_map[con] += gross_pnl;
         cum_net_pnl_map[con] += net_pnl;
-        cum_product_gross_pnl_map[contract_strat_map[con]] += gross_pnl;
-        cum_product_net_pnl_map[contract_strat_map[con]] += net_pnl;
+        cum_product_gross_pnl_map[ticker_strat_map[con]] += gross_pnl;
+        cum_product_net_pnl_map[ticker_strat_map[con]] += net_pnl;
         cum_avgcost_map[con] = avgcost_map[con];
         continue;
       }
@@ -332,8 +332,8 @@ void OrderHandler::HandleLeft() {
       double net_pnl = gross_pnl - fee.open_fee - fee.close_fee;
       cum_gross_pnl_map[con] += gross_pnl;
       cum_net_pnl_map[con] += net_pnl;
-      cum_product_gross_pnl_map[contract_strat_map[con]] += gross_pnl;
-      cum_product_net_pnl_map[contract_strat_map[con]] += net_pnl;
+      cum_product_gross_pnl_map[ticker_strat_map[con]] += gross_pnl;
+      cum_product_net_pnl_map[ticker_strat_map[con]] += net_pnl;
       continue;
     } else {  // thisday_pos ==0 or pre_pos == 0: just update avg
       cum_avgcost_map[con] += avgcost_map[con];

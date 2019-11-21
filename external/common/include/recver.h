@@ -4,6 +4,7 @@
 #include <zmq.hpp>
 #include <unistd.h>
 #include <string>
+#include <memory>
 #include "exchange_info.h"
 #include "market_snapshot.h"
 #include "pricer_data.h"
@@ -18,6 +19,21 @@ class Recver {
 
   ~Recver();
 
+
+  template <typename T>
+  void Recv(T& t) {
+    /*
+    if (BUFFER_SIZE < sizeof(T)) {
+      printf("buffer size is not enough!\n");
+      exit(1);
+    }
+    */
+    void* buffer = nullptr;
+    sock.get()->recv(buffer, sizeof(T));
+    t = *reinterpret_cast<T*>(buffer); //alias-strict, use union to slove this
+  }
+
+  /*
   MarketSnapshot Recv(const MarketSnapshot& shot);
 
   Order Recv(const Order& order);
@@ -25,10 +41,11 @@ class Recver {
   ExchangeInfo Recv(const ExchangeInfo& i);
 
   PricerData Recv(const PricerData& p);
+  */
 
  private:
-  zmq::context_t* con;
-  zmq::socket_t* sock;
+  unique_ptr<zmq::context_t> con;
+  unique_ptr<zmq::socket_t> sock;
 };
 
 #endif  //  RECVER_H_

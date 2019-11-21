@@ -50,15 +50,15 @@ int main() {
       libconfig::Setting &pairs_list = strategies[i].add("pairs", libconfig::Setting::TypeList);
       // 将python返回的List逐个元素放入libconfig::Setting的pairs list中
       for (int j = 0 ; j < PyList_Size(pReturn) ; j++) {
-        char *contract = NULL;
-        PyArg_Parse(PyList_GetItem(pReturn, j), "z", &contract);
-        pairs_list.add(libconfig::Setting::TypeString) = contract;
-        return_value_prt += (std::string(contract) + " ");
+        char *ticker = NULL;
+        PyArg_Parse(PyList_GetItem(pReturn, j), "z", &ticker);
+        pairs_list.add(libconfig::Setting::TypeString) = ticker;
+        return_value_prt += (std::string(ticker) + " ");
       }
     }
     printf("unique_name:%s,return pairs:%s\n", strategies[i]["unique_name"].c_str(), pReturn == NULL ? "NULL,keep the old pairs" : return_value_prt.c_str());
   }
   cfg.writeFile(config_path.c_str());
-  printf("update active contract finished\n");
+  printf("update active ticker finished\n");
   return 1;
 }

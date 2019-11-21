@@ -92,7 +92,7 @@ void convert_data(convert_pair pair) {
     raw_file.getline(buffer, SIZE_OF_SNAPSHOT);
     MarketSnapshot shot;
     shot = HandleSnapshot(buffer);
-    shot.Show(binary_file, 5);
+    SaveBin(binary_file, shot);
   }
   printf("  convert finished %s\n", be_converted_file.c_str());
 }

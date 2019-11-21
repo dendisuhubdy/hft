@@ -17,7 +17,7 @@
 
 class Strategy {
  public:
-  Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos, double tick_size, TimeController tc, int contract_size, std::string strat_name, bool enable_stdout = true, bool enable_file = true);
+  Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos, double tick_size, TimeController tc, int ticker_size, std::string strat_name, bool enable_stdout = true, bool enable_file = true);
   ~Strategy();
 
   void Start();
@@ -27,19 +27,19 @@ class Strategy {
  private:
   bool IsReady();
   void RequestQryPos();
-  void NewOrder(std::string contract, OrderSide::Enum side, int size = 1, bool control_price = false);
+  void NewOrder(std::string ticker, OrderSide::Enum side, int size = 1, bool control_price = false);
   void ModOrder(Order* o);
   void DelOrder(std::string ref);
 
-  double OrderPrice(std::string contract, OrderSide::Enum side, bool control_price = false);
+  double OrderPrice(std::string ticker, OrderSide::Enum side, bool control_price = false);
 
   bool IsHedged();
 
   double CalBalancePrice();
 
-  bool TradeClose(std::string contract, int size);
+  bool TradeClose(std::string ticker, int size);
 
-  void UpdateAvgCost(std::string contract, double trade_price, int size);
+  void UpdateAvgCost(std::string ticker, double trade_price, int size);
 
   bool PriceChange(double current_price, double reasonable_price, OrderSide::Enum side = OrderSide::Buy);
 
@@ -77,7 +77,7 @@ class Strategy {
   double price_control;
   double edurance;
   TimeController m_tc;
-  int m_contract_size;
+  int m_ticker_size;
   std::string m_strat_name;
 };
 

@@ -19,29 +19,28 @@ bool enable_stdout = true;
 bool enable_file = true;
 
 std::unordered_map<std::string, std::string> RegisterExchange() {
-  std::unordered_map<std::string, std::vector<std::string> > exchange_contract;
-  exchange_contract["SHFE"] = {"cu", "ni", "au"};
-  exchange_contract["CFFEX"] = {"IH", "IC", "IF", "T"};
-  exchange_contract["CZCE"] = {};
-  exchange_contract["DCE"] = {};
-  std::unordered_map<std::string, std::string> contract_exchange;
-  for (auto i : exchange_contract) {
+  std::unordered_map<std::string, std::vector<std::string> > exchange_ticker;
+  exchange_ticker["SHFE"] = {"cu", "ni", "au"};
+  exchange_ticker["CFFEX"] = {"IH", "IC", "IF", "T"};
+  exchange_ticker["CZCE"] = {};
+  exchange_ticker["DCE"] = {};
+  std::unordered_map<std::string, std::string> ticker_exchange;
+  for (auto i : exchange_ticker) {
     std::vector<std::string> c_v = i.second;
     for (auto j : c_v) {
-      contract_exchange[j] = i.first;
+      ticker_exchange[j] = i.first;
     }
   }
-  return contract_exchange;
+  return ticker_exchange;
 }
 
 void* RunOrderCommandListener(void *param) {
-  // Recver* r = reinterpret_cast<Recver*>(param);
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
   Recver* r = new Recver("order_pub");
   std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
-    o = r->Recv(o);
+    r->Recv(o);
     sender.get()->Send(o);
     if (enable_stdout) {
       o.Show(stdout);

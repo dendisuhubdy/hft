@@ -38,13 +38,13 @@ void OrderHandler::HandleConfig(std::string s) {
     std::string unique_name = setting["unique_name"];
     std::string ticker1 = setting["pairs"][0];
     std::string ticker2 = setting["pairs"][1];
-    contract_strat_map[ticker1] = unique_name;
-    contract_strat_map[ticker2] = unique_name;
+    ticker_strat_map[ticker1] = unique_name;
+    ticker_strat_map[ticker2] = unique_name;
   }
 }
 
 void OrderHandler::HandleNew(const Order & order) {
-  std::string ticker = order.contract;
+  std::string ticker = order.ticker;
   order.Show(stdout);
   /*
   printf("*************Start gen***************:\n");
@@ -59,7 +59,7 @@ void OrderHandler::HandleNew(const Order & order) {
     closed_size += abs(trade_size);
     double this_pnl = (avgcost_map[ticker] - order.price) * trade_size;
     realized_pnl_map[ticker] += this_pnl;
-    strat_pnl_map[contract_strat_map[ticker]] += this_pnl;
+    strat_pnl_map[ticker_strat_map[ticker]] += this_pnl;
     if (current_pos_map[ticker] == 0) {
       avgcost_map[ticker] = 0.0;
     }

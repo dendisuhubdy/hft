@@ -4,7 +4,7 @@
 
 #include "simplemaker/strategy.h"
 
-Strategy::Strategy(const std::string & main_ticker, const std::string & hedge_ticker, int maxpos, double tick_size, TimeController tc, int contract_size, const std::string & strat_name, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, bool enable_stdout, bool enable_file)
+Strategy::Strategy(const std::string & main_ticker, const std::string & hedge_ticker, int maxpos, double tick_size, TimeController tc, int ticker_size, const std::string & strat_name, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, bool enable_stdout, bool enable_file)
   : main_ticker(main_ticker),
     hedge_ticker(hedge_ticker),
     start_pos(maxpos),
@@ -25,7 +25,7 @@ Strategy::Strategy(const std::string & main_ticker, const std::string & hedge_ti
   (*ticker_strat_map)[hedge_ticker].emplace_back(this);
   (*ticker_strat_map)["positionend"].emplace_back(this);
   pthread_mutex_init(&add_size_mutex, NULL);
-  // contract_size = contract_size;
+  // ticker_size = ticker_size;
   m_strat_name = strat_name;
   MarketSnapshot shot;
   shot_map[main_ticker] = shot;
@@ -90,15 +90,15 @@ double Strategy::CalBalancePrice() {
   return balance_price;
 }
 
-bool Strategy::TradeClose(const std::string & contract, int size) {
-  int pos = position_map[contract];
+bool Strategy::TradeClose(const std::string & ticker, int size) {
+  int pos = position_map[ticker];
   return (pos*size <= 0);
 }
 
 void Strategy::DoOperationAfterCancelled(Order* o) {
-  printf("contract %s cancel num %d!\n", o->contract, cancel_map[o->contract]);
-  if (cancel_map[o->contract] > cancel_threshhold) {
-    printf("contract %s hit cancel limit!\n", o->contract);
+  printf("ticker %s cancel num %d!\n", o->ticker, cancel_map[o->ticker]);
+  if (cancel_map[o->ticker] > cancel_threshhold) {
+    printf("ticker %s hit cancel limit!\n", o->ticker);
     ss = StrategyStatus::Stopped;
     Stop();
   }
@@ -142,7 +142,7 @@ void Strategy::AddCloseOrderSize(OrderSide::Enum side) {
   pthread_mutex_lock(&add_size_mutex);
   Order * reverse_order = NULL;
   for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
-    if (!strcmp(it->second->contract, main_ticker.c_str())) {
+    if (!strcmp(it->second->ticker, main_ticker.c_str())) {
       if (it->second->Valid() && it->second->side == side) {
         reverse_order = it->second;
         reverse_order->size++;
@@ -163,11 +163,11 @@ void Strategy::AddCloseOrderSize(OrderSide::Enum side) {
   printf("release the lock\n");
 }
 
-double Strategy::OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) {
-  if (contract == hedge_ticker) {
+double Strategy::OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) {
+  if (ticker == hedge_ticker) {
     return (side == OrderSide::Buy)?shot_map[hedge_ticker].asks[0]:shot_map[hedge_ticker].bids[0];
   }
-  // main contract
+  // main ticker
   if (control_price) {
     double return_price =  ((side == OrderSide::Buy)?shot_map[main_ticker].bids[0]-price_control:shot_map[main_ticker].asks[0]+price_control);
     printf("[%s %s]Order use price control, bid %lf, ask %lf, price control %lf, return price is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), shot_map[main_ticker].bids[0], shot_map[main_ticker].asks[0], price_control, return_price);
@@ -339,10 +339,10 @@ void Strategy::Init() {
   m_tc = &this_tc;
 }
 
-void Strategy::ModerateOrders(const std::string & contract) {
-  if (contract == main_ticker) {
+void Strategy::ModerateOrders(const std::string & ticker) {
+  if (ticker == main_ticker) {
     ModerateOrders(main_ticker, 0);
-  } else if (contract == hedge_ticker) {
+  } else if (ticker == hedge_ticker) {
     ModerateHedgeOrders();
   } else {
   }
@@ -350,7 +350,7 @@ void Strategy::ModerateOrders(const std::string & contract) {
 
 void Strategy::ModerateHedgeOrders() {
   for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
-    if (!strcmp(it->second->contract, hedge_ticker.c_str())) {
+    if (!strcmp(it->second->ticker, hedge_ticker.c_str())) {
       MarketSnapshot hedge_shot = shot_map[hedge_ticker];
       Order* o = it->second;
       if (o->Valid()) {
@@ -373,10 +373,10 @@ void Strategy::ModerateHedgeOrders() {
   }
 }
 
-void Strategy::ModerateAllValid(const std::string & contract, OrderSide::Enum side) {
+void Strategy::ModerateAllValid(const std::string & ticker, OrderSide::Enum side) {
   printf("entering moderate all valid!\n");
   for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
-    if (!strcmp(it->second->contract, contract.c_str())) {
+    if (!strcmp(it->second->ticker, ticker.c_str())) {
       Order* o = it->second;
       if (o->Valid() && o->side == side) {
         ModOrder(o);
@@ -390,9 +390,9 @@ void Strategy::ModerateAllValid(const std::string & contract, OrderSide::Enum si
   printf("exiting moderate all valid!\n");
 }
 
-void Strategy::ModerateOrders(const std::string & contract, double edurance) {
+void Strategy::ModerateOrders(const std::string & ticker, double edurance) {
   for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
-    if (!strcmp(it->second->contract, contract.c_str())) {
+    if (!strcmp(it->second->ticker, ticker.c_str())) {
       Order* o = it->second;
       if (o->Valid()) {
         if (o->side == OrderSide::Buy && !MidBuy() && IsAlign() && position_map[main_ticker] >= 0) {  // ensure it's open
@@ -402,7 +402,7 @@ void Strategy::ModerateOrders(const std::string & contract, double edurance) {
           ModOrder(o, true);
           continue;
         }
-        double reasonable_price = OrderPrice(contract, o->side, false);
+        double reasonable_price = OrderPrice(ticker, o->side, false);
         if (PriceChange(o->price, reasonable_price, o->side, edurance)) {
           // printf("modify order %s, price:%lf->%lf\n", o->order_ref, o->price, reasonable_price);
           ModOrder(o);
@@ -445,11 +445,11 @@ void Strategy::OpenOrder(OrderSide::Enum sd, const std::string & info) {  // sen
 
 void Strategy::DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) {
   int trade_size = (o->side == OrderSide::Buy)?o->traded_size:-o->traded_size;
-  std::string contract = o->contract;
-  int previous_pos = position_map[contract]-trade_size;
+  std::string ticker = o->ticker;
+  int previous_pos = position_map[ticker]-trade_size;
   OrderSide::Enum sd;
   OrderSide::Enum reverse_sd;
-  bool is_close = TradeClose(contract, trade_size);
+  bool is_close = TradeClose(ticker, trade_size);
   if (trade_size > 0) {
     sd = OrderSide::Buy;
     reverse_sd = OrderSide::Sell;
@@ -458,8 +458,8 @@ void Strategy::DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) {
     reverse_sd = OrderSide::Buy;
   }
 
-  if (contract == main_ticker) {
-    int main_pos = position_map[contract];
+  if (ticker == main_ticker) {
+    int main_pos = position_map[ticker];
     printf("[%s %s]mainpos is %d, trade size is %d\n", main_ticker.c_str(), hedge_ticker.c_str(), main_pos, trade_size);
     if (!is_close) {  // open traded
       if (main_pos*trade_size == 1) {  // pos 0->1: cancel open order, add close order, add open order
@@ -487,18 +487,18 @@ void Strategy::DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) {
         return;
       }
     }
-  } else if (contract == hedge_ticker) {
+  } else if (ticker == hedge_ticker) {
   } else {
     SimpleHandle(251);
   }
 }
 
 void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
-  if (strcmp(o->contract, main_ticker.c_str()) == 0) {
+  if (strcmp(o->ticker, main_ticker.c_str()) == 0) {
     printf("[%s %s]Mid report: main_ticker's mid filled at %lf for order %s\n", main_ticker.c_str(), hedge_ticker.c_str(), info.trade_price, o->order_ref);
     // fprintf(order_file, "hedge order for %s\n", o->order_ref);
     NewOrder(hedge_ticker, (o->side == OrderSide::Buy)?OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, "hedgeorder");  // hedge operation
-  } else if (strcmp(o->contract, hedge_ticker.c_str()) == 0) {
+  } else if (strcmp(o->ticker, hedge_ticker.c_str()) == 0) {
     printf("[%s %s]mid report: hedge_ticker's mid filled at %lf for order %s\n", main_ticker.c_str(), hedge_ticker.c_str(), info.trade_price, o->order_ref);
   } else {
     // TODO(nick): handle error

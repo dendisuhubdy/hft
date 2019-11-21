@@ -40,8 +40,8 @@ void* RunExchangeListener(void *param) {
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
-    info = recver.Recv(info);
-    std::vector<BaseStrategy*> sv = (*sv_map)[info.contract];
+    recver.Recv(info);
+    std::vector<BaseStrategy*> sv = (*sv_map)[info.ticker];
     for (auto v : sv) {
       v->UpdateExchangeInfo(info);
     }
@@ -54,7 +54,7 @@ void* RunCtpOrderListener(void *param) {
   std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
-    o = r->Recv(o);
+    r->Recv(o);
     sender.get()->Send(o);
   }
   return NULL;
@@ -76,7 +76,7 @@ void* RunOrderListener(void *param) {
   std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
-    o = recver.Recv(o);
+    recver.Recv(o);
     sender.get()->Send(o);
     if (!oh->Handle(o)) {
       printf("order failed!\n");
@@ -109,8 +109,8 @@ void* RunCommandListener(void *param) {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
   Recver recver("*:33334", "tcp", "bind");
   while (true) {
-    MarketSnapshot shot;
-    shot = recver.Recv(shot);
+    Command shot;
+    recver.Recv(shot);
     shot.Show(stdout);
     std::string ticker = Split(shot.ticker, "|").front();
     if (ticker == "load_history") {
@@ -127,11 +127,11 @@ void* RunCommandListener(void *param) {
 int main() {
   std::string default_path = GetDefaultPath();
   libconfig::Config param_cfg;
-  libconfig::Config contract_cfg;
+  libconfig::Config ticker_cfg;
   std::string param_config_path = default_path + "/hft/config/backtest/backtest.config";
-  std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
+  std::string ticker_config_path = default_path + "/hft/config/ticker/ticker.config";
   param_cfg.readFile(param_config_path.c_str());
-  contract_cfg.readFile(contract_config_path.c_str());
+  ticker_cfg.readFile(ticker_config_path.c_str());
   try {
     const libconfig::Setting &sleep_time = param_cfg.lookup("time_controller")["sleep_time"];
     const libconfig::Setting &close_time = param_cfg.lookup("time_controller")["close_time"];
@@ -153,12 +153,12 @@ int main() {
     Recver data_recver("data_pub");
 
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
-    const libconfig::Setting & contract_setting_map = contract_cfg.lookup("map");
+    const libconfig::Setting & ticker_setting_map = ticker_cfg.lookup("map");
 
-    std::unordered_map<std::string, int> contract_index_map;
-    for (int i = 0; i < contract_setting_map.getLength(); i++) {
-      const libconfig::Setting & setting = contract_setting_map[i];
-      contract_index_map[setting["ticker"]] = i;
+    std::unordered_map<std::string, int> ticker_index_map;
+    for (int i = 0; i < ticker_setting_map.getLength(); i++) {
+      const libconfig::Setting & setting = ticker_setting_map[i];
+      ticker_index_map[setting["ticker"]] = i;
     }
     std::string order_file_path = param_cfg.lookup("order_file");
     std::string exchange_file_path = param_cfg.lookup("exchange_file");
@@ -251,13 +251,13 @@ int main() {
           const libconfig::Setting &s_list = param_setting["strategy_list"];
           for (int j = 0; j < s_list.getLength(); j++) {
             std::string con = s_list[j];
-            const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
-            sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+            const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
+            sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
           }
         } else {
           std::string con = param_setting["unique_name"];
-          const libconfig::Setting & contract_setting = contract_setting_map[contract_index_map[con]];
-          sv.emplace_back(new Strategy(param_setting, contract_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+          const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
+          sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
         }
       }
       tc.StartTimer();
