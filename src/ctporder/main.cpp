@@ -19,19 +19,19 @@ bool enable_stdout = true;
 bool enable_file = true;
 
 std::unordered_map<std::string, std::string> RegisterExchange() {
-  std::unordered_map<std::string, std::vector<std::string> > exchange_contract;
-  exchange_contract["SHFE"] = {"cu", "ni", "au"};
-  exchange_contract["CFFEX"] = {"IH", "IC", "IF", "T"};
-  exchange_contract["CZCE"] = {};
-  exchange_contract["DCE"] = {};
-  std::unordered_map<std::string, std::string> contract_exchange;
-  for (auto i : exchange_contract) {
+  std::unordered_map<std::string, std::vector<std::string> > exchange_ticker;
+  exchange_ticker["SHFE"] = {"cu", "ni", "au"};
+  exchange_ticker["CFFEX"] = {"IH", "IC", "IF", "T"};
+  exchange_ticker["CZCE"] = {};
+  exchange_ticker["DCE"] = {};
+  std::unordered_map<std::string, std::string> ticker_exchange;
+  for (auto i : exchange_ticker) {
     std::vector<std::string> c_v = i.second;
     for (auto j : c_v) {
-      contract_exchange[j] = i.first;
+      ticker_exchange[j] = i.first;
     }
   }
-  return contract_exchange;
+  return ticker_exchange;
 }
 
 void* RunOrderCommandListener(void *param) {

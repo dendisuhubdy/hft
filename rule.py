@@ -55,6 +55,8 @@ class simplemaker_class(BuildContext):
   cmd = "simplemaker"
 class simplearb_class(BuildContext):
   cmd = "simplearb"
+class newsimplearb_class(BuildContext):
+  cmd = "newsimplearb"
 class backtest_class(BuildContext):
   cmd = "backtest"
 class dt_class(BuildContext):
@@ -115,6 +117,9 @@ def build(bld):
     return
   if bld.cmd == "simplearb":
     run_simplearb(bld)
+    return
+  if bld.cmd == "newsimplearb":
+    run_newsimplearb(bld)
     return
   if bld.cmd == "backtest":
     run_backtest(bld)
@@ -278,6 +283,19 @@ def run_simplearb(bld):
     use = 'zmq commontools pthread config++' # simplearb'
   )
 
+def run_newsimplearb(bld):
+  bld.read_shlib('commontools', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/newsimplearb',
+    source = ['src/newsimplearb/main.cpp',
+              'src/newsimplearb/strategy.cpp'
+             ],
+    includes = [
+                'external/zeromq/include'
+               ],
+    use = 'zmq commontools pthread config++' # newsimplearb'
+  )
+
 def run_backtest(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
   #bld.read_shlib('backtest', paths=['external/strategy/backtest/lib'])
@@ -365,6 +383,7 @@ def run_all(bld):
   run_getins(bld)
   #run_arbmaker(bld)
   run_simplearb(bld)
+  run_newsimplearb(bld)
   run_backtest(bld)
   run_dt(bld)
   #run_new_backtest(bld)

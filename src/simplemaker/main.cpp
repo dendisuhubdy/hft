@@ -30,7 +30,7 @@ void* RunExchangeListener(void *param) {
   while (true) {
     ExchangeInfo info;
     info = recver.Recv(info);
-    std::vector<BaseStrategy*> sv = (*sv_map)[info.contract];
+    std::vector<BaseStrategy*> sv = (*sv_map)[info.ticker];
     for (auto v : sv) {
       v->UpdateExchangeInfo(info);
     }

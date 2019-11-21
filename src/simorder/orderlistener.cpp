@@ -31,7 +31,7 @@ void orderlistener::Run() {
     */
     Order o;
     o = recver->Recv(o);
-    // printf("recv order request: %s %d@%lf %s\n", o.contract, o.size, o.price, OrderSide::ToString(o.side));
+    // printf("recv order request: %s %d@%lf %s\n", o.ticker, o.size, o.price, OrderSide::ToString(o.side));
     o.Show(stdout);
   }
 }

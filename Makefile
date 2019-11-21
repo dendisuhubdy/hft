@@ -45,6 +45,9 @@ simplemaker:
 simplearb:
 	$(WAF) configure simplearb $(PARAMS)
 
+newsimplearb:
+	$(WAF) configure newsimplearb $(PARAMS)
+
 demostrat:
 	$(WAF) configure demostrat $(PARAMS)
 

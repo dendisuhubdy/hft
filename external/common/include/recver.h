@@ -4,6 +4,7 @@
 #include <zmq.hpp>
 #include <unistd.h>
 #include <string>
+#include <memory>
 #include "exchange_info.h"
 #include "market_snapshot.h"
 #include "pricer_data.h"
@@ -27,8 +28,8 @@ class Recver {
   PricerData Recv(const PricerData& p);
 
  private:
-  zmq::context_t* con;
-  zmq::socket_t* sock;
+  unique_ptr<zmq::context_t> con;
+  unique_ptr<zmq::socket_t> sock;
 };
 
 #endif  //  RECVER_H_

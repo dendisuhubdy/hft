@@ -26,12 +26,12 @@ class TimeInterval {
     #ifdef GCC
       gettimeofday(&end, NULL);
       std::cout << detail 
-        << (end.tv_sec - start.tv_sec) << "ms and " <<  (end.tv_usec - start.tv_usec)
+        << (end.tv_sec - start.tv_sec) << "s and " <<  (end.tv_usec - start.tv_usec)
         << " us" << std::endl;
     #else
       end = clock();
       std::cout << detail 
-        << (double)(end - start) << " ms" << std::endl;
+        << (double)(end - start) << " s" << std::endl;
     #endif // GCC
   }
 

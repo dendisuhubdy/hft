@@ -19,7 +19,7 @@
 
 class TimeController {
  public:
-  explicit TimeController(std::vector<std::string>sleep_time, std::vector<std::string> close_time, std::vector<std::string> force_close, const std::string & mode="real");
+  TimeController(std::vector<std::string>sleep_time, std::vector<std::string> close_time, std::vector<std::string> force_close, const std::string & mode="real");
   TimeController();
   TimeController(const TimeController & t);
 

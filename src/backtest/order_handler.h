@@ -44,7 +44,7 @@ class OrderHandler {
 
   std::unordered_map<std::string, double> fozen_capital_map;
 
-  std::unordered_map<std::string, std::string> contract_strat_map;
+  std::unordered_map<std::string, std::string> ticker_strat_map;
 
   std::unordered_map<std::string, double> avgcost_map;
   std::unordered_map<std::string, int> current_pos_map;
@@ -86,7 +86,7 @@ class OrderHandler {
   std::unordered_map<std::string, double> close_fee_map;
 
   std::unordered_map<std::string, double> min_price_move_map;
-  std::unordered_map<std::string, int> contract_size_map;
+  std::unordered_map<std::string, int> ticker_size_map;
   FILE* record_file;
   std::string date;
   std::string main_ticker;

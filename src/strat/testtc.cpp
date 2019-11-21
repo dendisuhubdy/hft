@@ -23,7 +23,7 @@ class TimeController {
     for (int i = 0; i < sleep_time.size(); i++) {
       std::vector<std::string> tv = SplitStr(sleep_time[i], "-");
       if (tv.size() != 2) {
-        printf("split error!size is %u, it's %s\n", tv.size(), sleep_time[i].c_str());
+        printf("split error!size is %lu, it's %s\n", tv.size(), sleep_time[i].c_str());
         exit(1);
       }
       if (Translate(tv[0]) >= Translate(tv[1])) {
@@ -61,7 +61,7 @@ class TimeController {
   int Translate(std::string time) {
     std::vector<std::string> content = SplitStr(time, ":");
     if (content.size() != 3) {
-      printf("slplit time error, size is %u, it's %s\n", content.size(), time.c_str());
+      printf("slplit time error, size is %lu, it's %s\n", content.size(), time.c_str());
       exit(1);
     }
     int hour = atoi(content[0].c_str());

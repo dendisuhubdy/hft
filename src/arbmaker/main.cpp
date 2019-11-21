@@ -15,7 +15,7 @@
 #include <vector>
 #include <string>
 
-#include "arbmaker/strategy.h"
+#include "./strategy.h"
 
 void HandleLeft() {
 }
@@ -41,7 +41,7 @@ int main() {
   sleep_time_v.emplace_back("10:14:20-10:30:00");
   sleep_time_v.emplace_back("11:29:20-13:30:00");
   sleep_time_v.emplace_back("00:58:20-08:55:00");
-  TimeController tc(sleep_time_v, "21:00:00", "14:55:30");
+  TimeController tc(sleep_time_v, {"21:00:00"}, {"14:55:30"});
   Recver data_recver("data_pub");
   BaseStrategy * s1 = new Strategy("AP907", "AP905", 5, 1, tc, 10, "AP");
   BaseStrategy * s2 = new Strategy("wr1907", "wr1905", 5, 1, tc, 10, "wr");

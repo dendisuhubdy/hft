@@ -118,7 +118,7 @@ void Listener::OnRspOrderInsert(CThostFtdcInputOrderField* order,
     Order o = t_m->GetOrder(ctp_order_ref);
     exchangeinfo.side = o.side;
     snprintf(exchangeinfo.reason, sizeof(exchangeinfo.reason), "%d", info->ErrorID);
-    snprintf(exchangeinfo.contract, sizeof(exchangeinfo.contract), "%s", o.contract);
+    snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", o.ticker);
     snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", o.order_ref);
     std::string orderref = t_m->GetOrderRef(ctp_order_ref);
     printf("sent Rej for %s %d back\n", orderref.c_str(), ctp_order_ref);
@@ -173,7 +173,7 @@ void Listener::OnRspOrderAction(CThostFtdcInputOrderActionField* order_action,
     ExchangeInfo exchangeinfo;
     exchangeinfo.type = InfoType::CancelRej;
     snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", o.order_ref);
-    snprintf(exchangeinfo.contract, sizeof(exchangeinfo.contract), "%s", o.contract);
+    snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", o.ticker);
     SendExchangeInfo(exchangeinfo);
   }
 }
@@ -215,7 +215,7 @@ void Listener::OnRtnOrder(CThostFtdcOrderField* order) {
   }
   printf("map it into %s\n", orderref.c_str());
   snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", orderref.c_str());
-  snprintf(exchangeinfo.contract, sizeof(exchangeinfo.contract), "%s", o.contract);
+  snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", o.ticker);
   switch (order->OrderSubmitStatus) {
   /////////////////////////////////////////////////
   // Just logging
@@ -314,7 +314,7 @@ void Listener::OnRtnTrade(CThostFtdcTradeField* trade) {
     return;
   }
 
-  snprintf(exchangeinfo.contract, sizeof(exchangeinfo.contract), "%s", o.contract);
+  snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", o.ticker);
   snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", orderref.c_str());
   printf("received onRtnTrade for %d, and map it into %s\n", ctp_order_ref, orderref.c_str());
 
@@ -387,7 +387,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
     const std::string & symbol = investor_position->InstrumentID;
     if (result) {
       ExchangeInfo info;
-      snprintf(info.contract, sizeof(info.contract), "%s", symbol.c_str());
+      snprintf(info.ticker, sizeof(info.ticker), "%s", symbol.c_str());
       // info.trade_price = (investor_position->PositionCost*investor_position->YdPosition + investor_position->OpenCost*investor_position->Position) / (investor_position->Position+investor_position->YdPosition);
       if (investor_position->YdPosition > 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterYesToken(symbol, investor_position->YdPosition, side);
@@ -409,7 +409,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
   if (is_last) {
     initialized_ = true;
     ExchangeInfo endinfo;
-    snprintf(endinfo.contract, sizeof(endinfo.contract), "%s", "positionend");
+    snprintf(endinfo.ticker, sizeof(endinfo.ticker), "%s", "positionend");
     endinfo.type = InfoType::Position;
     endinfo.trade_price = 0.0;
     endinfo.trade_size = 0;

@@ -1,31 +1,26 @@
-#ifndef ORDER_H_
-#define ORDER_H_
+#ifndef COMMAND_H_
+#define COMMAND_H_
 
 #include "define.h"
-#include "order_side.h"
-#include "order_action.h"
-#include "order_status.h"
+#include "command_type.h"
 #include "offset.h"
 
 #include <stdio.h>
 #include <sys/time.h>
 #include <fstream>
 
-struct Order {
-  timeval shot_time;
+struct Command {
+  timeval show_time;
   timeval send_time;
-  char ticker[MAX_CONTRACT_LENGTH];
-  double price;
-  int size;
-  int traded_size;
-  OrderSide::Enum side;
+  CommandType type;
+  char contract[MAX_CONTRACT_LENGTH];
   char order_ref[MAX_ORDERREF_SIZE];
   OrderAction::Enum action;
   OrderStatus::Enum status;
   Offset::Enum offset;
   char tbd[128];
 
-  Order()
+  Command()
     : size(0),
       traded_size(0),
       offset(Offset::UNINITED) {
@@ -50,17 +45,17 @@ struct Order {
     char send_time_s[32];
     snprintf(send_time_s, sizeof(send_time_s), "%ld.%ld", send_time.tv_sec, send_time.tv_usec);
     double send_time_sec = atof(send_time_s);
-    fprintf(stream, "%lf,%lf,%s,%lf,%d,%d,%s,%s,%s,%s,%s,%s\n",shot_time_sec,send_time_sec,ticker,price,size,traded_size,OrderSide::ToString(side),order_ref,OrderAction::ToString(action),OrderStatus::ToString(status),Offset::ToString(offset),tbd);
+    fprintf(stream, "%lf,%lf,%s,%lf,%d,%d,%s,%s,%s,%s,%s,%s\n",shot_time_sec,send_time_sec,contract,price,size,traded_size,OrderSide::ToString(side),order_ref,OrderAction::ToString(action),OrderStatus::ToString(status),Offset::ToString(offset),tbd);
   }
 
   void Show(FILE* stream) const {
     // timeval show_time;
     // gettimeofday(&show_time, NULL);
     fprintf(stream, "%ld %04ld %ld %04ld Order %s |",
-            send_time.tv_sec, send_time.tv_usec, shot_time.tv_sec, shot_time.tv_usec, ticker);
+            send_time.tv_sec, send_time.tv_usec, shot_time.tv_sec, shot_time.tv_usec, contract);
 
       fprintf(stream, " %lf@%d %d %s %s %s %s %s %s\n", price, size, traded_size, OrderSide::ToString(side), order_ref, OrderAction::ToString(action), OrderStatus::ToString(status), Offset::ToString(offset), tbd);
   }
 };
 
-#endif  //  ORDER_H_
+#endif  //  COMMAND_H_

@@ -4,7 +4,7 @@
 
 #include "strat_MA/strategy.h"
 
-Strategy::Strategy(std::vector<std::string> strat_contracts, std::vector<std::string> topic_v, TimeController tc, std::string strat_name)
+Strategy::Strategy(std::vector<std::string> strat_tickers, std::vector<std::string> topic_v, TimeController tc, std::string strat_name)
   : m_topic_v(topic_v),
     m_tc(tc),
     m_strat_name(strat_name),
@@ -18,8 +18,8 @@ Strategy::Strategy(std::vector<std::string> strat_contracts, std::vector<std::st
   pthread_mutex_init(&mod_mutex, NULL);
   pthread_mutex_init(&order_map_mutex, NULL);
   sender = new Sender("order_sub");
-  for (unsigned int i = 0; i < strat_contracts.size(); i++) {
-    IsStratContract[strat_contracts[i]] = true;
+  for (unsigned int i = 0; i < strat_tickers.size(); i++) {
+    IsStratContract[strat_tickers[i]] = true;
   }
   // RequestQryPos();
 }
@@ -69,14 +69,14 @@ std::string Strategy::GenOrderRef() {
   return orderref;
 }
 
-void Strategy::NewOrder(std::string contract, OrderSide::Enum side, PriceMode pmode, int size, bool control_price) {
+void Strategy::NewOrder(std::string ticker, OrderSide::Enum side, PriceMode pmode, int size, bool control_price) {
     if (size == 0) {
       return;
     }
     pthread_mutex_lock(&order_ref_mutex);
     Order* order = new Order();
-    snprintf(order->contract, sizeof(order->contract), "%s", contract.c_str());
-    order->price = OrderPrice(contract, side, pmode, control_price);
+    snprintf(order->ticker, sizeof(order->ticker), "%s", ticker.c_str());
+    order->price = OrderPrice(ticker, side, pmode, control_price);
     order->size = size;
     order->side = side;
     snprintf(order->order_ref, sizeof(order->order_ref), "%s", GenOrderRef().c_str());
@@ -91,20 +91,20 @@ void Strategy::NewOrder(std::string contract, OrderSide::Enum side, PriceMode pm
     pthread_mutex_unlock(&order_ref_mutex);
     sender->Send(*order);
     pthread_mutex_lock(&order_map_mutex);
-    order_map[contract][order->order_ref] = order;
+    order_map[ticker][order->order_ref] = order;
     pthread_mutex_unlock(&order_map_mutex);
 }
 
 
-void Strategy::ModerateOrders(std::string contract, ModMode mmode) {
-  ::unordered_map<std::string, ::unordered_map<std::string, Order*> >::iterator it = order_map.find(contract);
+void Strategy::ModerateOrders(std::string ticker, ModMode mmode) {
+  ::unordered_map<std::string, ::unordered_map<std::string, Order*> >::iterator it = order_map.find(ticker);
   if (it == order_map.end()) {
     return;
   }
   ::unordered_map<std::string, Order*> temp_map = it->second;
   switch (mmode) {
     case TradeOrCancel:
-     ClearAllByContract(contract);
+     ClearAllByContract(ticker);
      break;
     default:
      printf("unkonw mod mode. exit!\n");
@@ -158,7 +158,7 @@ bool Strategy::DataReady(std::string ticker, std::vector<std::string>topic_v) {
   }
   ::unordered_map<std::string, ::unordered_map<std::string, std::vector<PricerData> > >::iterator p_i = pricer_map.find(ticker);
   if (p_i == pricer_map.end()) {
-    printf("contract %s not found in pricer_map\n", ticker.c_str());
+    printf("ticker %s not found in pricer_map\n", ticker.c_str());
     return false;
   }
   ::unordered_map<std::string, std::vector<PricerData> > topic_map = p_i->second;
@@ -182,9 +182,9 @@ bool Strategy::DataReady(std::string ticker, std::vector<std::string>topic_v) {
   return true;
 }
 
-void Strategy::ClearAllByContract(std::string contract) {
-  printf("Enter Cancel ALL for %s\n", contract.c_str());
-  ::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator itr = order_map.find(contract);
+void Strategy::ClearAllByContract(std::string ticker) {
+  printf("Enter Cancel ALL for %s\n", ticker.c_str());
+  ::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator itr = order_map.find(ticker);
   if (itr == order_map.end()) {
     return;
   }
@@ -214,17 +214,17 @@ void Strategy::ClearAllByContract(std::string contract) {
 void ClearAll() {
 }
 
-void Strategy::DelOrder(std::string contract, std::string ref) {
+void Strategy::DelOrder(std::string ticker, std::string ref) {
   pthread_mutex_lock(&order_map_mutex);
-  std::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator it = order_map.find(contract);
+  std::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator it = order_map.find(ticker);
   if (it == order_map.end()) {
-    printf("delete error:tickererror not found %s order %s\n", contract.c_str(), ref.c_str());
+    printf("delete error:tickererror not found %s order %s\n", ticker.c_str(), ref.c_str());
     return;
   }
   std::unordered_map<std::string, Order*> &temp_map = it->second;
   std::unordered_map<std::string, Order*>::iterator itr = temp_map.find(ref);
   if (itr == temp_map.end()) {
-    printf("delete error:orderreferror not found %s order %s\n", contract.c_str(), ref.c_str());
+    printf("delete error:orderreferror not found %s order %s\n", ticker.c_str(), ref.c_str());
     return;
   }
   temp_map.erase(itr);
@@ -232,13 +232,13 @@ void Strategy::DelOrder(std::string contract, std::string ref) {
 }
 
 void Strategy::UpdatePos(Order* o, ExchangeInfo info) {
-  std::string contract = o->contract;
+  std::string ticker = o->ticker;
   int trade_size = (o->side == OrderSide::Buy)?o->size:-o->size;
   double trade_price = info.trade_price;
-  position_map[contract] += trade_size;
-  bool is_close = TradeClose(contract, trade_size);
+  position_map[ticker] += trade_size;
+  bool is_close = TradeClose(ticker, trade_size);
   if (!is_close) {  // only update avgcost when open traded
-    UpdateAvgCost(contract, trade_price, trade_size);
+    UpdateAvgCost(ticker, trade_price, trade_size);
   }
 }
 
@@ -256,41 +256,41 @@ void Strategy::UpdateExchangeInfo(ExchangeInfo info) {
     if (position_ready) {  // ignore positioninfo after ready
       return;
     }
-    if ((info.trade_price < 0.00001 || abs(info.trade_size) == 0) && strcmp(info.contract, "positionend") != 0) {
+    if ((info.trade_price < 0.00001 || abs(info.trade_size) == 0) && strcmp(info.ticker, "positionend") != 0) {
       return;
     }
-    if (strcmp(info.contract, main_shot.ticker) == 0) {
-      if (position_map[info.contract] + info.trade_size == 0) {
+    if (strcmp(info.ticker, main_shot.ticker) == 0) {
+      if (position_map[info.ticker] + info.trade_size == 0) {
         avgcost_main = 0.0;
       } else {
-        avgcost_main = (info.trade_price/m_contract_size*info.trade_size + avgcost_main*position_map[info.contract])/(position_map[info.contract] + info.trade_size);
+        avgcost_main = (info.trade_price/m_ticker_size*info.trade_size + avgcost_main*position_map[info.ticker])/(position_map[info.ticker] + info.trade_size);
       }
-    } else if (strcmp(info.contract, hedge_shot.ticker) == 0) {
-      if (position_map[info.contract] + info.trade_size == 0) {
+    } else if (strcmp(info.ticker, hedge_shot.ticker) == 0) {
+      if (position_map[info.ticker] + info.trade_size == 0) {
         avgcost_hedge = 0.0;
       } else {
-        avgcost_hedge = (info.trade_price/m_contract_size*info.trade_size + avgcost_hedge*position_map[info.contract])/(position_map[info.contract] + info.trade_size);
+        avgcost_hedge = (info.trade_price/m_ticker_size*info.trade_size + avgcost_hedge*position_map[info.ticker])/(position_map[info.ticker] + info.trade_size);
       }
-    } else if (strcmp(info.contract, "positionend") == 0) {
+    } else if (strcmp(info.ticker, "positionend") == 0) {
       printf("position recv finished: %s:%d@%lf %s:%d@%lf\n", main_shot.ticker, position_map[main_shot.ticker], avgcost_main, hedge_shot.ticker, position_map[hedge_shot.ticker], avgcost_hedge);
       position_ready = true;
       return;
     } else {
-      printf("recv unknown contract %s\n", info.contract);
+      printf("recv unknown ticker %s\n", info.ticker);
       return;
     }
-    position_map[info.contract] += info.trade_size;
+    position_map[info.ticker] += info.trade_size;
     return;
   }
 
-  std::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator it = order_map.find(info.contract);
+  std::unordered_map<std::string, std::unordered_map<std::string, Order*> >::iterator it = order_map.find(info.ticker);
   if (it == order_map.end()) {
-    printf("unknown ticker %s for ordermap! %s\n", info.contract, info.order_ref);
+    printf("unknown ticker %s for ordermap! %s\n", info.ticker, info.order_ref);
     return;
   }
   std::unordered_map<std::string, Order*>::iterator itr = it->second.find(info.order_ref);
   if (itr == it->second.end()) {
-    printf("unknown ref %s for %s in ordermap\n", info.order_ref, info.contract);
+    printf("unknown ref %s for %s in ordermap\n", info.order_ref, info.ticker);
     return;
   }
   Order* order = itr->second;
@@ -310,15 +310,15 @@ void Strategy::UpdateExchangeInfo(ExchangeInfo info) {
     case InfoType::Rej:
     {
       order->status = OrderStatus::Rejected;
-      DelOrder(order->contract, info.order_ref);
+      DelOrder(order->ticker, info.order_ref);
     }
       break;
     case InfoType::Cancelled:
     {
       order->status = OrderStatus::Cancelled;
-      DelOrder(order->contract, info.order_ref);
+      DelOrder(order->ticker, info.order_ref);
       if (order->action == OrderAction::ModOrder) {
-        NewOrder(order->contract, order->side, MarketPrice, order->size);
+        NewOrder(order->ticker, order->side, MarketPrice, order->size);
       }
     }
       break;
@@ -341,7 +341,7 @@ void Strategy::UpdateExchangeInfo(ExchangeInfo info) {
       order->traded_size += info.trade_size;
       if (order->size == order->traded_size) {
         order->status = OrderStatus::Filled;
-        DelOrder(order->contract, info.order_ref);
+        DelOrder(order->ticker, info.order_ref);
       } else {
         order->status = OrderStatus::Pfilled;
       }

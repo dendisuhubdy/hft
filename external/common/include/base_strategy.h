@@ -46,11 +46,11 @@ class BaseStrategy {
   virtual void UpdateTicker();
   virtual void HandleCommand(const MarketSnapshot& shot);
  protected:
-  void UpdateAvgCost(const std::string & contract, double trade_price, int size);
+  void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();
-  Order* NewOrder(const std::string & contract, OrderSide::Enum side, int size, bool control_price, bool sleep_order, const std::string & tbd, bool no_today = false);
+  Order* NewOrder(const std::string & ticker, OrderSide::Enum side, int size, bool control_price, bool sleep_order, const std::string & tbd, bool no_today = false);
   void ModOrder(Order* o, bool sleep=false);
-  void CancelAll(const std::string & contract);
+  void CancelAll(const std::string & ticker);
   void CancelAll();
   void CancelOrder(Order* o);
   void DelOrder(const std::string & ref);
@@ -81,7 +81,7 @@ class BaseStrategy {
   std::ofstream* strat_file;
   std::string m_strat_name;
   TimeController* m_tc;
-  int contract_size;
+  int ticker_size;
   std::unordered_map<std::string, int> cancel_map;
   StrategyStatus::Enum ss;
   std::unordered_map<std::string, bool> ticker_map;
@@ -100,13 +100,13 @@ class BaseStrategy {
   virtual void ForceFlat();
 
   virtual bool Ready() = 0;
-  virtual void ModerateOrders(const std::string & contract);
+  virtual void ModerateOrders(const std::string & ticker);
   virtual bool PriceChange(double current_price, double reasonable_price, OrderSide::Enum side, double edurance);
   virtual void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info);
   virtual void DoOperationAfterUpdateData(const MarketSnapshot& shot);
   virtual void DoOperationAfterFilled(Order* o, const ExchangeInfo& info);
 
-  virtual double OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) = 0;
+  virtual double OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) = 0;
 };
 
 #endif  // BASE_STRATEGY_H_

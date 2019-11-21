@@ -28,7 +28,7 @@ enum ModMode {
 
 class Strategy {
  public:
-  Strategy(std::vector<std::string> strat_contracts, std::vector<std::string> topic_v, TimeController tc, std::string strat_name);
+  Strategy(std::vector<std::string> strat_tickers, std::vector<std::string> topic_v, TimeController tc, std::string strat_name);
   ~Strategy();
 
   void Start();
@@ -39,11 +39,11 @@ class Strategy {
  private:
   void Run(std::string ticker);
   void RequestQryPos();
-  void NewOrder(std::string contract, OrderSide::Enum side, PriceMode pmode, int size = 1, bool control_price = false);
+  void NewOrder(std::string ticker, OrderSide::Enum side, PriceMode pmode, int size = 1, bool control_price = false);
   void ModOrder(Order* o);
-  void DelOrder(std::string contract, std::string ref);
+  void DelOrder(std::string ticker, std::string ref);
 
-  double OrderPrice(std::string contract, OrderSide::Enum side, PriceMode pmode, bool control_price = false);
+  double OrderPrice(std::string ticker, OrderSide::Enum side, PriceMode pmode, bool control_price = false);
 
   int GenerateUniqueOrderRef();
   std::string GenOrderRef();
@@ -59,26 +59,26 @@ class Strategy {
   }
 
 
-  void UpdateAvgCost(std::string contract, double trade_price, int size) {
+  void UpdateAvgCost(std::string ticker, double trade_price, int size) {
     /*
     double capital_change = trade_price*size;
-    if (contract == main_shot.ticker) {
-      int current_pos = position_map[contract];
+    if (ticker == main_shot.ticker) {
+      int current_pos = position_map[ticker];
       int pre_pos = current_pos - size;
       avgcost_main = (avgcost_main * pre_pos + capital_change)/current_pos;
-    } else if (contract == hedge_shot.ticker) {
-      int current_pos = position_map[contract];
+    } else if (ticker == hedge_shot.ticker) {
+      int current_pos = position_map[ticker];
       int pre_pos = current_pos - size;
       avgcost_hedge = (avgcost_hedge * pre_pos + capital_change)/current_pos;
     } else {
-      printf("updateavgcost error: unknown ticker %s\n", contract.c_str());
+      printf("updateavgcost error: unknown ticker %s\n", ticker.c_str());
       exit(1);
     }
     */
   }
 
-  bool TradeClose(std::string contract, int size) {
-    int pos = position_map[contract];
+  bool TradeClose(std::string ticker, int size) {
+    int pos = position_map[ticker];
     return (pos*size <= 0);
   }
 
@@ -123,22 +123,22 @@ class Strategy {
     }
   }
 
-  void ClearAllByContract(std::string contract);
+  void ClearAllByContract(std::string ticker);
   void ClearAll();
   void ModerateMainOrders();
   void ModerateHedgeOrders();
-  void ModerateOrders(std::string contract, ModMode mmode);
+  void ModerateOrders(std::string ticker, ModMode mmode);
   void UpdatePos(Order* o, ExchangeInfo info);
   void CloseAllTodayPos();
 
-  std::vector<std::string> m_contracts;
+  std::vector<std::string> m_tickers;
   bool position_ready;
   bool is_started;
   Sender* sender;
   MarketSnapshot main_shot;
   MarketSnapshot hedge_shot;
   ::unordered_map<std::string, MarketSnapshot> shot_map;
-  ::unordered_map<std::string, ::unordered_map<std::string, std::vector<PricerData> > > pricer_map;  // contract:topic:data
+  ::unordered_map<std::string, ::unordered_map<std::string, std::vector<PricerData> > > pricer_map;  // ticker:topic:data
   ::unordered_map<std::string, ::unordered_map<std::string, Order*> > order_map;
   ::unordered_map<std::string, int> position_map;
   int order_ref;
@@ -157,9 +157,9 @@ class Strategy {
   double avgcost_main;
   double avgcost_hedge;
   double edurance;
-  int m_contract_size;
+  int m_ticker_size;
   std::vector<std::string>m_topic_v;
-  std::vector<std::string>m_strat_contracts;
+  std::vector<std::string>m_strat_tickers;
   std::unordered_map<std::string, bool> IsStratContract;
   TimeController m_tc;
   std::string m_strat_name;

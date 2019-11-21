@@ -28,7 +28,7 @@ class OrderHandler {
   std::unordered_map<std::string, double> realized_pnl_map;
   std::unordered_map<std::string, int> current_pos_map;
   int closed_size;
-  std::unordered_map<std::string, std::string> contract_strat_map;
+  std::unordered_map<std::string, std::string> ticker_strat_map;
   std::unordered_map<std::string, double> strat_pnl_map;
 };
 

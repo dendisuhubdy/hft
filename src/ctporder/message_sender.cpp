@@ -123,10 +123,10 @@ bool MessageSender::NewOrder(const Order& order) {
   strncpy(req.BrokerID, broker_id_.c_str(), sizeof(req.BrokerID));
   strncpy(req.InvestorID, user_id_.c_str(), sizeof(req.InvestorID));
 
-  strncpy(req.InstrumentID, order.contract, sizeof(req.InstrumentID));
-  std::string con = GetCon(order.contract);
+  strncpy(req.InstrumentID, order.ticker, sizeof(req.InstrumentID));
+  std::string con = GetCon(order.ticker);
   if (exchange_map.find(con) == exchange_map.end()) {
-    printf("%s %s not found exchange", con.c_str(), order.contract);
+    printf("%s %s not found exchange", con.c_str(), order.ticker);
     PrintMap(exchange_map);
     return false;
   }
@@ -164,9 +164,9 @@ bool MessageSender::NewOrder(const Order& order) {
   } else {
     req.CombOffsetFlag[0] = THOST_FTDC_OF_Close_TODAY;
     if (order.side == OrderSide::Buy) {
-      (*buy_pos)[order.contract] -= order.size;
+      (*buy_pos)[order.ticker] -= order.size;
     } else {
-      (*sell_pos)[order.contract] -= order.size;
+      (*sell_pos)[order.ticker] -= order.size;
     }
   }
   */
@@ -217,7 +217,7 @@ bool MessageSender::NewOrder(const Order& order) {
 
   printf("SubmitNew %s %s %d@%lf %s %c\n",
     OrderSide::ToString(order.side),
-    order.contract,
+    order.ticker,
     order.size,
     order.price,
     order.order_ref,
@@ -238,11 +238,11 @@ void MessageSender::CancelOrder(const Order& order) {
   // strncpy(req.OrderRef, exchange_id.c_str(), sizeof(req.OrderRef));
   snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", ctp_order_ref);
 
-  strncpy(req.InstrumentID, o.contract, sizeof(req.InstrumentID));
+  strncpy(req.InstrumentID, o.ticker, sizeof(req.InstrumentID));
 
-  std::string con = GetCon(order.contract);
+  std::string con = GetCon(order.ticker);
   if (exchange_map.find(con) == exchange_map.end()) {
-    printf("cancel %s %s not found exchange", con.c_str(), order.contract);
+    printf("cancel %s %s not found exchange", con.c_str(), order.ticker);
     PrintMap(exchange_map);
     return;
   }
@@ -256,5 +256,5 @@ void MessageSender::CancelOrder(const Order& order) {
 
   user_api_->ReqOrderAction(&req, ++request_id_);
 
-  printf("SubmitCancel %s contract %s\n", o.order_ref, o.contract);
+  printf("SubmitCancel %s ticker %s\n", o.order_ref, o.ticker);
 }

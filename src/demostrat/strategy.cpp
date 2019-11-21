@@ -50,16 +50,16 @@ void Strategy::Flatting() {
 }
 
 void Strategy::DoOperationAfterCancelled(Order* o) {
-  printf("contract %s cancel num %d!\n", o->contract, cancel_map[o->contract]);
-  if (cancel_map[o->contract] > 100) {
-    printf("contract %s hit cancel limit!\n", o->contract);
+  printf("ticker %s cancel num %d!\n", o->ticker, cancel_map[o->ticker]);
+  if (cancel_map[o->ticker] > 100) {
+    printf("ticker %s hit cancel limit!\n", o->ticker);
     Stop();
   }
 }
 
-double Strategy::OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) {
+double Strategy::OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) {
   // this is a logic to make order use market price
-  return (side == OrderSide::Buy)?shot_map[contract].asks[0]:shot_map[contract].bids[0];
+  return (side == OrderSide::Buy)?shot_map[ticker].asks[0]:shot_map[ticker].bids[0];
 }
 
 void Strategy::Start() {
@@ -73,10 +73,10 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
   // shot.Show(stdout);
 }
 
-void Strategy::ModerateOrders(const std::string & contract) {
+void Strategy::ModerateOrders(const std::string & ticker) {
   for (std::unordered_map<std::string, Order*>::iterator it = order_map.begin(); it != order_map.end(); it++) {
     Order* o = it->second;
-    MarketSnapshot shot = shot_map[o->contract];
+    MarketSnapshot shot = shot_map[o->ticker];
     if (o->Valid()) {
       if (o->side == OrderSide::Buy && fabs(o->price - shot.asks[0]) > 0.01) {
         ModOrder(o);
