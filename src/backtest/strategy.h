@@ -30,7 +30,7 @@ class Strategy : public BaseStrategy {
   void Stop() override;
 
   void Clear() override;
-  void HandleCommand(const MarketSnapshot& shot) override;
+  void HandleCommand(const Command& shot) override;
   void UpdateTicker() override;
  private:
   void ClearPositionRecord();

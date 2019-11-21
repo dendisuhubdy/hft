@@ -142,4 +142,10 @@ static inline std::vector<std::string> Split(const std::string &str, const T &de
   return tokens;
 }
 
+template<typename T>
+void SaveBin(std::ofstream &stream, const T& t) {
+  stream.write((char*)&t, sizeof(T));
+  stream.flush();
+}
+
 #endif // COMMON_TOOLS_H_

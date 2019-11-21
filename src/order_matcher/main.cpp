@@ -13,7 +13,7 @@ void* RunOrderCommandListener(void *param) {
   Recver* r = new Recver("order_pub");
   while (true) {
     Order o;
-    o = r->Recv(o);
+    r->Recv(o);
     if (!order_handler->Handle(o)) {
       // handle error
     }

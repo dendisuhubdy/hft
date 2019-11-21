@@ -40,7 +40,7 @@ void* RunExchangeListener(void *param) {
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
-    info = recver.Recv(info);
+    recver.Recv(info);
     std::vector<BaseStrategy*> sv = (*sv_map)[info.ticker];
     for (auto v : sv) {
       v->UpdateExchangeInfo(info);
@@ -54,7 +54,7 @@ void* RunCtpOrderListener(void *param) {
   std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
-    o = r->Recv(o);
+    r->Recv(o);
     sender.get()->Send(o);
   }
   return NULL;
@@ -76,7 +76,7 @@ void* RunOrderListener(void *param) {
   std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
-    o = recver.Recv(o);
+    recver.Recv(o);
     sender.get()->Send(o);
     if (!oh->Handle(o)) {
       printf("order failed!\n");
@@ -109,8 +109,8 @@ void* RunCommandListener(void *param) {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
   Recver recver("*:33334", "tcp", "bind");
   while (true) {
-    MarketSnapshot shot;
-    shot = recver.Recv(shot);
+    Command shot;
+    recver.Recv(shot);
     shot.Show(stdout);
     std::string ticker = Split(shot.ticker, "|").front();
     if (ticker == "load_history") {

@@ -427,7 +427,7 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
     snprintf(shot.ticker, sizeof(shot.ticker), "%s", label.c_str());
     shot.last_trade = mid;
     if (this_strat_file) {
-      shot.Show(*this_strat_file);
+      SaveBin(*this_strat_file, shot);
     }
     map_vector.emplace_back(mid);  // map_vector saved the aligned mid, all the elements here are safe to trade
     if (map_vector.size() > min_train_sample && map_vector.size() % (2*min_train_sample) == 1) {
@@ -437,23 +437,23 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
   }
 }
 
-void Strategy::HandleCommand(const MarketSnapshot& shot) {
+void Strategy::HandleCommand(const Command& shot) {
   printf("received command!\n");
   shot.Show(stdout);
-  if (abs(shot.asks[0]) > MIN_DOUBLE_DIFF) {
-    up_diff = shot.asks[0];
+  if (abs(shot.vdouble[0]) > MIN_DOUBLE_DIFF) {
+    up_diff = shot.vdouble[0];
     return;
   }
-  if (abs(shot.bids[0]) > MIN_DOUBLE_DIFF) {
-    down_diff = shot.bids[0];
+  if (abs(shot.vdouble[1]) > MIN_DOUBLE_DIFF) {
+    down_diff = shot.vdouble[1];
     return;
   }
-  if (abs(shot.asks[1]) > MIN_DOUBLE_DIFF) {
-    stop_loss_up_line = shot.asks[1];
+  if (abs(shot.vdouble[2]) > MIN_DOUBLE_DIFF) {
+    stop_loss_up_line = shot.vdouble[2];
     return;
   }
-  if (abs(shot.bids[1]) > MIN_DOUBLE_DIFF) {
-    stop_loss_down_line = shot.bids[1];
+  if (abs(shot.vdouble[3]) > MIN_DOUBLE_DIFF) {
+    stop_loss_down_line = shot.vdouble[3];
     return;
   }
 }

@@ -10,6 +10,7 @@
 #include "pricer_data.h"
 #include "define.h"
 #include "order.h"
+#include "command.h"
 
 using namespace std;
 
@@ -20,11 +21,27 @@ class Sender {
   ~Sender();
   void Bind(const std::string & address);
 
+  template <typename T>
+    void Send(const T & t) {
+      char buffer[BUFFER_SIZE];
+        if (BUFFER_SIZE < sizeof(t)) {
+          printf("buffer size is not enough, 28\n");
+          exit(1);
+        }   
+        memcpy(buffer, &t, sizeof(t));
+        pthread_mutex_lock(&mutex);
+        sock.get()->send(buffer, sizeof(buffer));
+        pthread_mutex_unlock(&mutex);
+    }
+
+  /*
   void Send(const MarketSnapshot& shot);
   void Send(const Order& order);
   void Send(const ExchangeInfo& info);
   void Send(const PricerData& p);
+  void Send(const Command& p);
   void Send(const char* s);
+*/
 
  private:
   unique_ptr<zmq::context_t> con;

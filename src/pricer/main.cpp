@@ -43,7 +43,7 @@ int main() {
   int time_zone_diff = 8*3600;
   while (true) {
     MarketSnapshot shot;
-    shot = recver.Recv(shot);
+    recver.Recv(shot);
     if (!notfirst_map[shot.ticker]) {
       preshot_map[shot.ticker] = shot;
       nextcaltime_map[shot.ticker] = 9*3600;

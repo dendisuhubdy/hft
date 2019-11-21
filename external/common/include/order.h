@@ -38,10 +38,6 @@ struct Order {
     }
     return false;
   }
-  void Show(std::ofstream &stream) const {
-    stream.write((char*)this, sizeof(*this));
-    stream.flush();
-  }
 
   void ShowCsv(FILE* stream) const {
     char shot_time_s[32];

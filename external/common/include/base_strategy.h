@@ -5,6 +5,7 @@
 #include "order.h"
 #include "sender.h"
 #include "define.h"
+#include "command.h"
 #include "exchange_info.h"
 #include "order_status.h"
 #include "common_tools.h"
@@ -32,11 +33,6 @@ class BaseStrategy {
   void RequestQryPos();
   virtual void Print() const;
   virtual void Init() = 0;
-  /*
-  virtual void InitTicker() = 0;
-  virtual void InitTimer() = 0;
-  virtual void InitFile() = 0;
-  */
   void SendPlainText(const std::string & flag, const std::string & s);
 
   virtual void Clear();
@@ -44,7 +40,7 @@ class BaseStrategy {
   double GetMid(const std::string & ticker);
   void UpdateCT(const Contractor& ct);
   virtual void UpdateTicker();
-  virtual void HandleCommand(const MarketSnapshot& shot);
+  virtual void HandleCommand(const Command& shot);
  protected:
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();

@@ -30,7 +30,7 @@ void orderlistener::Run() {
     Order* o = reinterpret_cast<Order*>(buffer);
     */
     Order o;
-    o = recver->Recv(o);
+    recver->Recv(o);
     // printf("recv order request: %s %d@%lf %s\n", o.ticker, o.size, o.price, OrderSide::ToString(o.side));
     o.Show(stdout);
   }

@@ -19,6 +19,21 @@ class Recver {
 
   ~Recver();
 
+
+  template <typename T>
+  void Recv(T& t) {
+    /*
+    if (BUFFER_SIZE < sizeof(T)) {
+      printf("buffer size is not enough!\n");
+      exit(1);
+    }
+    */
+    void* buffer = nullptr;
+    sock.get()->recv(buffer, sizeof(T));
+    t = *reinterpret_cast<T*>(buffer); //alias-strict, use union to slove this
+  }
+
+  /*
   MarketSnapshot Recv(const MarketSnapshot& shot);
 
   Order Recv(const Order& order);
@@ -26,6 +41,7 @@ class Recver {
   ExchangeInfo Recv(const ExchangeInfo& i);
 
   PricerData Recv(const PricerData& p);
+  */
 
  private:
   unique_ptr<zmq::context_t> con;

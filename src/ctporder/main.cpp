@@ -35,13 +35,12 @@ std::unordered_map<std::string, std::string> RegisterExchange() {
 }
 
 void* RunOrderCommandListener(void *param) {
-  // Recver* r = reinterpret_cast<Recver*>(param);
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
   Recver* r = new Recver("order_pub");
   std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
-    o = r->Recv(o);
+    r->Recv(o);
     sender.get()->Send(o);
     if (enable_stdout) {
       o.Show(stdout);

@@ -26,7 +26,7 @@ void* RunExchangeListener(void *param) {
   Recver recver("exchange_info");
   while (true) {
     ExchangeInfo info;
-    info = recver.Recv(info);
+    recver.Recv(info);
     st->UpdateExchangeInfo(info);
   }
   return NULL;
@@ -59,7 +59,7 @@ int main() {
   }
   while (true) {
     PricerData pd;
-    pd = pd_recver.Recv(pd);
+    pd_recver.Recv(pd);
     pd.Show(stdout);
     s.UpdateData(pd);
   }

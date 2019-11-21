@@ -6,6 +6,7 @@
 #include <timecontroller.h>
 #include <Contractor.h>
 #include <order.h>
+#include <command.h>
 #include <sender.h>
 #include <caler.h>
 #include <exchange_info.h>
@@ -30,7 +31,7 @@ class Strategy : public BaseStrategy {
   void Stop() override;
 
   void Clear() override;
-  void HandleCommand(const MarketSnapshot& shot) override;
+  void HandleCommand(const Command& shot) override;
   void UpdateTicker() override;
  private:
   void ClearPositionRecord();

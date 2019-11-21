@@ -36,9 +36,6 @@ ctporder:
 getins:
 	$(WAF) configure getins $(PARAMS)
 
-arbmaker:
-	$(WAF) configure arbmaker $(PARAMS)
-
 simplemaker:
 	$(WAF) configure simplemaker $(PARAMS)
 

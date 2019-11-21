@@ -23,10 +23,6 @@ struct ExchangeInfo {
       trade_price(-1) {
   }
 
-  void Show(std::ofstream &stream) const {
-    stream.write((char*)this, sizeof(*this));
-  }
-
   void ShowCsv(FILE* stream) const {
     /*
     char time_s[32];

@@ -10,52 +10,42 @@
 #include <fstream>
 
 struct Command {
-  timeval show_time;
   timeval send_time;
-  CommandType type;
-  char contract[MAX_CONTRACT_LENGTH];
-  char order_ref[MAX_ORDERREF_SIZE];
-  OrderAction::Enum action;
-  OrderStatus::Enum status;
-  Offset::Enum offset;
+  CommandType::Enum type;
+  char ticker[MAX_CONTRACT_LENGTH];
+  int vint[8];
+  double vdouble[8];
   char tbd[128];
 
-  Command()
-    : size(0),
-      traded_size(0),
-      offset(Offset::UNINITED) {
+  Command() {
     snprintf(tbd, sizeof(tbd), "%s", "null");
   }
 
   bool Valid() const {
-    if (status == OrderStatus::SubmitNew || status == OrderStatus::New || status == OrderStatus::CancelRej) {
+    if (type != CommandType::Uninited) {
       return true;
     }
     return false;
   }
+
   void Show(std::ofstream &stream) const {
     stream.write((char*)this, sizeof(*this));
     stream.flush();
   }
 
-  void ShowCsv(FILE* stream) const {
-    char shot_time_s[32];
-    snprintf(shot_time_s, sizeof(shot_time_s), "%ld.%ld", shot_time.tv_sec, shot_time.tv_usec);
-    double shot_time_sec = atof(shot_time_s);
-    char send_time_s[32];
-    snprintf(send_time_s, sizeof(send_time_s), "%ld.%ld", send_time.tv_sec, send_time.tv_usec);
-    double send_time_sec = atof(send_time_s);
-    fprintf(stream, "%lf,%lf,%s,%lf,%d,%d,%s,%s,%s,%s,%s,%s\n",shot_time_sec,send_time_sec,contract,price,size,traded_size,OrderSide::ToString(side),order_ref,OrderAction::ToString(action),OrderStatus::ToString(status),Offset::ToString(offset),tbd);
+  void Show(FILE* stream, int depth=3) const {
+    timeval show_time;
+    gettimeofday(&show_time, NULL);
+    fprintf(stream, "%ld %04ld %ld %04ld Command %s |",
+            send_time.tv_sec, send_time.tv_usec, show_time.tv_sec, show_time.tv_usec, ticker);
+    for (int i = 0; i < depth; i++) {
+      fprintf(stream, "%d", vint[i]);
+    }
+    for (int i = 0; i < depth; i++) {
+      fprintf(stream, "%.2f", vdouble[i]);
+    }
   }
 
-  void Show(FILE* stream) const {
-    // timeval show_time;
-    // gettimeofday(&show_time, NULL);
-    fprintf(stream, "%ld %04ld %ld %04ld Order %s |",
-            send_time.tv_sec, send_time.tv_usec, shot_time.tv_sec, shot_time.tv_usec, contract);
-
-      fprintf(stream, " %lf@%d %d %s %s %s %s %s %s\n", price, size, traded_size, OrderSide::ToString(side), order_ref, OrderAction::ToString(action), OrderStatus::ToString(status), Offset::ToString(offset), tbd);
-  }
 };
 
 #endif  //  COMMAND_H_

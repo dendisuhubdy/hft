@@ -16,7 +16,7 @@ int main() {
   Sender sender("data_sub", "connect");
   while (true) {
     MarketSnapshot shot;
-    shot = recver.Recv(shot);
+    recver.Recv(shot);
     sender.Send(shot);
     // shot.Show(stdout);
   }
