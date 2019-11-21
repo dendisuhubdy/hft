@@ -24,7 +24,7 @@
 class Strategy : public BaseStrategy {
  public:
   explicit Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & contract_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode = "real", std::ofstream* order_file = nullptr, std::ofstream* exchange_file = nullptr, std::ofstream* strat_file = nullptr, bool no_close_today = false);
-  ~Strategy();
+  virtual ~Strategy();
 
   void Start() override;
   void Stop() override;
@@ -121,6 +121,11 @@ class Strategy : public BaseStrategy {
   bool no_close_today;
   int open_count;
   int close_count;
+  int main_record;
+  int hedge_record;
+  MarketSnapshot main_last;
+  MarketSnapshot hedge_last;
+  double total_slip_loss;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_

@@ -350,6 +350,9 @@ int main() {
     order_file.close();
     exchange_file.close();
     strat_file.close();
+    for (auto i : sv) {
+      delete i;
+    }
     printf("backtest over!\n");
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
