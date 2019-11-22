@@ -30,7 +30,7 @@ int main() {
   libconfig::Config param_cfg;
   libconfig::Config ticker_cfg;
   std::string config_path = default_path + "/hft/config/prod/prod.config";
-  std::string ticker_config_path = default_path + "/hft/config/ticker/ticker.config";
+  std::string ticker_config_path = default_path + "/hft/config/contract/contract.config";
   // printf("config path is %s\n", config_path.c_str());
   param_cfg.readFile(config_path.c_str());
   ticker_cfg.readFile(ticker_config_path.c_str());
@@ -51,7 +51,6 @@ int main() {
   }
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   TimeController tc(sleep_time_v, close_time_v, force_close_time_v);
-  Recver data_recver("data_pub");
 
   const libconfig::Setting & strategies = param_cfg.lookup("strategy");
   const libconfig::Setting & ticker_setting_map = ticker_cfg.lookup("map");

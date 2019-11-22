@@ -19,30 +19,12 @@ class Sender {
   explicit Sender(const std::string& name, const std::string & bs_mode = "bind", const std::string & mode = "ipc", std::ofstream* shot_recorder = nullptr, std::ofstream* order_recorder = nullptr, std::ofstream* info_recorder = nullptr);
 
   ~Sender();
-  void Bind(const std::string & address);
+  inline void Bind(const std::string & address);
 
   template <typename T>
-    void Send(const T & t) {
-      /*char buffer[BUFFER_SIZE];
-        if (BUFFER_SIZE < sizeof(t)) {
-          printf("buffer size is not enough, 28\n");
-          exit(1);
-        }   
-        memcpy(buffer, &t, sizeof(t));
-        pthread_mutex_lock(&mutex);
-        sock.get()->send(buffer, sizeof(buffer));
-        pthread_mutex_unlock(&mutex);*/
+    inline void Send(const T & t) {
       sock.get()->send(&t, sizeof(T));
     }
-
-  /*
-  void Send(const MarketSnapshot& shot);
-  void Send(const Order& order);
-  void Send(const ExchangeInfo& info);
-  void Send(const PricerData& p);
-  void Send(const Command& p);
-  void Send(const char* s);
-*/
 
  private:
   unique_ptr<zmq::context_t> con;

@@ -20,7 +20,7 @@ class Recver {
   ~Recver();
 
   template <typename T>
-  void Recv(T& t) {
+  inline void Recv(T& t) {
     sock.get()->recv(&t, sizeof(T));
   }
 
