@@ -45,15 +45,7 @@ void* RunExchangeListener(void *param) {
 
 int main() {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-  std::vector<std::string> sleep_time_v;
-  sleep_time_v.emplace_back("10:14:20-10:30:00");
-  sleep_time_v.emplace_back("11:29:20-13:30:00");
-  std::vector<std::string> close_time_v;
-  close_time_v.emplace_back("14:55:20-15:05:00");
-  close_time_v.emplace_back("22:59:20-23:59:59");
-  close_time_v.emplace_back("00:00:00-03:59:59");
-  std::vector<std::string> force_close_time_v;
-  TimeController tc(sleep_time_v, close_time_v, force_close_time_v);
+  TimeController tc("/root/hft/config/prod/time.config");
 
   Recver data_recver("data_pub");
   std::vector<BaseStrategy*> sv;

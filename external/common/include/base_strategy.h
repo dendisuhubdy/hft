@@ -4,6 +4,7 @@
 #include "market_snapshot.h"
 #include "order.h"
 #include "sender.h"
+#include "Dater.h"
 #include "define.h"
 #include "command.h"
 #include "exchange_info.h"
@@ -12,6 +13,7 @@
 #include "strategy_status.h"
 #include "Contractor.h"
 #include "timecontroller.h"
+#include <libconfig.h++>
 #include <unordered_map>
 
 #include <cmath>
@@ -42,6 +44,7 @@ class BaseStrategy {
   virtual void UpdateTicker();
   virtual void HandleCommand(const Command& shot);
  protected:
+  BaseStrategy(const std::string& contract_config_path);
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();
   Order* NewOrder(const std::string & ticker, OrderSide::Enum side, int size, bool control_price, bool sleep_order, const std::string & tbd, bool no_today = false);
@@ -72,9 +75,6 @@ class BaseStrategy {
   pthread_mutex_t cancel_mutex;
   pthread_mutex_t order_ref_mutex;
   pthread_mutex_t mod_mutex;
-  std::ofstream* order_file;
-  std::ofstream* exchange_file;
-  std::ofstream* strat_file;
   std::string m_strat_name;
   TimeController* m_tc;
   int ticker_size;
@@ -84,8 +84,10 @@ class BaseStrategy {
   MarketSnapshot last_shot;
   long int build_position_time;
   int max_holding_sec;
+  Dater dt;
   Contractor m_ct;
   bool init_ticker;
+  libconfig::Config contract_config;
  private:
   virtual void DoOperationAfterCancelled(Order* o);
   virtual void Run() = 0;

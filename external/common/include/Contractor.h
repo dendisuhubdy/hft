@@ -16,19 +16,6 @@
 #include "./common_tools.h"
 #include "./timecontroller.h"
 
-/*
-struct ticker_volume {
-  std::string ticker;
-  int volume;
-  bool operator<(const struct ticker_volume & tv) const {
-    if (this->volume < tv.volume) {
-      return false;
-    }
-    return true;
-  }
-};
-*/
-
 class Contractor {
  public:
   Contractor(std::string file_path);
@@ -52,7 +39,6 @@ class Contractor {
   std::unordered_map<std::string, std::pair<std::string, int> > tick_pair;
   std::unordered_set<std::string> tick_set;
   std::unordered_set<std::string> ticker_set;
-  // std::unordered_map<std::string, std::ofstream> file_map;
   TimeController tc;
   bool is_ready;
 };

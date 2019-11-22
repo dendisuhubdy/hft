@@ -10,7 +10,6 @@
 #include "time_status.h"
 #include <unordered_map>
 #include <time.h>
-#include <libconfig.h++>
 #include <sys/time.h>
 
 #include <cmath>
@@ -20,22 +19,23 @@
 
 class TimeController {
  public:
-  TimeController(string time_config);
+  TimeController(std::vector<std::string>sleep_time, std::vector<std::string> close_time, std::vector<std::string> force_close, const std::string & mode="real");
   TimeController();
   TimeController(const TimeController & t);
+
   ~TimeController();
 
-  TimeStatus::Enum ShotStatus(const MarketSnapshot& shot);
-  TimeStatus::Enum CurrentStatus();
-  TimeStatus::Enum IntStatus(int check_time) const;
+  TimeStatus::Enum CheckCurrentTime(const MarketSnapshot& shot);
 
-  int TimevalInt(timeval t = {0,0}) const;
-  int CurrentInt() const;
-  std::string TimevalStr(timeval t = {0, 0}, bool show_time = false) const;
-  std::string IntStr(int sec) const;
+  TimeStatus::Enum CheckTime(int check_time) const;
 
+  int GetTodaySec();
+  int GetSec(timeval t = {0,0}) const;
+  bool IsMix(int s1, int e1, int s2, int e2) const;
   void StartTimer();
   void EndTimer(const std::string & label="");
+  int GetStratSec(timeval t = {0, 0}) const;
+  std::string TimeToStr(timeval t = {0, 0}, bool show_time = false) const;
 
  private:
   int last_sec;
@@ -51,7 +51,6 @@ class TimeController {
   long int timer_usec;
   bool is_timer_on;
 
-  bool IsMix(int s1, int e1, int s2, int e2) const;
   int Translate(const std::string & time) const;
   bool Check() const;
   void Push(std::vector<std::string> timestr, std::vector<int>& a, std::vector<int>& b);

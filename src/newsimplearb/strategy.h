@@ -24,7 +24,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & contract_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode = "real", std::ofstream* order_file = nullptr, std::ofstream* exchange_file = nullptr, std::ofstream* strat_file = nullptr, bool no_close_today = false);
+  explicit Strategy(const libconfig::Setting & param_setting, const std::string& contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* sender, const std::string & mode = "real", bool no_close_today = false);
   ~Strategy();
 
   void Start() override;
@@ -113,9 +113,6 @@ class Strategy : public BaseStrategy {
   double round_fee_cost;
   int max_close_try;
   double current_spread;
-  std::ofstream* this_order_file;
-  std::ofstream* this_exchange_file;
-  std::ofstream* this_strat_file;
   CALER * caler;
   bool is_started;
   Sender* data_sender;

@@ -130,27 +130,12 @@ int main() {
   libconfig::Config ticker_cfg;
   std::string param_config_path = default_path + "/hft/config/backtest/backtest.config";
   std::string ticker_config_path = default_path + "/hft/config/ticker/ticker.config";
+  std::string time_config_path = default_path + "/hft/config/prod/time.config";
   param_cfg.readFile(param_config_path.c_str());
   ticker_cfg.readFile(ticker_config_path.c_str());
   try {
-    const libconfig::Setting &sleep_time = param_cfg.lookup("time_controller")["sleep_time"];
-    const libconfig::Setting &close_time = param_cfg.lookup("time_controller")["close_time"];
-    const libconfig::Setting &force_close_time = param_cfg.lookup("time_controller")["force_close_time"];
-    std::vector<std::string> sleep_time_v;
-    std::vector<std::string> close_time_v;
-    std::vector<std::string> force_close_time_v;
-    for (int i = 0; i < sleep_time.getLength(); i++) {
-      sleep_time_v.push_back(sleep_time[i]);
-    }
-    for (int i = 0; i < close_time.getLength(); i++) {
-      close_time_v.push_back(close_time[i]);
-    }
-    for (int i = 0; i < force_close_time.getLength(); i++) {
-      force_close_time_v.push_back(force_close_time[i]);
-    }
     std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-    TimeController tc(sleep_time_v, close_time_v, force_close_time_v, "test");
-    Recver data_recver("data_pub");
+    TimeController tc(time_config_path);
 
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
     const libconfig::Setting & ticker_setting_map = ticker_cfg.lookup("map");
@@ -237,7 +222,7 @@ int main() {
     std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
     Contractor ct(dt.GetValidFile(start_date, -40));
     PrintVector(ct.GetAllTick());
-    std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp"));
+    std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp", "mid_backtest.dat"));
     std::vector<BaseStrategy*> sv;
     // while (true) {
       sv.clear();
@@ -252,12 +237,12 @@ int main() {
           for (int j = 0; j < s_list.getLength(); j++) {
             std::string con = s_list[j];
             const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
-            sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+            sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", no_close_today));
           }
         } else {
           std::string con = param_setting["unique_name"];
           const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
-          sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", &order_file, &exchange_file, &strat_file, no_close_today));
+          sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", no_close_today));
         }
       }
       tc.StartTimer();

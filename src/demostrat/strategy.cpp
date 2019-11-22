@@ -27,7 +27,7 @@ void Strategy::Init() {
   std::vector<string> sleep_time_v;
   std::vector<string> close_time_v;
   std::vector<string> force_close_time_v;
-  m_tc = new TimeController(sleep_time_v, close_time_v, force_close_time_v, "data");;
+  m_tc = new TimeController("/root/hft/config/prod/time.config");
 }
 
 bool Strategy::Ready() {

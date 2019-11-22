@@ -5,33 +5,30 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & ticker_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode, std::ofstream* order_file, std::ofstream* exchange_file, std::ofstream* strat_file, bool no_close_today)
-  : this_tc(tc),
+Strategy::Strategy(const libconfig::Setting & param_setting, const std::string & contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* sender, const std::string & mode, bool no_close_today)
+  : BaseStrategy(contract_config_path),
+    this_tc(tc),
     tsm(ticker_strat_map),
     mode(mode),
     last_valid_mid(0.0),
     stop_loss_times(0),
     max_close_try(10),
-    this_order_file(order_file),
-    this_exchange_file(exchange_file),
-    this_strat_file(strat_file),
     no_close_today(no_close_today),
     open_count(0),
     close_count(0) {
-  caler = new CALER(ticker_setting);
+  caler = new CALER(contract_config_path);
   try {
-    m_ct = ct;
-    std::string unique_name = ticker_setting["ticker"];
+    std::string unique_name = param_setting["unique_name"];
+    const libconfig::Setting & contract_setting = contract_config.lookup(unique_name.c_str());
     m_strat_name = unique_name;
     std::vector<std::string> v = m_ct.GetTicker(unique_name);
-    // PrintVector(v);
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];
     min_train_sample = param_setting["min_train_samples"];
     double m_r = param_setting["min_range"];
     double m_p = param_setting["min_profit"];
-    min_price_move = ticker_setting["min_price_move"];
+    min_price_move = contract_setting["min_price_move"];
     printf("[%s, %s] mpv is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), min_price_move);
     min_profit = m_p * min_price_move;
     min_range = m_r * min_price_move;
@@ -44,7 +41,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Se
     max_holding_sec = param_setting["max_holding_sec"];
     range_width = param_setting["range_width"];
     std::string con = GetCon(main_ticker);
-    cancel_limit = ticker_setting["cancel_limit"];
+    cancel_limit = contract_setting["cancel_limit"];
     printf("[%s %s] try over!\n", main_ticker.c_str(), hedge_ticker.c_str());
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
@@ -127,11 +124,11 @@ void Strategy::Clear() {
   m_ct.Clear();
   if (close_count != open_count) {
     printf("[%s %s]not flat in %s when cleared, open_close %d %d\n",
-               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimeToStr(shot_map[main_ticker].time).c_str(),
+               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimevalStr(shot_map[main_ticker].time).c_str(),
                open_count, close_count);
   } else {
     printf("[%s %s] no position in %s when cleared, open %d\n",
-               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimeToStr(shot_map[main_ticker].time).c_str(),
+               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimevalStr(shot_map[main_ticker].time).c_str(),
                open_count);
   }
   printf("[%s %s] open_close max is %d\n", main_ticker.c_str(), hedge_ticker.c_str(), open_count);
@@ -313,7 +310,7 @@ void Strategy::CloseLogic() {
   }
 
   if (TimeUp()) {
-    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" ? shot_map[main_ticker].time.tv_sec : m_tc->GetSec(), max_holding_sec, GetPairMid());
+    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" ? shot_map[main_ticker].time.tv_sec : m_tc->CurrentInt(), max_holding_sec, GetPairMid());
     ForceFlat();
     return;
   }
@@ -372,28 +369,8 @@ void Strategy::Run() {
   }
 }
 
-/*
-void Strategy::InitTicker() {
-  ticker_map[main_ticker] = true;
-  ticker_map[hedge_ticker] = true;
-  ticker_map["positionend"] = true;
-}
-
-void Strategy::InitTimer() {
-  m_tc = &this_tc;
-}
-
-void Strategy::InitFile() {
-  order_file = this_order_file;
-  exchange_file = this_exchange_file;
-}
-*/
-
 void Strategy::Init() {
   m_tc = &this_tc;
-  order_file = this_order_file;
-  exchange_file = this_exchange_file;
-  strat_file = this_strat_file;
   // ui_file = this_ui_file;
   ticker_map[main_ticker] = true;
   ticker_map[hedge_ticker] = true;
@@ -426,9 +403,6 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
     std::string label = main_ticker + '|' + hedge_ticker;
     snprintf(shot.ticker, sizeof(shot.ticker), "%s", label.c_str());
     shot.last_trade = mid;
-    if (this_strat_file) {
-      SaveBin(*this_strat_file, shot);
-    }
     map_vector.emplace_back(mid);  // map_vector saved the aligned mid, all the elements here are safe to trade
     if (map_vector.size() > min_train_sample && map_vector.size() % (2*min_train_sample) == 1) {
       CalParams();
@@ -566,7 +540,7 @@ void Strategy::UpdateBuildPosTime() {
   if (hedge_pos == 0) {  // closed all position, reinitialize build_position_time
     build_position_time = MAX_UNIX_TIME;
   } else if (hedge_pos == 1) {  // position 0->1, record build_time
-    build_position_time = m_tc->GetStratSec(last_shot.time);
+    build_position_time = m_tc->TimevalInt(last_shot.time);
   }
 }
 

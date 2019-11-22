@@ -23,7 +23,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & contract_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode = "real", std::ofstream* order_file = nullptr, std::ofstream* exchange_file = nullptr, std::ofstream* strat_file = nullptr, bool no_close_today = false);
+  explicit Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & ticker_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode = "real", bool no_close_today = false);
   virtual ~Strategy();
 
   void Start() override;
@@ -38,10 +38,7 @@ class Strategy : public BaseStrategy {
   void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
   void DoOperationAfterFilled(Order* o, const ExchangeInfo& info) override;
   void DoOperationAfterCancelled(Order* o) override;
-  void ModerateOrders(const std::string & contract) override;
-  // void InitTicker();
-  // void InitTimer();
-  // void InitFile();
+  void ModerateOrders(const std::string & ticker) override;
   void Init() override;
   bool Ready() override;
   void Pause() override;
@@ -52,7 +49,7 @@ class Strategy : public BaseStrategy {
 
   void UpdateBuildPosTime();
 
-  double OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) override;
+  double OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) override;
 
   OrderSide::Enum OpenLogicSide();
   bool OpenLogic();
@@ -112,9 +109,6 @@ class Strategy : public BaseStrategy {
   double round_fee_cost;
   int max_close_try;
   double current_spread;
-  std::ofstream* this_order_file;
-  std::ofstream* this_exchange_file;
-  std::ofstream* this_strat_file;
   CALER * caler;
   bool is_started;
   Sender* data_sender;
