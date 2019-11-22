@@ -23,7 +23,7 @@ class Sender {
 
   template <typename T>
     void Send(const T & t) {
-      char buffer[BUFFER_SIZE];
+      /*char buffer[BUFFER_SIZE];
         if (BUFFER_SIZE < sizeof(t)) {
           printf("buffer size is not enough, 28\n");
           exit(1);
@@ -31,7 +31,8 @@ class Sender {
         memcpy(buffer, &t, sizeof(t));
         pthread_mutex_lock(&mutex);
         sock.get()->send(buffer, sizeof(buffer));
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex);*/
+      sock.get()->send(&t, sizeof(T));
     }
 
   /*

@@ -8,6 +8,7 @@
 #include <market_snapshot.h>
 #include <common_tools.h>
 #include <base_strategy.h>
+#include <strategy_container.h>
 #include <unordered_map>
 
 #include <iostream>
@@ -22,60 +23,6 @@ void HandleLeft() {
 }
 
 void PrintResult() {
-}
-
-void Load_history(std::string file_name) {
-  std::unique_ptr<Sender> sender(new Sender("*:33336", "bind", "tcp"));
-  std::ifstream raw_file;
-  raw_file.open(file_name.c_str(), ios::in|ios::binary);
-  if (!raw_file) {
-    printf("%s is not existed!", file_name.c_str());
-    return;
-  }
-  MarketSnapshot shot;
-  while (raw_file.read(reinterpret_cast<char *>(&shot), sizeof(shot))) {
-    sender.get()->Send(shot);
-  }
-  MarketSnapshot fshot;
-  snprintf(fshot.ticker, sizeof(fshot.ticker), "%s", "load_end");
-  sender.get()->Send(fshot);
-  printf("Load_history finished!\n");
-}
-
-void* RunCommandListener(void *param) {
-  std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
-  Recver recver("*:33334", "tcp", "bind");
-  while (true) {
-    Command shot;
-    recver.Recv(shot);
-    printf("command recved!\n");
-    shot.Show(stdout);
-    std::string ticker = Split(shot.ticker, "|").front();
-    if (ticker == "load_history") {
-      Load_history("mid.dat");
-      continue;
-    }
-    std::vector<BaseStrategy*> sv = (*sv_map)[ticker];
-    for (auto v : sv) {
-      v->HandleCommand(shot);
-    }
-  }
-  return NULL;
-}
-
-void* RunExchangeListener(void *param) {
-  std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
-  Recver recver("exchange_info");
-  while (true) {
-    ExchangeInfo info;
-    recver.Recv(info);
-    info.Show(stdout);
-    std::vector<BaseStrategy*> sv = (*sv_map)[info.ticker];
-    for (auto v : sv) {
-      v->UpdateExchangeInfo(info);
-    }
-  }
-  return NULL;
 }
 
 int main() {
@@ -137,36 +84,8 @@ int main() {
     const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
     sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "real", &order_file, &exchange_file, &strat_file, no_close_today));
   }
-
-  printf("strategy init all ok!\n");
-  pthread_t command_thread;
-  if (pthread_create(&command_thread,
-                     NULL,
-                     &RunCommandListener,
-                     &ticker_strat_map) != 0) {
-    perror("command_pthread_create");
-    exit(1);
-  }
-
-  pthread_t exchange_thread;
-  if (pthread_create(&exchange_thread,
-                     NULL,
-                     &RunExchangeListener,
-                     &ticker_strat_map) != 0) {
-    perror("pthread_create");
-    exit(1);
-  }
-  sleep(3);
-  printf("send query position ok!\n");
-  while (true) {
-    MarketSnapshot shot;
-    data_recver.Recv(shot);
-    shot.is_initialized = true;
-    std::vector<BaseStrategy*> sv = ticker_strat_map[shot.ticker];
-    for (auto v : sv) {
-      v->UpdateData(shot);
-    }
-  }
+  StrategyContainer sc(ticker_strat_map);
+  sc.Start();
   HandleLeft();
   PrintResult();
 }
