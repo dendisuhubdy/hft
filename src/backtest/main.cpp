@@ -129,7 +129,7 @@ int main() {
   libconfig::Config param_cfg;
   libconfig::Config ticker_cfg;
   std::string param_config_path = default_path + "/hft/config/backtest/backtest.config";
-  std::string ticker_config_path = default_path + "/hft/config/ticker/ticker.config";
+  std::string ticker_config_path = default_path + "/hft/config/contract/contract.config";
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   param_cfg.readFile(param_config_path.c_str());
   ticker_cfg.readFile(ticker_config_path.c_str());
