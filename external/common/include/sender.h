@@ -25,7 +25,9 @@ class Sender {
   template <typename T>
     inline void Send(const T & t) {
       sock.get()->send(&t, sizeof(T));
-      SaveBin(*f.get(), t);
+      if (f.get()) {
+        SaveBin(*f.get(), t);
+      }
     }
 
  private:

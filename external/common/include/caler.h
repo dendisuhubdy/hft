@@ -25,6 +25,7 @@ struct FeePoint {
 class CALER {
  public:
   CALER(std::string config_path);
+  CALER(const std::string& config_path, const std::string& key);
   CALER(const libconfig::Setting & param_setting);
   ~CALER();
   Fee CalFee(std::string ticker, double open_price, int open_size, double close_price, int close_size, bool no_close_today = false);

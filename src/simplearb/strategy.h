@@ -6,6 +6,7 @@
 #include <timecontroller.h>
 #include <Contractor.h>
 #include <order.h>
+#include <command.h>
 #include <sender.h>
 #include <caler.h>
 #include <exchange_info.h>
@@ -23,8 +24,8 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & ticker_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode = "real", bool no_close_today = false);
-  virtual ~Strategy();
+  explicit Strategy(const libconfig::Setting & param_setting, const std::string& contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* sender, const std::string & mode = "real", bool no_close_today = false);
+  ~Strategy();
 
   void Start() override;
   void Stop() override;
@@ -38,7 +39,10 @@ class Strategy : public BaseStrategy {
   void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
   void DoOperationAfterFilled(Order* o, const ExchangeInfo& info) override;
   void DoOperationAfterCancelled(Order* o) override;
-  void ModerateOrders(const std::string & ticker) override;
+  void ModerateOrders(const std::string & contract) override;
+  // void InitTicker();
+  // void InitTimer();
+  // void InitFile();
   void Init() override;
   bool Ready() override;
   void Pause() override;
@@ -49,7 +53,7 @@ class Strategy : public BaseStrategy {
 
   void UpdateBuildPosTime();
 
-  double OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) override;
+  double OrderPrice(const std::string & contract, OrderSide::Enum side, bool control_price) override;
 
   OrderSide::Enum OpenLogicSide();
   bool OpenLogic();
@@ -115,11 +119,6 @@ class Strategy : public BaseStrategy {
   bool no_close_today;
   int open_count;
   int close_count;
-  int main_record;
-  int hedge_record;
-  MarketSnapshot main_last;
-  MarketSnapshot hedge_last;
-  double total_slip_loss;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_

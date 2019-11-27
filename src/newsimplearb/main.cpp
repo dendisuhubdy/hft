@@ -6,10 +6,9 @@
 #include <sender.h>
 #include <Dater.h>
 #include <market_snapshot.h>
-#include <strategy_container.h>
 #include <common_tools.h>
 #include <base_strategy.h>
-#include <thread>
+#include <strategy_container.h>
 #include <unordered_map>
 
 #include <iostream>
@@ -28,19 +27,30 @@ void PrintResult() {
 
 int main() {
   std::string default_path = GetDefaultPath();
-
   libconfig::Config param_cfg;
+  libconfig::Config contract_config;
   std::string config_path = default_path + "/hft/config/prod/prod.config";
-  param_cfg.readFile(config_path.c_str());
-
+  std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
+  param_cfg.readFile(config_path.c_str());
+  contract_config.readFile(contract_config_path.c_str());
+  std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   TimeController tc(time_config_path);
 
-  std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
-
-  std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-  std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
   const libconfig::Setting & strategies = param_cfg.lookup("strategy");
+  const libconfig::Setting & ticker_setting_map = contract_config.lookup("map");
+  std::unordered_map<std::string, int> ticker_index_map;
+
+  for (int i = 0; i < ticker_setting_map.getLength(); i++) {
+    const libconfig::Setting & setting = ticker_setting_map[i];
+    ticker_index_map[setting["ticker"]] = i;
+  }
+
+  std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp"));
+  Dater dt;
+  std::string file = dt.GetValidFile(dt.GetCurrentDate(), -10);
+  Contractor ct(file);
+
   for (int i = 0; i < strategies.getLength(); i++) {
     const libconfig::Setting & param_setting = strategies[i];
     std::string con = param_setting["unique_name"];
@@ -48,10 +58,10 @@ int main() {
     if (param_setting.exists("no_close_today")) {
       no_close_today = param_setting["no_close_today"];
     }
-    auto s = new Strategy(param_setting, contract_config_path, tc, &ticker_strat_map, sender.get(), "real", no_close_today);
+    const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
+    auto s = new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "real", no_close_today);
     s->Print();
   }
-
   StrategyContainer sc(ticker_strat_map);
   sc.Start();
   HandleLeft();

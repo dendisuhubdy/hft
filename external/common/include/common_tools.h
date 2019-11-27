@@ -144,9 +144,6 @@ static inline std::vector<std::string> Split(const std::string &str, const T &de
 
 template<typename T>
 void SaveBin(std::ofstream &stream, const T& t) {
-  if (!stream) {
-    return;
-  }
   stream.write((char*)&t, sizeof(T));
   stream.flush();
 }
