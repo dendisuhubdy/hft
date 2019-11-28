@@ -36,7 +36,8 @@ int main() {
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   TimeController tc(time_config_path);
 
-  std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
+  std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
+  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
@@ -47,7 +48,7 @@ int main() {
     if (param_setting.exists("no_close_today")) {
       no_close_today = param_setting["no_close_today"];
     }
-    auto s = new Strategy(param_setting, contract_config_path, tc, &ticker_strat_map, sender.get(), "real", no_close_today);
+    auto s = new Strategy(param_setting, contract_config_path, tc, &ticker_strat_map, ui_sender.get(), order_sender.get(), "real", no_close_today);
     s->Print();
   }
 

@@ -5,7 +5,7 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, const std::string & contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* sender, const std::string & mode, bool no_close_today)
+Strategy::Strategy(const libconfig::Setting & param_setting, const std::string & contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode, bool no_close_today)
   : BaseStrategy(contract_config_path),
     this_tc(tc),
     tsm(ticker_strat_map),
@@ -53,7 +53,8 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const std::string &
     printf("EXCEPTION: %s\n", ex.what());
     exit(1);
   }
-  ui_sender = sender;
+  ui_sender = uisender;
+  order_sender = ordersender;
   (*ticker_strat_map)[main_ticker].emplace_back(this);
   (*ticker_strat_map)[hedge_ticker].emplace_back(this);
   (*ticker_strat_map)["positionend"].emplace_back(this);
@@ -549,7 +550,7 @@ void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
     // get hedged right now
     std::string a = o->tbd;
     a.find("close") == string::npos ? open_count++ : close_count++;
-    Order* order = NewOrder(hedge_ticker, (o->side == OrderSide::Buy)?OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, "", no_close_today);
+    Order* order = NewOrder(hedge_ticker, (o->side == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, "", no_close_today);
     order->Show(stdout);
     HandleTestOrder(order);
   } else if (strcmp(o->ticker, hedge_ticker.c_str()) == 0) {

@@ -24,7 +24,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, const std::string& contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* sender, const std::string & mode = "real", bool no_close_today = false);
+  explicit Strategy(const libconfig::Setting & param_setting, const std::string& contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode = "real", bool no_close_today = false);
   ~Strategy();
 
   void Start() override;
