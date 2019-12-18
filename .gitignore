@@ -11,11 +11,8 @@ build/*
 *.swp
 *.log
 *.out
-tools/waf-plugins/*
 *.swp
 *.pyc
-backend/tools/waf-plugins/*
-backend/tools/.*
 .lock-waf_linux2_build
 src/build-*
 *.pro.user
