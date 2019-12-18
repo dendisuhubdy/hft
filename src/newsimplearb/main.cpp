@@ -47,6 +47,7 @@ int main() {
   }
 
   std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp"));
+  std::unique_ptr<Sender> ordersender(new Sender("order_sub", "connect", "ipc", "order.dat"));
   Dater dt;
   std::string file = dt.GetValidFile(dt.GetCurrentDate(), -10);
   Contractor ct(file);
@@ -59,7 +60,7 @@ int main() {
       no_close_today = param_setting["no_close_today"];
     }
     const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
-    auto s = new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "real", no_close_today);
+    auto s = new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), ordersender.get(), "real", no_close_today);
     s->Print();
   }
   StrategyContainer sc(ticker_strat_map);

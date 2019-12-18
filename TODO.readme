@@ -5,3 +5,8 @@
 5.Data interface
 6.Time performance test
 7.more complex backtest function in
+
+
+current:
+backtest and simplearb main.cpp is not compatible
+backtest need map config
