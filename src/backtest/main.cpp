@@ -129,7 +129,7 @@ int main() {
   libconfig::Config param_cfg;
   libconfig::Config ticker_cfg;
   std::string param_config_path = default_path + "/hft/config/backtest/backtest.config";
-  std::string ticker_config_path = default_path + "/hft/config/contract/contract.config";
+  std::string ticker_config_path = default_path + "/hft/config/contract/bk_contract.config";
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   param_cfg.readFile(param_config_path.c_str());
   ticker_cfg.readFile(ticker_config_path.c_str());
@@ -223,6 +223,7 @@ int main() {
     Contractor ct(dt.GetValidFile(start_date, -40));
     PrintVector(ct.GetAllTick());
     std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp", "mid_backtest.dat"));
+    std::unique_ptr<Sender> ordersender(new Sender("order_sub", "connect", "ipc", "order.dat"));
     std::vector<BaseStrategy*> sv;
     // while (true) {
       sv.clear();
@@ -237,12 +238,12 @@ int main() {
           for (int j = 0; j < s_list.getLength(); j++) {
             std::string con = s_list[j];
             const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
-            sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", no_close_today));
+            sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), ordersender.get(), "test", no_close_today));
           }
         } else {
           std::string con = param_setting["unique_name"];
           const libconfig::Setting & ticker_setting = ticker_setting_map[ticker_index_map[con]];
-          sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), "test", no_close_today));
+          sv.emplace_back(new Strategy(param_setting, ticker_setting, tc, &ticker_strat_map, ct, sender.get(), ordersender.get(), "test", no_close_today));
         }
       }
       tc.StartTimer();

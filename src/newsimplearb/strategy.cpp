@@ -5,7 +5,7 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & ticker_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, const std::string & mode, bool no_close_today)
+Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Setting & ticker_setting, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Contractor& ct, Sender* sender, Sender* ordersender, const std::string & mode, bool no_close_today)
   : this_tc(tc),
     tsm(ticker_strat_map),
     mode(mode),
@@ -18,6 +18,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const libconfig::Se
     main_record(0),
     hedge_record(0),
     total_slip_loss(0.0) {
+  order_sender = ordersender;
   caler = new CALER(ticker_setting);
   try {
     m_ct = ct;
