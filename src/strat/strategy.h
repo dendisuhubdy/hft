@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 
-#include "strat/timecontroller.h"
+#include "strat/time_controller.h"
 
 class Strategy {
  public:

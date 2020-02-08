@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 
-#include "strat_MA/timecontroller.h"
+#include "strat_MA/time_controller.h"
 
 enum PriceMode {
   BestPos,

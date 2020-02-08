@@ -55,12 +55,6 @@ class simplearb_class(BuildContext):
   cmd = "simplearb"
 class backtest_class(BuildContext):
   cmd = "backtest"
-class dt_class(BuildContext):
-  cmd = "dt"
-class convert_to_binary_data_class(BuildContext):
-  cmd = "convert_to_binary_data"
-class datatools_class(BuildContext):
-  cmd = "datatools"
 class order_matcher_class(BuildContext):
   cmd = "order_matcher"
 class demostrat_class(BuildContext):
@@ -113,15 +107,6 @@ def build(bld):
     return
   if bld.cmd == "backtest":
     run_backtest(bld)
-    return
-  if bld.cmd == "dt":
-    run_dt(bld)
-    return
-  if bld.cmd == "convert_to_binary_data":
-    run_convert_to_binary_data(bld)
-    return
-  if bld.cmd == "datatools":
-    run_datatools(bld)
     return
   if bld.cmd == "order_matcher":
     run_order_matcher(bld)
@@ -278,36 +263,6 @@ def run_backtest(bld):
     use = 'zmq commontools pthread config++ python2.7 z' # backtest'
   )
 
-def run_dt(bld):
-  bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/dt',
-    source = ['src/dt/main.cpp'
-             ],
-    use = 'zmq commontools pthread config++ python2.7'
-  )
-
-
-def run_convert_to_binary_data(bld):
-  bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/convert_to_binary_data',
-    source = ['src/convert_to_binary_data/main.cpp'
-             ],
-    includes = [
-                'external/zeromq/include'],
-    use = 'zmp commontools pthread config++'
-  )
-
-def run_datatools(bld):
-  bld.read_shlib('commontools', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/datatool',
-    source = ['src/datatools/main.cpp'
-             ],
-    use = 'commontools pthread config++'
-  )
-
 def run_order_matcher(bld):
   bld.read_shlib('commontools', paths=['external/common/lib'])
   bld.program(
@@ -349,11 +304,8 @@ def run_all(bld):
   run_getins(bld)
   run_simplearb(bld)
   #run_backtest(bld)
-  #run_dt(bld)
   #run_new_backtest(bld)
   run_order_matcher(bld)
   run_demostrat(bld)
   run_simplemaker(bld)
   run_update_active_contract(bld)
-  run_convert_to_binary_data(bld)
-  #run_datatools(bld)

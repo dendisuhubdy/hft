@@ -2,7 +2,7 @@
 #define SRC_DEMOSTRAT_STRATEGY_H_
 
 #include <market_snapshot.h>
-#include <timecontroller.h>
+#include <time_controller.h>
 #include <order.h>
 #include <sender.h>
 #include <exchange_info.h>
