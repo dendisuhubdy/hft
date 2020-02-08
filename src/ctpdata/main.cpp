@@ -7,6 +7,7 @@
 #include <common_tools.h>
 
 #include <string>
+#include <ctime>
 #include <vector>
 #include <fstream>
 
@@ -29,8 +30,17 @@ class Listener : public CThostFtdcMdSpi {
       record_stdout(show_stdout),
       record_file(file_record) {
     sender = new Sender("data_source");
-    data_file = fopen("data.txt", "w");
-    binary_file.open("data_binary.dat", ios::app | ios::out | ios::binary);
+    // data_file = fopen("data.txt", "w");
+    time_t time_seconds = time(0);
+    struct tm now_time;
+    localtime_r(&time_seconds, &now_time);
+    char date[32];
+    strftime(date, sizeof(date), "%Y-%m-%d", &now_time);
+    std::string file_name = "future";
+    file_name += date;
+    file_name += ".dat";
+    printf("data file is %s\n", file_name.c_str());
+    binary_file.open(file_name.c_str(), ios::app | ios::out | ios::binary);
   }
   ~Listener() {
     if (record_file) {
