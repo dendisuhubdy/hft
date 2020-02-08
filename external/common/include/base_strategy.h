@@ -1,18 +1,19 @@
 #ifndef BASE_STRATEGY_H_
 #define BASE_STRATEGY_H_
 
-#include "market_snapshot.h"
-#include "order.h"
-#include "sender.h"
-#include "Dater.h"
+#include "struct/market_snapshot.h"
+#include "struct/order.h"
+#include "util/sender.h"
+#include "util/dater.h"
 #include "define.h"
-#include "command.h"
-#include "exchange_info.h"
-#include "order_status.h"
-#include "common_tools.h"
-#include "strategy_status.h"
-#include "Contractor.h"
-#include "timecontroller.h"
+#include "struct/command.h"
+#include "struct/exchange_info.h"
+#include "struct/order_status.h"
+#include "util/caler.h"
+#include "util/common_tools.h"
+#include "struct/strategy_status.h"
+#include "util/contractor.h"
+#include "util/timecontroller.h"
 #include <libconfig.h++>
 #include <unordered_map>
 
@@ -21,6 +22,7 @@
 #include <string>
 #include <unistd.h>
 #include <memory>
+#include <mutex>
 
 class BaseStrategy {
  public:
@@ -40,11 +42,11 @@ class BaseStrategy {
   virtual void Clear();
   void debug() const;
   double GetMid(const std::string & ticker);
-  void UpdateCT(const Contractor& ct);
+  // void UpdateCT(const HistoryWorker& ct);
   virtual void UpdateTicker();
   virtual void HandleCommand(const Command& shot);
  protected:
-  BaseStrategy(const std::string& contract_config_path);
+  // BaseStrategy(const std::string& contract_config_path);
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();
   Order* NewOrder(const std::string & ticker, OrderSide::Enum side, int size, bool control_price, bool sleep_order, const std::string & tbd, bool no_today = false);
@@ -72,11 +74,11 @@ class BaseStrategy {
   unordered_map<std::string, int> position_map;
   unordered_map<std::string, double> avgcost_map;
   int ref_num;
-  pthread_mutex_t cancel_mutex;
-  pthread_mutex_t order_ref_mutex;
-  pthread_mutex_t mod_mutex;
+  std::mutex cancel_mutex;
+  std::mutex order_ref_mutex;
+  std::mutex mod_mutex;
   std::string m_strat_name;
-  TimeController* m_tc;
+  TimeController m_tc;
   int ticker_size;
   std::unordered_map<std::string, int> cancel_map;
   StrategyStatus::Enum ss;
@@ -84,10 +86,9 @@ class BaseStrategy {
   MarketSnapshot last_shot;
   long int build_position_time;
   int max_holding_sec;
-  Dater dt;
   Contractor m_ct;
+  CALER m_cal;
   bool init_ticker;
-  libconfig::Config contract_config;
  private:
   virtual void DoOperationAfterCancelled(Order* o);
   virtual void Run() = 0;

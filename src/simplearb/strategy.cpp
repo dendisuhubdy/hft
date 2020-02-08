@@ -5,23 +5,44 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, const std::string & contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode, bool no_close_today)
-  : BaseStrategy(contract_config_path),
-    this_tc(tc),
-    tsm(ticker_strat_map),
-    mode(mode),
+Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode, bool no_close_today)
+  : mode(mode),
     last_valid_mid(0.0),
     stop_loss_times(0),
     max_close_try(10),
     no_close_today(no_close_today),
-    open_count(0),
-    close_count(0) {
+    // open_count(0),
+    // close_count(0),
+    m_hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20)) {
+  FillStratConfig(param_setting, no_close_today);
+  RunningSetup(ticker_strat_map, uisender, ordersender, mode);
+}
+
+Strategy::~Strategy() {
+}
+
+void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode) {
+  ui_sender = uisender;
+  order_sender = ordersender;
+  (*ticker_strat_map)[main_ticker].emplace_back(this);
+  (*ticker_strat_map)[hedge_ticker].emplace_back(this);
+  (*ticker_strat_map)["positionend"].emplace_back(this);
+  MarketSnapshot shot;
+  shot_map[main_ticker] = shot;
+  shot_map[hedge_ticker] = shot;
+  avgcost_map[main_ticker] = 0.0;
+  avgcost_map[hedge_ticker] = 0.0;
+  if (mode == "test") {
+    position_ready = true;
+  }
+}
+
+void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today) {
   try {
     std::string unique_name = param_setting["unique_name"];
-    caler = new CALER(contract_config_path, unique_name);
-    const libconfig::Setting & contract_setting = contract_config.lookup(unique_name.c_str());
+    const libconfig::Setting & contract_setting = m_ct.Lookup(unique_name);
     m_strat_name = unique_name;
-    std::vector<std::string> v = m_ct.GetTicker(unique_name);
+    std::vector<std::string> v = m_hw.GetTicker(unique_name);
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];
@@ -53,39 +74,22 @@ Strategy::Strategy(const libconfig::Setting & param_setting, const std::string &
     printf("EXCEPTION: %s\n", ex.what());
     exit(1);
   }
-  ui_sender = uisender;
-  order_sender = ordersender;
-  (*ticker_strat_map)[main_ticker].emplace_back(this);
-  (*ticker_strat_map)[hedge_ticker].emplace_back(this);
-  (*ticker_strat_map)["positionend"].emplace_back(this);
-  MarketSnapshot shot;
-  shot_map[main_ticker] = shot;
-  shot_map[hedge_ticker] = shot;
-  avgcost_map[main_ticker] = 0.0;
-  avgcost_map[hedge_ticker] = 0.0;
-  if (mode == "test") {
-    position_ready = true;
-  }
-  // printf("[%s %s]strategy init success!\n", main_ticker.c_str(), hedge_ticker.c_str());
   up_diff = 0.0;
   down_diff = 0.0;
   stop_loss_up_line = 0.0;
   stop_loss_down_line = 0.0;
 }
 
-Strategy::~Strategy() {
-  delete caler;
-}
-
+/*
 void Strategy::UpdateTicker() {
     std::string old_main = main_ticker;
     std::string old_hedge = hedge_ticker;
     std::string unique_name = GetCon(main_ticker);
-    std::vector<std::string> v = m_ct.GetTicker(unique_name);
+    std::vector<std::string> v = m_hw.GetTicker(unique_name);
     if (v.size() < 2) {
       printf("no enough ticker for %s to update\n", unique_name.c_str());
-      for (auto i:m_ct.GetAllTick()) {
-        PrintVector(m_ct.GetTicker(i));
+      for (auto i:m_hw.GetAllTick()) {
+        PrintVector(m_hw.GetTicker(i));
       }
       return;
     }
@@ -122,19 +126,20 @@ void Strategy::Clear() {
   map_vector.clear();
   build_position_time = MAX_UNIX_TIME;
   stop_loss_times = 0;
-  m_ct.Clear();
+  m_hw.Clear();
   if (close_count != open_count) {
     printf("[%s %s]not flat in %s when cleared, open_close %d %d\n",
-               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimevalStr(shot_map[main_ticker].time).c_str(),
+               main_ticker.c_str(), hedge_ticker.c_str(), m_tc.TimevalStr(shot_map[main_ticker].time).c_str(),
                open_count, close_count);
   } else {
     printf("[%s %s] no position in %s when cleared, open %d\n",
-               main_ticker.c_str(), hedge_ticker.c_str(), m_tc->TimevalStr(shot_map[main_ticker].time).c_str(),
+               main_ticker.c_str(), hedge_ticker.c_str(), m_tc.TimevalStr(shot_map[main_ticker].time).c_str(),
                open_count);
   }
   printf("[%s %s] open_close max is %d\n", main_ticker.c_str(), hedge_ticker.c_str(), open_count);
   open_count = close_count = 0;
 }
+*/
 
 void Strategy::Stop() {
   CancelAll(main_ticker);
@@ -200,9 +205,9 @@ void Strategy::CalParams() {
   }
   std /= min_train_sample;
   std = sqrt(std);
-  FeePoint main_point = caler->CalFeePoint(main_ticker, GetMid(main_ticker), 1, GetMid(main_ticker), 1, no_close_today);
-  FeePoint hedge_point = caler->CalFeePoint(hedge_ticker, GetMid(hedge_ticker), 1, GetMid(hedge_ticker), 1, no_close_today);
-  round_fee_cost = main_point.open_fee_point + main_point.close_fee_point + hedge_point.open_fee_point + hedge_point.close_fee_point;
+  FeePoint main_point = m_cal.CalFeePoint(main_ticker, GetMid(main_ticker), 1, GetMid(main_ticker), 1, no_close_today);
+  FeePoint hedge_point = m_cal.CalFeePoint(hedge_ticker, GetMid(hedge_ticker), 1, GetMid(hedge_ticker), 1, no_close_today);
+  double round_fee_cost = main_point.open_fee_point + main_point.close_fee_point + hedge_point.open_fee_point + hedge_point.close_fee_point;
   double margin = std::max(range_width * std, min_range) + round_fee_cost;
   up_diff = avg + margin;
   down_diff = avg - margin;
@@ -261,9 +266,9 @@ bool Strategy::Close(bool force_flat) {
     o->Show(stdout);
     HandleTestOrder(o);
     if (mode == "real") {
-      double this_round_pnl = caler->CalNetPnl(main_ticker, avgcost_map[main_ticker], abs(pos), o->price, abs(pos), close_side, no_close_today) + caler->CalNetPnl(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), pos_side, no_close_today);
-      Fee main_fee = caler->CalFee(main_ticker, avgcost_map[main_ticker], abs(pos), shot_map[main_ticker].  bids[0], abs(pos), no_close_today);
-      Fee hedge_fee = caler->CalFee(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), no_close_today);
+      double this_round_pnl = m_cal.CalNetPnl(main_ticker, avgcost_map[main_ticker], abs(pos), o->price, abs(pos), close_side, no_close_today) + m_cal.CalNetPnl(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), pos_side, no_close_today);
+      Fee main_fee = m_cal.CalFee(main_ticker, avgcost_map[main_ticker], abs(pos), shot_map[main_ticker].  bids[0], abs(pos), no_close_today);
+      Fee hedge_fee = m_cal.CalFee(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), no_close_today);
       double this_round_fee = main_fee.open_fee + main_fee.close_fee + hedge_fee.open_fee + hedge_fee.close_fee;
       printf("%ld [%s %s]%sThis round close pnl: %lf, fee_cost: %lf pos is %d, holding second is %ld\n", shot_map[hedge_ticker].time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), force_flat ? "[Time up] " : "", this_round_pnl, this_round_fee, pos, shot_map[hedge_ticker].time.tv_sec - build_position_time);
     }
@@ -311,7 +316,7 @@ void Strategy::CloseLogic() {
   }
 
   if (TimeUp()) {
-    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" ? shot_map[main_ticker].time.tv_sec : m_tc->CurrentInt(), max_holding_sec, GetPairMid());
+    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" ? shot_map[main_ticker].time.tv_sec : m_tc.CurrentInt(), max_holding_sec, GetPairMid());
     ForceFlat();
     return;
   }
@@ -371,7 +376,6 @@ void Strategy::Run() {
 }
 
 void Strategy::Init() {
-  m_tc = &this_tc;
   // ui_file = this_ui_file;
   ticker_map[main_ticker] = true;
   ticker_map[hedge_ticker] = true;
@@ -541,15 +545,15 @@ void Strategy::UpdateBuildPosTime() {
   if (hedge_pos == 0) {  // closed all position, reinitialize build_position_time
     build_position_time = MAX_UNIX_TIME;
   } else if (hedge_pos == 1) {  // position 0->1, record build_time
-    build_position_time = m_tc->TimevalInt(last_shot.time);
+    build_position_time = m_tc.TimevalInt(last_shot.time);
   }
 }
 
 void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
   if (strcmp(o->ticker, main_ticker.c_str()) == 0) {
     // get hedged right now
-    std::string a = o->tbd;
-    a.find("close") == string::npos ? open_count++ : close_count++;
+    // std::string a = o->tbd;
+    // a.find("close") == string::npos ? open_count++ : close_count++;
     Order* order = NewOrder(hedge_ticker, (o->side == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, "", no_close_today);
     order->Show(stdout);
     HandleTestOrder(order);

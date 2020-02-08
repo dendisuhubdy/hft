@@ -5,11 +5,10 @@
 #include <unistd.h>
 #include <string>
 #include <memory>
-#include "exchange_info.h"
-#include "market_snapshot.h"
-#include "pricer_data.h"
+#include "struct/exchange_info.h"
+#include "struct/market_snapshot.h"
 #include "define.h"
-#include "order.h"
+#include "struct/order.h"
 
 using namespace std;
 

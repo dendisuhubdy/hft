@@ -22,7 +22,7 @@
 #include <queue>
 #include <stack>
 
-#include "market_snapshot.h"
+#include "struct/market_snapshot.h"
 using namespace std;
 
 // std::vector<std::string> Split(std::string raw_string, char split_char=' ');

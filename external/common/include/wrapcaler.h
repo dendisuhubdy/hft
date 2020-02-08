@@ -1,5 +1,5 @@
-#include "./caler.h"
-#include "./order_side.h"
+#include "./util/caler.h"
+#include "./struct/order_side.h"
 #include <boost/python.hpp>
 using namespace boost::python;
 

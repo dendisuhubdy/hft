@@ -1,14 +1,14 @@
-#ifndef DATATRANSFORMER_H_
-#define DATATRANSFORMER_H_
+#ifndef DATA_TRANSFORMER_H_
+#define DATA_TRANSFORMER_H_
 
 #include <iostream>
 #include <fstream>
 #include <memory>
-#include <market_snapshot.h>
-#include <common_tools.h>
-#include <timecontroller.h>
-#include <ThreadPool.h>
-#include <Contractor.h>
+#include "struct/market_snapshot.h"
+#include "util/common_tools.h"
+#include "util/timecontroller.h"
+#include "util/history_worker.h"
+#include "util/ThreadPool.h"
 #include <zlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -34,6 +34,7 @@ class DataTransformer {
   void AllGzToCsv(const std::string & source_dir, const std::string & dest_file="") const;
 
   static void CatContract(const std::string & file_name, int count, int size);
+  static void FSYCatContract(const std::string & file_name, const std::string& csv_name, int count, int size);
 
   void AllCat(const std::string & source_dir, const std::string & dest_file ="") const;
 
@@ -43,4 +44,4 @@ class DataTransformer {
   ThreadPool * pool;
 };
 
-#endif  // DATATRANSFORMER_H_
+#endif  // DATA_TRANSFORMER_H_

@@ -1,8 +1,9 @@
 #ifndef CALER_H_
 #define CALER_H_
 
-#include "common_tools.h"
-#include "order_side.h"
+#include "util/common_tools.h"
+#include "util/contractor.h"
+#include "struct/order_side.h"
 #include <unordered_map>
 #include <libconfig.h++>
 #include <string>
@@ -27,6 +28,7 @@ class CALER {
   CALER(std::string config_path);
   CALER(const std::string& config_path, const std::string& key);
   CALER(const libconfig::Setting & param_setting);
+  CALER(Contractor & ct);
   ~CALER();
   Fee CalFee(std::string ticker, double open_price, int open_size, double close_price, int close_size, bool no_close_today = false);
   FeePoint CalFeePoint(std::string ticker, double open_price, int open_size, double close_price, int close_size, bool no_close_today = false);

@@ -7,9 +7,9 @@
 #include <iostream>
 #include <string>
 
-#include "base_strategy.h"
-#include "sender.h"
-#include "recver.h"
+#include "core/base_strategy.h"
+#include "util/sender.h"
+#include "util/recver.h"
 
 using namespace std;
 

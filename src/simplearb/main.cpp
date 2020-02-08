@@ -48,7 +48,7 @@ int main() {
     if (param_setting.exists("no_close_today")) {
       no_close_today = param_setting["no_close_today"];
     }
-    auto s = new Strategy(param_setting, contract_config_path, tc, &ticker_strat_map, ui_sender.get(), order_sender.get(), "real", no_close_today);
+    auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), "real", no_close_today);
     s->Print();
   }
 

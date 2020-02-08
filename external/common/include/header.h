@@ -10,7 +10,6 @@
 #include <recver.h>
 #include <sender.h>
 #include <Dater.h>
-#include <Contractor.h>
 #include <market_snapshot.h>
 #include <common_tools.h>
 #include <base_strategy.h>
