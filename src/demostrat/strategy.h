@@ -1,14 +1,14 @@
 #ifndef SRC_DEMOSTRAT_STRATEGY_H_
 #define SRC_DEMOSTRAT_STRATEGY_H_
 
-#include <market_snapshot.h>
-#include <time_controller.h>
-#include <order.h>
-#include <sender.h>
-#include <exchange_info.h>
-#include <order_status.h>
-#include <common_tools.h>
-#include <base_strategy.h>
+#include <struct/market_snapshot.h>
+#include <util/time_controller.h>
+#include <struct/order.h>
+#include <util/sender.h>
+#include <struct/exchange_info.h>
+#include <struct/order_status.h>
+#include <util/common_tools.h>
+#include <core/base_strategy.h>
 #include <unordered_map>
 
 #include <cmath>

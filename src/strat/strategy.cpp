@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "strat/strategy.h"
+#include "strategy.h"
 
 Strategy::Strategy(std::string main_ticker, std::string hedge_ticker, int maxpos, double tick_size, TimeController tc, int ticker_size, std::string strat_name, bool enable_stdout, bool enable_file)
   : position_ready(false),

@@ -1,17 +1,17 @@
 #ifndef SRC_NEWSIMPLEARB_STRATEGY_H_
 #define SRC_NEWSIMPLEARB_STRATEGY_H_
 
-#include <market_snapshot.h>
-#include <strategy_status.h>
-#include <time_controller.h>
+#include <struct/market_snapshot.h>
+#include <struct/strategy_status.h>
+#include <util/time_controller.h>
 #include <Contractor.h>
-#include <order.h>
-#include <sender.h>
-#include <caler.h>
-#include <exchange_info.h>
-#include <order_status.h>
-#include <common_tools.h>
-#include <base_strategy.h>
+#include <struct/order.h>
+#include <util/sender.h>
+#include <util/caler.h>
+#include <struct/exchange_info.h>
+#include <struct/order_status.h>
+#include <util/common_tools.h>
+#include <core/base_strategy.h>
 #include <libconfig.h++>
 #include <unordered_map>
 

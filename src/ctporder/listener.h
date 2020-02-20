@@ -4,9 +4,9 @@
 #include <ThostFtdcTraderApi.h>
 #include <stdint.h>
 #include <unordered_map>
-#include <exchange_info.h>
-#include <info_type.h>
-#include <sender.h>
+#include <struct/exchange_info.h>
+#include <struct/info_type.h>
+#include <util/sender.h>
 
 #include <map>
 #include <string>

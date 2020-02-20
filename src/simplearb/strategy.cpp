@@ -5,7 +5,7 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode, bool no_close_today)
+Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, HistoryWorker* hw, const std::string & mode, bool no_close_today)
   : mode(mode),
     last_valid_mid(0.0),
     stop_loss_times(0),
@@ -13,7 +13,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
     no_close_today(no_close_today),
     // open_count(0),
     // close_count(0),
-    m_hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20)) {
+    m_hw(hw) {
   FillStratConfig(param_setting, no_close_today);
   RunningSetup(ticker_strat_map, uisender, ordersender, mode);
 }
@@ -42,7 +42,7 @@ void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_
     std::string unique_name = param_setting["unique_name"];
     const libconfig::Setting & contract_setting = m_ct.Lookup(unique_name);
     m_strat_name = unique_name;
-    std::vector<std::string> v = m_hw.GetTicker(unique_name);
+    std::vector<std::string> v = m_hw->GetTicker(unique_name);
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];

@@ -1,20 +1,20 @@
 #ifndef SRC_SIMPLEARB_STRATEGY_H_
 #define SRC_SIMPLEARB_STRATEGY_H_
 
-#include <market_snapshot.h>
-#include <strategy_status.h>
-#include <time_controller.h>
-#include <contractor.h>
-#include <order.h>
-#include <command.h>
-#include <sender.h>
-#include <caler.h>
-#include <dater.h>
-#include <exchange_info.h>
-#include <order_status.h>
-#include <history_worker.h>
-#include <common_tools.h>
-#include <base_strategy.h>
+#include <struct/market_snapshot.h>
+#include <struct/strategy_status.h>
+#include <util/time_controller.h>
+#include <util/contractor.h>
+#include <struct/order.h>
+#include <struct/command.h>
+#include <util/sender.h>
+#include <util/caler.h>
+#include <util/dater.h>
+#include <struct/exchange_info.h>
+#include <struct/order_status.h>
+#include <util/history_worker.h>
+#include <util/common_tools.h>
+#include <core/base_strategy.h>
 #include <libconfig.h++>
 #include <unordered_map>
 
@@ -26,7 +26,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode = "real", bool no_close_today = false);
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, HistoryWorker* hw, const std::string & mode = "real", bool no_close_today = false);
   ~Strategy();
 
   void Start() override;
@@ -113,7 +113,7 @@ class Strategy : public BaseStrategy {
   bool no_close_today;
   // int open_count;
   // int close_count;
-  HistoryWorker m_hw;
+  HistoryWorker* m_hw;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_

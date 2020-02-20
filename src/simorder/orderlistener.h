@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 #include <zmq.hpp>
-#include <order.h>
-#include <recver.h>
+#include <struct/order.h>
+#include <util/recver.h>
 
 #include <iostream>
 #include <string>

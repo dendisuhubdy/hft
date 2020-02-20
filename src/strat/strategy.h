@@ -1,19 +1,19 @@
 #ifndef SRC_STRAT_STRATEGY_H_
 #define SRC_STRAT_STRATEGY_H_
 
-#include <market_snapshot.h>
-#include <order.h>
-#include <sender.h>
-#include <exchange_info.h>
-#include <order_status.h>
-#include <common_tools.h>
+#include <struct/market_snapshot.h>
+#include <struct/order.h>
+#include <util/sender.h>
+#include <struct/exchange_info.h>
+#include <struct/order_status.h>
+#include <util/common_tools.h>
 #include <unordered_map>
 
 #include <cmath>
 #include <vector>
 #include <string>
 
-#include "strat/time_controller.h"
+#include "./time_controller.h"
 
 class Strategy {
  public:

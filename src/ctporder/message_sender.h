@@ -2,9 +2,9 @@
 #define SRC_CTPORDER_MESSAGE_SENDER_H_
 
 #include <ThostFtdcTraderApi.h>
-#include <order_side.h>
-#include <order.h>
-#include <common_tools.h>
+#include <struct/order_side.h>
+#include <struct/order.h>
+#include <util/common_tools.h>
 #include <unordered_map>
 
 #include <stdexcept>

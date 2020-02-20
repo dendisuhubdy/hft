@@ -1,1 +1,1 @@
-/root/hft/src/newsimplearb/strategy.cpp
+/root/hft/src/simplearb/strategy.cpp

@@ -1,11 +1,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <zmq.hpp>
-#include <order.h>
-#include <recver.h>
-#include <sender.h>
+#include <struct/order.h>
+#include <util/recver.h>
+#include <util/sender.h>
 #include <pricer_data.h>
-#include <market_snapshot.h>
+#include <struct/market_snapshot.h>
 #include <unordered_map>
 
 #include <iostream>
