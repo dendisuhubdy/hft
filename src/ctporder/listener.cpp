@@ -37,7 +37,7 @@ Listener::Listener(const std::string & exchange_info_address,
   if (e_f) {
     exchange_file = fopen("ctporder_exchange.txt", "w");
   }
-  sender = new Sender(exchange_info_address.c_str());
+  sender = new Sender(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
 }
 
 Listener::~Listener() {
