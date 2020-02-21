@@ -466,7 +466,7 @@ void Strategy::ModerateOrders(const std::string & ticker) {
         std::string ticker = o->ticker;
         MarketSnapshot shot = shot_map[ticker];
         double reasonable_price = (o->side == OrderSide::Buy ? shot.asks[0] : shot.bids[0]);
-        bool is_price_move = (fabs(reasonable_price - o->price) >= min_price_move);
+        bool is_price_move = (fabs(reasonable_price - o->price) >= min_price_move/2);
         if (!is_price_move) {
           continue;
         }

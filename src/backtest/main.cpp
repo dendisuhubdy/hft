@@ -220,8 +220,8 @@ int main() {
     }
     int period = param_cfg.lookup("period");
     std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
+    PrintVector(file_v);
     Contractor ct(dt.GetValidFile(start_date, -40));
-    PrintVector(ct.GetAllTick());
     std::unique_ptr<Sender> sender(new Sender("*:33333", "bind", "tcp", "mid_backtest.dat"));
     std::unique_ptr<Sender> ordersender(new Sender("order_sub", "connect", "ipc", "order.dat"));
     std::vector<BaseStrategy*> sv;
