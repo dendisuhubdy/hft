@@ -18,3 +18,6 @@ src/build-*
 *.pro.user
 core.*
 external/common/include/*.cpp
+external/common/include/struct/*.cpp
+external/common/include/core/*.cpp
+external/common/include/util/*.cpp

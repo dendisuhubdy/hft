@@ -37,8 +37,8 @@ int main() {
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   TimeController tc(time_config_path);
 
-  std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "core/mid.dat"));
-  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "core/order.dat"));
+  std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
+  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
 
   HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;

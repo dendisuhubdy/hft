@@ -25,6 +25,7 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
 
   std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
   std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
+  cout << "init " << order_sender.get() << endl;
   HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
@@ -68,7 +69,8 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
 int main() {
   auto t = GenTSM();
   auto ticker_strat_map = t.first;
-  auto file_list = t.second;
+  // auto file_list = t.second;
+  std::vector<std::string> file_list = {"/running/2020-02-07/future2020-02-07.dat.gz"};
   PrintVector(file_list);
   ThreadPool pool(4);
   for (auto f: file_list) {

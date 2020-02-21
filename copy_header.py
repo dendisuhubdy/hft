@@ -23,9 +23,11 @@ def Copy():
   header_path = GetUserPath() + 'lib-hft/include/'
   target_path = GetUserPath() + 'hft/external/common/include/'
   for dl in dir_list:
-    print('copying dir %s to %s' % (header_path+dl, target_path+dl))
-    command = 'cp -rf %s %s' % (header_path+dl, target_path)
-    os.system(command)
+    for f in os.listdir(header_path+dl):
+      if f.split('.')[-1] == 'h':
+        print('copying %s from %s to %s' % (f, header_path+dl, target_path+dl))
+        command = 'cp -rf %s %s' % (header_path+dl+"/"+f, target_path)
+        os.system(command)
   for f in os.listdir(header_path):
     if f.split('.')[-1] != 'h':
       continue
