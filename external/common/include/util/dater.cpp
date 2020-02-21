@@ -23,7 +23,7 @@ std::string Dater::GetOneDataFileNameByDate(const std::string & date) {
     printf("bad date %s\n", date.c_str());
     return "";
   }
-  return "/running/"+date_str+"/future" + date_str + ".dat.gz";
+  return "/running/"+date_str+"/future" + date_str + ".dat";
 }
 
 std::string Dater::GetValidFile(const std::string & start_date, int num_days) {

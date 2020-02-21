@@ -1,5 +1,6 @@
 #include <libconfig.h++>
 #include <unordered_map>
+#include <utility>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@
 #include "util/history_worker.h"
 #include "/root/hft/src/simplearb/strategy.h"
 
-std::unordered_map<std::string, std::vector<BaseStrategy*> > GenTSM() {
+std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::vector<std::string> > GenTSM() {
   std::string default_path = GetDefaultPath();
 
   libconfig::Config param_cfg;
@@ -28,6 +29,17 @@ std::unordered_map<std::string, std::vector<BaseStrategy*> > GenTSM() {
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
+
+  Dater dt;
+  std::string start_date = param_cfg.lookup("start_date");
+  if (start_date == "today") {
+    start_date = dt.GetDate();
+  }
+  if (start_date == "yesterday") {
+    start_date = dt.GetDate("", -1);
+  }
+  int period = param_cfg.lookup("period");
+  std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
 
   try {
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
@@ -50,16 +62,15 @@ std::unordered_map<std::string, std::vector<BaseStrategy*> > GenTSM() {
     printf("EXCEPTION: %s\n", ex.what());
     exit(1);
   }
-  return ticker_strat_map;
+  return std::make_pair(ticker_strat_map, file_v);
 }
 
 int main() {
-  auto ticker_strat_map = GenTSM();
+  auto t = GenTSM();
+  auto ticker_strat_map = t.first;
+  auto file_list = t.second;
+  PrintVector(file_list);
   ThreadPool pool(4);
-  std::vector<std::string> file_list = {"/running/2020-02-07/future2020-02-07.dat.gz",
-                                        "/running/2020-02-07/future2020-02-07.dat.gz",
-                                        "/running/2020-02-07/future2020-02-07.dat.gz",
-                                        "/running/2020-02-07/future2020-02-07.dat.gz"};
   for (auto f: file_list) {
     pool.enqueue([](const std::unordered_map<std::string, std::vector<BaseStrategy*> >& m, std::string f) {Backtester bt(m); bt.LoadData(f);}, ticker_strat_map, f);
   }
