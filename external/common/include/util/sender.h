@@ -26,7 +26,7 @@ class Sender {
     inline void Send(const T & t) {
       sock.get()->send(&t, sizeof(T));
       if (f.get()) {
-        std::lock_guard<std::mutex> lck(mtx);  // for mutli-thread backtest file writting
+        // std::lock_guard<std::mutex> lck(mtx);  // for mutli-thread backtest file writting
         f.get()->write((char*)&t, sizeof(T));
         f.get()->flush();
       }

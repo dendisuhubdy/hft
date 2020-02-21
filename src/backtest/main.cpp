@@ -13,6 +13,8 @@
 #include "util/history_worker.h"
 #include "/root/hft/src/simplearb/strategy.h"
 
+std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
+std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
 std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::vector<std::string> > GenTSM() {
   std::string default_path = GetDefaultPath();
 
@@ -23,9 +25,9 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   TimeController tc(time_config_path);
 
-  std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
-  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
-  cout << "init " << order_sender.get() << endl;
+  MarketSnapshot shot;
+  order_sender.get()->Send(shot);
+  printf("send test ok!\n");
   HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
@@ -69,8 +71,8 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
 int main() {
   auto t = GenTSM();
   auto ticker_strat_map = t.first;
-  // auto file_list = t.second;
-  std::vector<std::string> file_list = {"/running/2020-02-07/future2020-02-07.dat.gz"};
+  auto file_list = t.second;
+  // std::vector<std::string> file_list = {"/running/2020-02-07/future2020-02-07.dat.gz"};
   PrintVector(file_list);
   ThreadPool pool(4);
   for (auto f: file_list) {
