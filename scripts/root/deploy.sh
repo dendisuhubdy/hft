@@ -5,7 +5,7 @@ cd
 cd hft
 #git fetch origin
 #git reset --hard origin/master
-#make
+make
 
 
 ssh -i ~/.ssh/ali_key root@127.0.0.1 "cd;rm -rf deploy;mkdir deploy"
