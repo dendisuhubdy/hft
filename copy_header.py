@@ -26,7 +26,7 @@ def Copy():
     for f in os.listdir(header_path+dl):
       if f.split('.')[-1] == 'h':
         print('copying %s from %s to %s' % (f, header_path+dl, target_path+dl))
-        command = 'cp -rf %s %s' % (header_path+dl+"/"+f, target_path)
+        command = 'cp -rf %s %s' % (header_path+dl+"/"+f, target_path+dl)
         os.system(command)
   for f in os.listdir(header_path):
     if f.split('.')[-1] != 'h':

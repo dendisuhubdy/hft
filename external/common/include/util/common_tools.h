@@ -100,6 +100,8 @@ bool CheckVSize(std::vector<T>v, int size) {
 
 double PriceCorrector(double price, double min_price, bool is_upper = false);
 bool DoubleEqual(double a, double b, double min_vaule = 0.0000001);
+bool DoubleGreater(double a, double b, double min_vaule = 0.0000001);
+bool DoubleLess(double a, double b, double min_vaule = 0.0000001);
 void SimpleHandle(int line);
 
 std::string GetCon(std::string ticker);
