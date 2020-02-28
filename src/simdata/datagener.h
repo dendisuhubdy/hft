@@ -2,9 +2,9 @@
 #define SRC_SIMDATA_DATAGENER_H_
 
 #include <zmq.hpp>
-#include <sender.h>
-#include <market_snapshot.h>
-#include <common_tools.h>
+#include <util/sender.h>
+#include <struct/market_snapshot.h>
+#include <util/common_tools.h>
 #include <define.h>
 
 #include <iostream>

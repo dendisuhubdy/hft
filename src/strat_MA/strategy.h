@@ -1,11 +1,11 @@
 #ifndef SRC_STRAT_MA_STRATEGY_H_
 #define SRC_STRAT_MA_STRATEGY_H_
 
-#include <market_snapshot.h>
-#include <order.h>
-#include <sender.h>
-#include <exchange_info.h>
-#include <order_status.h>
+#include <struct/market_snapshot.h>
+#include <struct/order.h>
+#include <util/sender.h>
+#include <struct/exchange_info.h>
+#include <struct/order_status.h>
 #include <pricer_data.h>
 #include <unordered_map>
 
@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 
-#include "strat_MA/timecontroller.h"
+#include "strat_MA/time_controller.h"
 
 enum PriceMode {
   BestPos,

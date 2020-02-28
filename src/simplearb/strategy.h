@@ -1,18 +1,20 @@
 #ifndef SRC_SIMPLEARB_STRATEGY_H_
 #define SRC_SIMPLEARB_STRATEGY_H_
 
-#include <market_snapshot.h>
-#include <strategy_status.h>
-#include <timecontroller.h>
-#include <Contractor.h>
-#include <order.h>
-#include <command.h>
-#include <sender.h>
-#include <caler.h>
-#include <exchange_info.h>
-#include <order_status.h>
-#include <common_tools.h>
-#include <base_strategy.h>
+#include <struct/market_snapshot.h>
+#include <struct/strategy_status.h>
+#include <util/time_controller.h>
+#include <util/contractor.h>
+#include <struct/order.h>
+#include <struct/command.h>
+#include <util/sender.h>
+#include <util/caler.h>
+#include <util/dater.h>
+#include <struct/exchange_info.h>
+#include <struct/order_status.h>
+#include <util/history_worker.h>
+#include <util/common_tools.h>
+#include <core/base_strategy.h>
 #include <libconfig.h++>
 #include <unordered_map>
 
@@ -24,25 +26,25 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, const std::string& contract_config_path, const TimeController& tc, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode = "real", bool no_close_today = false);
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, HistoryWorker* hw, const std::string & mode = "real", bool no_close_today = false);
   ~Strategy();
 
   void Start() override;
   void Stop() override;
 
-  void Clear() override;
+  // void Clear() override;
   void HandleCommand(const Command& shot) override;
-  void UpdateTicker() override;
+  // void UpdateTicker() override;
  private:
+  void FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today);
+  void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode);
   void ClearPositionRecord();
   void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
   void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
   void DoOperationAfterFilled(Order* o, const ExchangeInfo& info) override;
   void DoOperationAfterCancelled(Order* o) override;
   void ModerateOrders(const std::string & contract) override;
-  // void InitTicker();
-  // void InitTimer();
-  // void InitFile();
+
   void Init() override;
   bool Ready() override;
   void Pause() override;
@@ -83,8 +85,7 @@ class Strategy : public BaseStrategy {
   int max_pos;
   double min_price_move;
 
-  TimeController this_tc;
-  std::unordered_map<std::string, std::vector<BaseStrategy*> >*tsm;
+  // std::unordered_map<std::string, std::vector<BaseStrategy*> >*tsm;
   int cancel_limit;
   std::unordered_map<std::string, double> mid_map;
   double up_diff;
@@ -106,19 +107,13 @@ class Strategy : public BaseStrategy {
   int max_loss_times;
   double stop_loss_times;
   double stop_loss_margin;
-  double open_fee_rate;
-  double close_today_fee_rate;
-  double close_fee_rate;
-  double deposit_rate;
-  double round_fee_cost;
   int max_close_try;
   double current_spread;
-  CALER * caler;
   bool is_started;
-  Sender* data_sender;
   bool no_close_today;
-  int open_count;
-  int close_count;
+  // int open_count;
+  // int close_count;
+  HistoryWorker* m_hw;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_

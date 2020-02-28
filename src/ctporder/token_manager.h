@@ -1,11 +1,11 @@
 #ifndef SRC_CTPORDER_TOKEN_MANAGER_H_
 #define SRC_CTPORDER_TOKEN_MANAGER_H_
 
-#include <order.h>
+#include <struct/order.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ThostFtdcUserApiDataType.h>
-#include <common_tools.h>
+#include <util/common_tools.h>
 
 #include <unordered_map>
 #include <string>

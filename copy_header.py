@@ -19,15 +19,21 @@ def Copy():
   if not os.path.exists(GetUserPath()+'lib-hft'):
     print("%s not existed!"%(GetUserPath()+'lib-hft'))
     return
+  dir_list = ['struct', 'util', 'core']
   header_path = GetUserPath() + 'lib-hft/include/'
-  target_path = GetUserPath() + 'hft/external/common/include'
-  for root, dirs, files in os.walk(header_path):
-    for f in files:
-      src_file = os.path.join(root, f)
-      if src_file.split('.')[-1] != 'h':
-        continue
-      shutil.copy(src_file, target_path)
-      print('copying %s to %s' % (src_file, target_path))
+  target_path = GetUserPath() + 'hft/external/common/include/'
+  for dl in dir_list:
+    for f in os.listdir(header_path+dl):
+      if f.split('.')[-1] == 'h':
+        print('copying %s from %s to %s' % (f, header_path+dl, target_path+dl))
+        command = 'cp -rf %s %s' % (header_path+dl+"/"+f, target_path+dl)
+        os.system(command)
+  for f in os.listdir(header_path):
+    if f.split('.')[-1] != 'h':
+      continue
+    shutil.copy(header_path+f, target_path)
+    print('copying %s to %s' % (header_path+f, target_path))
+  shutil.copy("/root/lib-hft/lib/libnick.so", '/root/hft/external/common/lib')
 
 if __name__ == '__main__':
   Copy()

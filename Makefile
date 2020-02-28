@@ -42,29 +42,17 @@ simplemaker:
 simplearb:
 	$(WAF) configure simplearb $(PARAMS)
 
-newsimplearb:
-	$(WAF) configure newsimplearb $(PARAMS)
-
 demostrat:
 	$(WAF) configure demostrat $(PARAMS)
 
 backtest:
 	$(WAF) configure backtest $(PARAMS)
 
-convert_to_binary_data:
-	$(WAF) configure convert_to_binary_data $(PARAMS)
-
-datatools:
-	$(WAF) configure datatools $(PARAMS)
-
 order_matcher:
 	$(WAF) configure order_matcher $(PARAMS)
 
 teststrat:
 	$(WAF) configure teststrat $(PARAMS)
-
-dt:
-	$(WAF) configure dt $(PARAMS)
 
 clean:
 	rm -rf build

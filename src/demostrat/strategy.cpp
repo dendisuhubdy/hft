@@ -13,7 +13,6 @@ Strategy::Strategy(std::unordered_map<std::string, std::vector<BaseStrategy*> >*
 }
 
 Strategy::~Strategy() {
-  delete m_tc;
 }
 
 void Strategy::Stop() {
@@ -27,7 +26,7 @@ void Strategy::Init() {
   std::vector<string> sleep_time_v;
   std::vector<string> close_time_v;
   std::vector<string> force_close_time_v;
-  m_tc = new TimeController("/root/hft/config/prod/time.config");
+  // m_tc = new TimeController("/root/hft/config/prod/time.config");
 }
 
 bool Strategy::Ready() {

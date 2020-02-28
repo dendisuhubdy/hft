@@ -1,10 +1,10 @@
 #ifndef SRC_ORDER_MATCHER_ORDER_HANDLER_H_
 #define SRC_ORDER_MATCHER_ORDER_HANDLER_H_
 
-#include <order_side.h>
-#include <order.h>
+#include <struct/order_side.h>
+#include <struct/order.h>
 #include <unordered_map>
-#include <common_tools.h>
+#include <util/common_tools.h>
 
 #include <libconfig.h++>
 

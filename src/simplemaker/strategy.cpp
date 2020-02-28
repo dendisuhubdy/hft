@@ -336,7 +336,6 @@ void Strategy::Init() {
   ticker_map[main_ticker] = true;
   ticker_map[hedge_ticker] = true;
   ticker_map["position_end"] = true;
-  m_tc = &this_tc;
 }
 
 void Strategy::ModerateOrders(const std::string & ticker) {
