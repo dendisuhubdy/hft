@@ -17,7 +17,7 @@ using namespace std;
 
 class Sender {
  public:
-  explicit Sender(const std::string& name, const std::string & bs_mode = "bind", const std::string & zmq_mode = "ipc", std::string file_name = "");
+  explicit Sender(const std::string& name, const std::string & bs_mode = "bind", const std::string & zmq_mode = "ipc", const std::string& file_name = "");
 
   ~Sender();
   inline void Bind(const std::string & address);

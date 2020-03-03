@@ -1,6 +1,5 @@
 #include <libconfig.h++>
 #include <unordered_map>
-#include <utility>
 #include <string>
 #include <vector>
 
@@ -13,9 +12,7 @@
 #include "util/history_worker.h"
 #include "./strategy.h"
 
-std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
-std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
-std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::vector<std::string> > GenTSM() {
+int main() {
   std::string default_path = GetDefaultPath();
 
   libconfig::Config param_cfg;
@@ -25,21 +22,12 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   TimeController tc(time_config_path);
 
+  std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
+  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
   HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
-
-  Dater dt;
-  std::string start_date = param_cfg.lookup("start_date");
-  if (start_date == "today") {
-    start_date = dt.GetDate();
-  }
-  if (start_date == "yesterday") {
-    start_date = dt.GetDate("", -1);
-  }
-  int period = param_cfg.lookup("period");
-  std::vector<std::string> file_v = dt.GetDataFilesNameByDate(start_date, period, true);
 
   try {
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
@@ -62,16 +50,10 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
     printf("EXCEPTION: %s\n", ex.what());
     exit(1);
   }
-  return std::make_pair(ticker_strat_map, file_v);
-}
 
-int main() {
-  auto it = GenTSM();
-  auto ticker_strat_map = it.first;
-  auto file_v = it.second;
-  PrintVector(file_v);
   ThreadPool pool(4);
-  for (auto f: file_v) {
+  std::vector<std::string> file_list = {"/running/2020-02-07/future2020-02-07.dat.gz"};
+  for (auto f: file_list) {
     pool.enqueue([](const std::unordered_map<std::string, std::vector<BaseStrategy*> >& m, std::string f) {Backtester bt(m); bt.LoadData(f);}, ticker_strat_map, f);
   }
 }
