@@ -67,8 +67,6 @@ int main() {
     exit(1);
   }
   sleep(3);
-  sv.back()->RequestQryPos();
-  printf("send query position ok!\n");
   while (true) {
     MarketSnapshot shot;
     data_recver.Recv(shot);
