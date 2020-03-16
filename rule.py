@@ -210,7 +210,7 @@ def run_simplearb(bld):
                 #'external/strategy/simplearb/include',
                 'external/zeromq/include'
                ],
-    use = 'zmq nick pthread config++' # simplearb'
+    use = 'zmq nick pthread config++ shm' # simplearb'
   )
 
 def run_backtest(bld):

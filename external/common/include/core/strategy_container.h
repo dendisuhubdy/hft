@@ -10,6 +10,7 @@
 #include "core/base_strategy.h"
 #include "util/sender.h"
 #include "util/recver.h"
+#include "util/shm_reader.hpp"
 
 using namespace std;
 
@@ -23,9 +24,9 @@ class StrategyContainer {
  private:
   static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver* command_recver);
   static void RunExchangeListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver* exchangeinfo_recver);
-  static void RunMarketDataListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver* marketdata_recver);
+  static void RunMarketDataListener(unordered_map<string, vector<BaseStrategy*> > &m, ShmReader<MarketSnapshot>* marketdata_recver);
   unordered_map<string, vector<BaseStrategy*> > &m;
-  unique_ptr<Recver> marketdata_recver;
+  unique_ptr<ShmReader<MarketSnapshot> > marketdata_recver;
   unique_ptr<Recver> exchangeinfo_recver;
   unique_ptr<Recver> command_recver;
 };

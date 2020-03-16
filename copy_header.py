@@ -24,12 +24,12 @@ def Copy():
   target_path = GetUserPath() + 'hft/external/common/include/'
   for dl in dir_list:
     for f in os.listdir(header_path+dl):
-      if f.split('.')[-1] == 'h':
+      if f.split('.')[-1] == 'h' or f.split('.')[-1] == 'hpp':
         print('copying %s from %s to %s' % (f, header_path+dl, target_path+dl))
         command = 'cp -rf %s %s' % (header_path+dl+"/"+f, target_path+dl)
         os.system(command)
   for f in os.listdir(header_path):
-    if f.split('.')[-1] != 'h':
+    if f.split('.')[-1] != 'h' and f.split('.')[-1] != 'hpp':
       continue
     shutil.copy(header_path+f, target_path)
     print('copying %s to %s' % (header_path+f, target_path))
