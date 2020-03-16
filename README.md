@@ -1,3 +1,4 @@
+![pnl](https://github.com/nickhuangxinyu/hft/blob/master/pnl.png "pnl running on china futures market")
 # High Frequency Trading Solution #
 * running on china futures market and cryptocurrency market
 

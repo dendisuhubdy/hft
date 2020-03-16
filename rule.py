@@ -29,10 +29,6 @@ def configure(conf):
 from waflib.Build import BuildContext
 class all_class(BuildContext):
   cmd = "all"
-class strat_class(BuildContext):
-  cmd = "strat"
-class strat_ma_class(BuildContext):
-  cmd = "strat_ma"
 class simdata_class(BuildContext):
   cmd = "simdata"
 class simorder_class(BuildContext):
@@ -59,8 +55,6 @@ class order_matcher_class(BuildContext):
   cmd = "order_matcher"
 class demostrat_class(BuildContext):
   cmd = "demostrat"
-class update_active_contract_class(BuildContext):
-  cmd = "update_active_contract"
 from lint import add_lint_ignore
 
 def build(bld):
@@ -68,12 +62,6 @@ def build(bld):
   add_lint_ignore('backend')
   if bld.cmd == "all":
     run_all(bld)
-    return
-  if bld.cmd == "strat":
-    run_strat(bld)
-    return
-  if bld.cmd == "strat_ma":
-    run_strat_ma(bld)
     return
   if bld.cmd == "pricer":
     run_pricer(bld)
@@ -114,22 +102,9 @@ def build(bld):
   if bld.cmd == "demostrat":
     run_demostrat(bld)
     return
-  if bld.cmd == "update_active_contract":
-    run_update_active_contract(bld)
-    return
   else:
     print "error! " + str(bld.cmd)
     return
-
-def run_strat(bld):
-  bld.read_shlib('nick', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/strat',
-    source = ['src/strat/main.cpp',
-              'src/strat/strategy.cpp'],
-    includes = ['external/zeromq/include'],
-    use = 'zmq nick pthread config++'
-  )
 
 def run_simdata(bld):
   bld.read_shlib('nick', paths=['external/common/lib'])
@@ -198,16 +173,6 @@ def run_mid_data(bld):
   bld.program(
     target = 'bin/mid_data',
     source = ['src/mid_data/main.cpp'],
-    includes = ['external/zeromq/include'],
-    use = 'zmq nick pthread config++'
-  )
-
-def run_strat_ma(bld):
-  bld.read_shlib('nick', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/strat_MA',
-    source = ['src/strat_MA/main.cpp',
-              'src/strat_MA/strategy.cpp'],
     includes = ['external/zeromq/include'],
     use = 'zmq nick pthread config++'
   )
@@ -283,17 +248,7 @@ def run_demostrat(bld):
     use = 'zmq nick pthread config++'
   )
 
-def run_update_active_contract(bld):
-  bld.program(
-    target = 'bin/update_active_contract',
-    source = ['src/update_active_contract/main.cpp'
-             ],
-    use = 'config++ python2.7 pthread config++'
-  )
-
 def run_all(bld):
-  #run_strat(bld)
-  #run_strat_ma(bld)
   #run_pricer(bld)
   run_mid_data(bld)
   run_simdata(bld)
@@ -304,8 +259,6 @@ def run_all(bld):
   run_getins(bld)
   run_simplearb(bld)
   run_backtest(bld)
-  #run_new_backtest(bld)
   run_order_matcher(bld)
   run_demostrat(bld)
   run_simplemaker(bld)
-  run_update_active_contract(bld)

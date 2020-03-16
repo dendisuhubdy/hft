@@ -3,12 +3,6 @@ WAF = backend/tools/waf
 all:
 	$(WAF) configure all $(PARAMS)
 
-strat:
-	$(WAF) configure strat $(PARAMS)
-
-strat_ma:
-	$(WAF) configure strat_ma $(PARAMS)
-
 easy_strat:
 	$(WAF) configure easy_strat $(PARAMS)
 
