@@ -32,7 +32,7 @@ class Listener : public CThostFtdcMdSpi {
       record_stdout(show_stdout),
       record_file(file_record) {
     // sender = new Sender("data_source");
-    sender = new ShmWriter <MarketSnapshot> ("data_pub", 10000000);
+    sender = new ShmWriter <MarketSnapshot> ("data_pub", 100000);
     // data_file = fopen("data.txt", "w");
     time_t time_seconds = time(0);
     struct tm now_time;

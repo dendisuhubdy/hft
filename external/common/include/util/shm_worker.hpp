@@ -58,10 +58,13 @@ class ShmWorker {
     shmid = shmget(m_key, 0, 0);
     header_size = 3*sizeof(std::atomic_int) + sizeof(pthread_mutex_t);
     if (shmid == -1) {
-      perror("shmget err");
-      printf("errno is %s\n", strerror(errno));
       if (errno == ENOENT || errno == EINVAL) {
-        shmid = shmget(m_key, header_size+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
+        int count = 0;
+        while (shmid == -1 && count++ < 10) {
+          perror("shmget err");
+          printf("errno is %s\n", strerror(errno));
+          shmid = shmget(m_key, header_size+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
+        }
         printf("creating new shm\n");
         create_new = true;
         m_data = (char*)shmat(shmid, NULL, 0);
@@ -74,6 +77,7 @@ class ShmWorker {
         pthread_mutexattr_setpshared(&mutexattr, PTHREAD_PROCESS_SHARED);
         pthread_mutex_init(p, &mutexattr); 
       } else {
+        printf("errno is %s\n", strerror(errno));
         exit(1);
       }
     } else {
