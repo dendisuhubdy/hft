@@ -7,14 +7,15 @@
 #include "core/backtester.h"
 #include "util/ThreadPool.h"
 #include "util/time_controller.h"
-#include "util/sender.h"
-#include "util/recver.h"
+#include "util/sender.hpp"
+#include "util/recver.hpp"
 #include "util/dater.h"
 #include "util/history_worker.h"
+#include "struct/market_snapshot.h"
 #include "./strategy.h"
 
-std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
-std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
+std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
+std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
 std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::vector<std::string> > GenTSM() {
   std::string default_path = GetDefaultPath();
 

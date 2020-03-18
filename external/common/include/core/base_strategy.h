@@ -3,7 +3,7 @@
 
 #include "struct/market_snapshot.h"
 #include "struct/order.h"
-#include "util/sender.h"
+#include "util/sender.hpp"
 #include "util/dater.h"
 #include "define.h"
 #include "struct/command.h"
@@ -67,8 +67,8 @@ class BaseStrategy {
   void UpdatePos(Order* o, const ExchangeInfo& info);
   
   bool position_ready;
-  Sender* order_sender;
-  Sender* ui_sender;
+  Sender<Order>* order_sender;
+  Sender<MarketSnapshot>* ui_sender;
   unordered_map<std::string, MarketSnapshot> shot_map;
   unordered_map<std::string, Order*> order_map;
   unordered_map<std::string, Order*> sleep_order_map;

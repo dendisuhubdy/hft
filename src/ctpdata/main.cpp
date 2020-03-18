@@ -1,6 +1,6 @@
 #include <ThostFtdcMdApi.h>
 #include <stdlib.h>
-#include <util/sender.h>
+#include <util/sender.hpp>
 #include <util/shm_worker.hpp>
 #include <util/shm_writer.hpp>
 #include <sys/time.h>

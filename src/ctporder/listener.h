@@ -6,12 +6,12 @@
 #include <unordered_map>
 #include <struct/exchange_info.h>
 #include <struct/info_type.h>
-#include <util/sender.h>
+#include <util/sender.hpp>
 
 #include <map>
 #include <string>
 
-#include "ctporder/token_manager.h"
+#include "./token_manager.h"
 
 class MessageSender;
 
@@ -20,7 +20,7 @@ class Listener : public CThostFtdcTraderSpi {
   Listener(const std::string & order_update_path,
            MessageSender* message_sender,
            const std::string & error_list,
-           ::unordered_map<int, int>* id_map,
+           std::unordered_map<int, int>* id_map,
            TokenManager* tm,
            bool enable_stdout = true,
            bool enable_file = true);
@@ -89,7 +89,7 @@ class Listener : public CThostFtdcTraderSpi {
   // only DCE will auto combine, CZCE won't. we didn't trade combo instrument, so just call it if got combo instrument position
   // bool HandleComboPosition(const CThostFtdcInvestorPositionField* investor_position);
 
-  Sender* sender;
+  Sender<ExchangeInfo>* sender;
   MessageSender* message_sender_;
 
   TThostFtdcFrontIDType front_id_;
@@ -101,7 +101,7 @@ class Listener : public CThostFtdcTraderSpi {
   std::map<std::string, int> startup_positions_;
 
   std::map<int, std::string> error_list_;
-  ::unordered_map<int, int>* order_id_map;
+  std::unordered_map<int, int>* order_id_map;
   TokenManager* t_m;
   FILE* exchange_file;
   bool e_s;

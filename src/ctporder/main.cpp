@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <zmq.hpp>
-#include <util/recver.h>
-#include <util/sender.h>
+#include <util/recver.hpp>
+#include <util/sender.hpp>
 #include <ThostFtdcTraderApi.h>
 #include <unordered_map>
 
@@ -36,8 +36,8 @@ std::unordered_map<std::string, std::string> RegisterExchange() {
 
 void* RunOrderCommandListener(void *param) {
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
-  Recver* r = new Recver("order_pub");
-  std::shared_ptr<Sender> sender(new Sender("*:33335", "bind", "tcp"));
+  Recver<Order>* r = new Recver<Order>("order_pub");
+  std::shared_ptr<Sender<Order> > sender(new Sender<Order>("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
     r->Recv(o);

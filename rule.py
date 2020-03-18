@@ -29,10 +29,6 @@ def configure(conf):
 from waflib.Build import BuildContext
 class all_class(BuildContext):
   cmd = "all"
-class simdata_class(BuildContext):
-  cmd = "simdata"
-class simorder_class(BuildContext):
-  cmd = "simorder"
 class pricer_class(BuildContext):
   cmd = "pricer"
 class proxy_class(BuildContext):
@@ -69,12 +65,6 @@ def build(bld):
   if bld.cmd == "mid_data":
     run_mid_data(bld)
     return
-  if bld.cmd == "simdata":
-    run_simdata(bld)
-    return
-  if bld.cmd == "simorder":
-    run_simdata(bld)
-    return
   if bld.cmd == "proxy":
     run_proxy(bld)
     return
@@ -106,25 +96,6 @@ def build(bld):
     print "error! " + str(bld.cmd)
     return
 
-def run_simdata(bld):
-  bld.read_shlib('nick', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/simdata',
-    source = ['src/simdata/main.cpp',
-              'src/simdata/datagener.cpp'],
-    includes = ['external/zeromq/include'],
-    use = 'zmq nick pthread config++'
-  )
-
-def run_simorder(bld):
-  bld.read_shlib('nick', paths=['external/common/lib'])
-  bld.program(
-    target = 'bin/simorder',
-    source = ['src/simorder/main.cpp',
-              'src/simorder/orderlistener.cpp'],
-    includes = ['external/zeromq/include'],
-    use = 'zmq nick config++'
-  )
 def run_ctpdata(bld):
   bld.read_shlib('nick', paths=['external/common/lib'])
   bld.read_shlib('thostmduserapi', paths=['external/ctp/lib'])
@@ -251,8 +222,6 @@ def run_demostrat(bld):
 def run_all(bld):
   #run_pricer(bld)
   run_mid_data(bld)
-  run_simdata(bld)
-  run_simdata(bld)
   run_proxy(bld)
   run_ctpdata(bld)
   run_ctporder(bld)

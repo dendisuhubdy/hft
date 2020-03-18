@@ -20,7 +20,7 @@ class ShmRecver : public ShmWorker {
   inline void Recv(T& t) {
     while (read_index.load() == ((atomic_int*)(m_data + 2*sizeof(int)))->load()) {
     }
-    &t = reinterpret_cast<T*>(m_data+header_size+(read_index.load()%m_size)*sizeof(T));
+    t = *reinterpret_cast<T*>(m_data+header_size+(read_index.load()%m_size)*sizeof(T));
     read_index.fetch_add(1);
   }
 

@@ -8,19 +8,21 @@
 #include <string>
 
 #include "core/base_strategy.h"
-#include "util/recver.h"
+#include "util/recver.hpp"
 #include "util/shm_recver.hpp"
 
 using namespace std;
 
-template<typename T>
+// template<template<typename> typename T>
+// template<template<class K> T>
+template<template<typename> class T>
 class StrategyContainer {
  public:
   StrategyContainer(unordered_map<string, vector<BaseStrategy*> > &m)
     : m(m),
-      marketdata_recver(new ShmRecver<MarketSnapshot>("data_pub")),
-      exchangeinfo_recver(new ShmRecver<ExchangeInfo>("exchange_info")),
-      command_recver(new Recver("*:33334", "tcp", "bind")) {
+      marketdata_recver(new T<MarketSnapshot>("data_pub")),
+      exchangeinfo_recver(new T<ExchangeInfo>("exchange_info")),
+      command_recver(new Recver<Command>("*:33334", "tcp", "bind")) {
 
 }
   // explicit StrategyContainer(const StrategyContainer& sc) {}  // unable copy constructor
@@ -36,7 +38,7 @@ class StrategyContainer {
     marketdata_thread.join();
   }
  private:
-  static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, T* command_recver) {
+  static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver<Command>* command_recver) {
     while (true) {
       Command shot;
       command_recver->Recv(shot);
@@ -54,7 +56,7 @@ class StrategyContainer {
     }
   }
 
-  static void RunExchangeListener(unordered_map<string, vector<BaseStrategy*> > &m, T* exchangeinfo_recver) {
+  static void RunExchangeListener(unordered_map<string, vector<BaseStrategy*> > &m, T<ExchangeInfo>* exchangeinfo_recver) {
     while (true) {
       ExchangeInfo info;
       exchangeinfo_recver->Recv(info);
@@ -66,10 +68,10 @@ class StrategyContainer {
     }
   }
 
-  static void RunMarketDataListener(unordered_map<string, vector<BaseStrategy*> > &m, T * marketdata_recver) {
+  static void RunMarketDataListener(unordered_map<string, vector<BaseStrategy*> > &m, T<MarketSnapshot> * marketdata_recver) {
     while (true) {
       MarketSnapshot shot;
-      shot = marketdata_recver->read();
+      marketdata_recver->Recv(shot);
       auto sv = m[shot.ticker];
       for (auto s : sv) {
         s->UpdateData(shot);
@@ -78,9 +80,9 @@ class StrategyContainer {
   }
 
   unordered_map<string, vector<BaseStrategy*> > &m;
-  unique_ptr<T> marketdata_recver;
-  unique_ptr<T> exchangeinfo_recver;
-  unique_ptr<T> command_recver;
+  unique_ptr<T<MarketSnapshot> > marketdata_recver;
+  unique_ptr<T<ExchangeInfo> > exchangeinfo_recver;
+  unique_ptr<Recver<Command> > command_recver;
 };
 
 #endif  // STRATEGY_CONTAINER_HPP_

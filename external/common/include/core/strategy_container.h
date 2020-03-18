@@ -8,9 +8,8 @@
 #include <string>
 
 #include "core/base_strategy.h"
-#include "util/sender.h"
-#include "util/recver.h"
-#include "util/shm_reader.hpp"
+#include "util/recver.hpp"
+#include "util/shm_recver.hpp"
 
 using namespace std;
 
@@ -22,13 +21,13 @@ class StrategyContainer {
   virtual ~StrategyContainer();
   void Start();
  private:
-  static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver* command_recver);
-  static void RunExchangeListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver* exchangeinfo_recver);
-  static void RunMarketDataListener(unordered_map<string, vector<BaseStrategy*> > &m, ShmReader<MarketSnapshot>* marketdata_recver);
+  static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver<Command>* crecver);
+  static void RunExchangeListener(unordered_map<string, vector<BaseStrategy*> > &m, ShmRecver<ExchangeInfo>* erecver);
+  static void RunMarketDataListener(unordered_map<string, vector<BaseStrategy*> > &m, ShmRecver<MarketSnapshot>* mrecver);
   unordered_map<string, vector<BaseStrategy*> > &m;
-  unique_ptr<ShmReader<MarketSnapshot> > marketdata_recver;
-  unique_ptr<Recver> exchangeinfo_recver;
-  unique_ptr<Recver> command_recver;
+  unique_ptr<ShmRecver<MarketSnapshot> > marketdata_recver;
+  unique_ptr<ShmRecver<ExchangeInfo> > exchangeinfo_recver;
+  unique_ptr<Recver<Command> > command_recver;
 };
 
 #endif  // STRATEGY_CONTAINER_H_

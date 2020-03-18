@@ -7,8 +7,8 @@
 #include <libconfig.h++>
 #include <order.h>
 #include <define.h>
-#include <recver.h>
-#include <sender.h>
+#include <recver.hpp>
+#include <sender.hpp>
 #include <Dater.h>
 #include <market_snapshot.h>
 #include <common_tools.h>

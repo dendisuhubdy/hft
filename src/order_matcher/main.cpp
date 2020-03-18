@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <zmq.hpp>
-#include <util/recver.h>
+#include <util/recver.hpp>
 #include <unordered_map>
 
 #include <iostream>
@@ -10,7 +10,7 @@
 
 void* RunOrderCommandListener(void *param) {
   OrderHandler* order_handler = reinterpret_cast<OrderHandler*>(param);
-  Recver* r = new Recver("order_pub");
+  Recver<Order>* r = new Recver<Order>("order_pub");
   while (true) {
     Order o;
     r->Recv(o);
