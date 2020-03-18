@@ -1,12 +1,1 @@
-1.order show still be 4k align, even use flush every time
-2.encapsulate config handler
-3.deconstructor release resource
-4.backtest framework need simlify
-5.Data interface
-6.Time performance test
-7.more complex backtest function in
-
-
-current:
-backtest and simplearb main.cpp is not compatible
-backtest need map config
+basestrategey: template to switch commun mode easily
