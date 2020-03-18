@@ -9,7 +9,7 @@
 
 #include "core/base_strategy.h"
 #include "util/recver.h"
-#include "util/shm_reader.hpp"
+#include "util/shm_recver.hpp"
 
 using namespace std;
 
@@ -18,9 +18,9 @@ class StrategyContainer {
  public:
   StrategyContainer(unordered_map<string, vector<BaseStrategy*> > &m)
     : m(m),
-      marketdata_recver(new ShmReader<MarketSnapshot>("data_pub", 1000000)),
-      exchangeinfo_recver(new T("exchange_info")),
-      command_recver(new T("*:33334", "tcp", "bind")) {
+      marketdata_recver(new ShmRecver<MarketSnapshot>("data_pub")),
+      exchangeinfo_recver(new ShmRecver<ExchangeInfo>("exchange_info")),
+      command_recver(new Recver("*:33334", "tcp", "bind")) {
 
 }
   // explicit StrategyContainer(const StrategyContainer& sc) {}  // unable copy constructor
@@ -54,7 +54,6 @@ class StrategyContainer {
     }
   }
 
-
   static void RunExchangeListener(unordered_map<string, vector<BaseStrategy*> > &m, T* exchangeinfo_recver) {
     while (true) {
       ExchangeInfo info;
@@ -77,6 +76,7 @@ class StrategyContainer {
       }
     }
   }
+
   unordered_map<string, vector<BaseStrategy*> > &m;
   unique_ptr<T> marketdata_recver;
   unique_ptr<T> exchangeinfo_recver;

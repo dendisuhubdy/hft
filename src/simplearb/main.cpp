@@ -5,11 +5,12 @@
 #include <util/recver.h>
 #include <util/sender.h>
 #include <struct/market_snapshot.h>
-#include <core/strategy_container.h>
+#include <core/strategy_container.hpp>
 #include <util/common_tools.h>
 #include <core/base_strategy.h>
 #include <util/history_worker.h>
 #include <util/dater.h>
+#include <util/shm_recver.hpp>
 #include <thread>
 #include <unordered_map>
 
