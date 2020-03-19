@@ -36,6 +36,7 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
 
   Dater dt;
   std::string start_date = param_cfg.lookup("start_date");
+  std::string test_mode = param_cfg.lookup("test_mode");
   if (start_date == "today") {
     start_date = dt.GetDate();
   }
@@ -53,7 +54,7 @@ std::pair< std::unordered_map<std::string, std::vector<BaseStrategy*> >, std::ve
       if (param_setting.exists("no_close_today")) {
         no_close_today = param_setting["no_close_today"];
       }
-      auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &hw, "test", no_close_today);
+      auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &hw, test_mode, no_close_today);
       s->Print();
     }
   } catch(const libconfig::SettingNotFoundException &nfex) {

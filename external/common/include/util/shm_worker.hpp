@@ -26,6 +26,7 @@ class ShmWorker {
   }
 
   virtual ~ShmWorker() {
+    printf("shmworker deconstructor called\n");
     shmdt(m_data);
     if (create_new) {
       shmctl(shmid, IPC_RMID, 0);
@@ -62,6 +63,10 @@ class ShmWorker {
       printf("errno is %s\n", strerror(errno));
       if (errno == ENOENT || errno == EINVAL) {
         shmid = shmget(m_key, header_size+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
+        if (shmid == -1) {
+          printf("both connet and create are failed for shm\n");
+          exit(1);
+        }
         printf("creating new shm\n");
         create_new = true;
         m_data = (char*)shmat(shmid, NULL, 0);

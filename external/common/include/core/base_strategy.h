@@ -35,6 +35,7 @@ class BaseStrategy {
   virtual void Start() = 0;
   virtual void Stop() = 0;
   void UpdateData(const MarketSnapshot& shot);
+  void UpdateData(const MarketSnapshot& this_shot, const MarketSnapshot& next_shot);
   void UpdateExchangeInfo(const ExchangeInfo& info);
   void RequestQryPos();
   virtual void Print() const;
@@ -71,6 +72,7 @@ class BaseStrategy {
   ShmSender<Order>* order_sender;
   Sender<MarketSnapshot>* ui_sender;
   unordered_map<std::string, MarketSnapshot> shot_map;
+  unordered_map<std::string, MarketSnapshot> next_shot_map;
   unordered_map<std::string, Order*> order_map;
   unordered_map<std::string, Order*> sleep_order_map;
   unordered_map<std::string, int> position_map;

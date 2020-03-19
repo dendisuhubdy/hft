@@ -32,7 +32,7 @@ void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStra
   shot_map[hedge_ticker] = shot;
   avgcost_map[main_ticker] = 0.0;
   avgcost_map[hedge_ticker] = 0.0;
-  if (mode == "test") {
+  if (mode == "test" || mode == "nexttest") {
     position_ready = true;
   }
 }
@@ -178,13 +178,26 @@ void Strategy::DoOperationAfterCancelled(Order* o) {
 }
 
 double Strategy::OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) {
-  if (ticker == hedge_ticker) {
-    return (side == OrderSide::Buy)?shot_map[hedge_ticker].asks[0]:shot_map[hedge_ticker].bids[0];
-  } else if (ticker == main_ticker) {
-    return (side == OrderSide::Buy)?shot_map[main_ticker].asks[0]:shot_map[main_ticker].bids[0];
+  if (mode == "nexttest") {
+    if (ticker == hedge_ticker) {
+      printf("[%s] %s: %lf %lf ->> %lf %lf\n", hedge_ticker.c_str(), OrderSide::ToString(side), shot_map[hedge_ticker].asks[0], shot_map[hedge_ticker].bids[0], next_shot_map[hedge_ticker].asks[0], next_shot_map[hedge_ticker].bids[0]);
+      return (side == OrderSide::Buy)?next_shot_map[hedge_ticker].asks[0]:next_shot_map[hedge_ticker].bids[0];
+    } else if (ticker == main_ticker) {
+      printf("[%s] %s: %lf %lf ->> %lf %lf\n", main_ticker.c_str(), OrderSide::ToString(side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0]);
+      return (side == OrderSide::Buy)?next_shot_map[main_ticker].asks[0]:next_shot_map[main_ticker].bids[0];
+    } else {
+      printf("error ticker %s\n", ticker.c_str());
+      return -1.0;
+    }
   } else {
-    printf("error ticker %s\n", ticker.c_str());
-    return -1.0;
+    if (ticker == hedge_ticker) {
+      return (side == OrderSide::Buy)?shot_map[hedge_ticker].asks[0]:shot_map[hedge_ticker].bids[0];
+    } else if (ticker == main_ticker) {
+      return (side == OrderSide::Buy)?shot_map[main_ticker].asks[0]:shot_map[main_ticker].bids[0];
+    } else {
+      printf("error ticker %s\n", ticker.c_str());
+      return -1.0;
+    }
   }
 }
 
@@ -316,7 +329,7 @@ void Strategy::CloseLogic() {
   }
 
   if (TimeUp()) {
-    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" ? shot_map[main_ticker].time.tv_sec : m_tc.CurrentInt(), max_holding_sec, GetPairMid());
+    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" || mode == "nexttest" ? shot_map[main_ticker].time.tv_sec : m_tc.CurrentInt(), max_holding_sec, GetPairMid());
     ForceFlat();
     return;
   }
@@ -387,7 +400,7 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
   current_spread = shot_map[main_ticker].asks[0] - shot_map[main_ticker].bids[0] + shot_map[hedge_ticker].asks[0] - shot_map[hedge_ticker].bids[0];
   if (IsAlign()) {
     double mid = GetPairMid();
-    if (mode != "test") {
+    if (mode != "test" && mode != "nexttest") {
       printf("%ld [%s, %s]mid_diff is %lf\n", shot.time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
     }
     if (ss == StrategyStatus::Training) {
@@ -529,7 +542,7 @@ void Strategy::UpdateBound(OrderSide::Enum side) {
 }
 
 void Strategy::HandleTestOrder(Order* o) {
-  if (mode != "test") {
+  if (mode != "test" && mode != "nexttest") {
     return;
   }
   ExchangeInfo info;
