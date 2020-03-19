@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <util/sender.hpp>
 #include <util/shm_worker.hpp>
-#include <util/shm_writer.hpp>
+#include <util/shm_sender.hpp>
 #include <sys/time.h>
 #include <unordered_map>
 #include <struct/market_snapshot.h>
@@ -32,7 +32,7 @@ class Listener : public CThostFtdcMdSpi {
       record_stdout(show_stdout),
       record_file(file_record) {
     // sender = new Sender("data_source");
-    sender = new ShmWriter <MarketSnapshot> ("data_pub", 100000);
+    sender = new ShmSender<MarketSnapshot> ("data_pub", 100000);
     // data_file = fopen("data.txt", "w");
     time_t time_seconds = time(0);
     struct tm now_time;
@@ -150,7 +150,7 @@ class Listener : public CThostFtdcMdSpi {
       snapshot.asks[i] = 0;
     }
     snapshot.Show(stdout, 5);
-    sender->write(snapshot);
+    sender->Send(snapshot);
     if (record_file) {
       snapshot.Show(data_file, 5);
     }
@@ -244,7 +244,7 @@ class Listener : public CThostFtdcMdSpi {
   bool record_file;
   std::ofstream binary_file;
   // Sender* sender;
-  ShmWriter<MarketSnapshot> * sender;
+  ShmSender<MarketSnapshot> * sender;
 };
 
 int main() {
