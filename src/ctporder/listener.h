@@ -7,6 +7,7 @@
 #include <struct/exchange_info.h>
 #include <struct/info_type.h>
 #include <util/sender.hpp>
+#include <util/shm_sender.hpp>
 
 #include <map>
 #include <string>
@@ -89,7 +90,7 @@ class Listener : public CThostFtdcTraderSpi {
   // only DCE will auto combine, CZCE won't. we didn't trade combo instrument, so just call it if got combo instrument position
   // bool HandleComboPosition(const CThostFtdcInvestorPositionField* investor_position);
 
-  Sender<ExchangeInfo>* sender;
+  ShmSender<ExchangeInfo>* sender;
   MessageSender* message_sender_;
 
   TThostFtdcFrontIDType front_id_;
