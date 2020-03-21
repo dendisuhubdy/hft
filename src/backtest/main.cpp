@@ -31,7 +31,6 @@ std::map<std::string, std::string> GetBacktestFile() {
 
   Dater dt;
   std::string start_date = param_cfg.lookup("start_date");
-  std::string test_mode = param_cfg.lookup("test_mode");
   if (start_date == "today") {
     start_date = dt.GetDate();
   }
@@ -57,17 +56,19 @@ std::unordered_map<std::string, std::vector<BaseStrategy*> > GetStratMap(std::st
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
   HistoryWorker hw(Dater::FindOneValid(date, -20));
 
-  std::string ui_address = "backtest_ui_" + date;
-  std::string order_address = "order_sub_" + date;
-  std::string ui_file = "mid_" + date + ".dat";
-  std::string order_file = "order_" + date + ".dat";
   // std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file));
   // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
   // std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>(order_address, 100000, order_file));
-  auto ui_sender = new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file);
-  auto order_sender = new ShmSender<Order>(order_address, 100000, order_file);
 
   try {
+    std::string backtest_outputdir = param_cfg.lookup("backtest_outputdir");
+    EnsureDir(backtest_outputdir);
+    std::string ui_address = "backtest_ui_" + date;
+    std::string order_address = "order_sub_" + date;
+    std::string ui_file = backtest_outputdir + "/mid_" + date + ".dat";
+    std::string order_file = backtest_outputdir + "/order_" + date + ".dat";
+    auto ui_sender = new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file);
+    auto order_sender = new ShmSender<Order>(order_address, 100000, order_file);
     std::string test_mode = param_cfg.lookup("test_mode");
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
     for (int i = 0; i < strategies.getLength(); i++) {
