@@ -43,7 +43,7 @@ int main() {
   std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
   std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>("order_pub", 100000, "order.dat"));
 
-  HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
+  HistoryWorker hw(Dater::FindOneValid(Dater::GetCurrentDate(), -20));
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
   const libconfig::Setting & strategies = param_cfg.lookup("strategy");

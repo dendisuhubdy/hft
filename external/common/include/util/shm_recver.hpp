@@ -8,6 +8,7 @@ class ShmRecver : public ShmWorker {
  public:
   ShmRecver(const std::string & key, int size = 100000) {
     init <T> (key, size);
+    sleep(1);
     auto tail = (atomic_int*)(m_data + 2*sizeof(atomic_int));
     read_index = tail->load();
     printf("read_index is %d\n", read_index.load());

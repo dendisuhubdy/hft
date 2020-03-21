@@ -45,6 +45,16 @@ void PrintMap(std::unordered_map<T1, T2>map) {
   cout << "End print map" << endl;
 }
 
+template <class T1, class T2>
+void PrintMap(std::map<T1, T2>map) {
+  cout << "Start print map:";
+  // for (class std::unordered_map<T1, T2>::iterator it = map.begin(); it != map.end(); it++) {
+  for (auto it : map) {
+    cout << "map[" << it.first << "]=" << it.second << " ";
+  }
+  cout << "End print map" << endl;
+}
+
 template <class T>
 void PrintVector(std::vector<T>v) {
   cout << "Start print vector:\n";

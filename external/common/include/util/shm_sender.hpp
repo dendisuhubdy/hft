@@ -10,6 +10,7 @@ class ShmSender: public ShmWorker {
   ShmSender(const std::string& key, int size = 100000, const std::string& file_name = "")
     : f(file_name.empty() ? nullptr : new std::ofstream(file_name.c_str(), ios::out | ios::binary)) {
     init <T> (key, size);
+    sleep(1);
     mutex = reinterpret_cast<pthread_mutex_t*>(m_data + 3*sizeof(atomic_int));
   }
 

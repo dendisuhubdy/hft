@@ -11,8 +11,6 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
     stop_loss_times(0),
     max_close_try(10),
     no_close_today(no_close_today),
-    // open_count(0),
-    // close_count(0),
     m_hw(hw) {
   FillStratConfig(param_setting, no_close_today);
   RunningSetup(ticker_strat_map, uisender, ordersender, mode);

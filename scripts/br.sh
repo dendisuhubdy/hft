@@ -3,5 +3,5 @@
 cd /root/hft
 for f in `find . -name "*.h" -or -name "*.cpp"`
 do
-	sed -i "s/strategy_container.h>/strategy_container.hpp>/g" $f
+	sed -i "s/FineOneValid(/FindOneValid(/g" $f
 done

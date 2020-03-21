@@ -26,7 +26,6 @@ class ShmWorker {
   }
 
   virtual ~ShmWorker() {
-    printf("shmworker deconstructor called\n");
     shmdt(m_data);
     if (create_new) {
       shmctl(shmid, IPC_RMID, 0);

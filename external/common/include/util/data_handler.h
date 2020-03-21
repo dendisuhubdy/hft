@@ -6,6 +6,7 @@
 #include <zlib.h>
 #include "struct/market_snapshot.h"
 #include "util/common_tools.h"
+#include "util/time_controller.h"
 #include "define.h"
 
 class DataHandler {
@@ -16,6 +17,9 @@ class DataHandler {
   virtual void HandleShot(MarketSnapshot* this_shot, MarketSnapshot* next_shot) = 0;
  private:
   std::unordered_map<std::string, MarketSnapshot> lastshot_map;
+  std::unordered_map<std::string, std::vector<MarketSnapshot> > all_shot;
+  std::unordered_map<std::string, int> ticker_count;
+  TimeController tc;
 };
 
 #endif // DATA_HANDLER_H_
