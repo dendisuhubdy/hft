@@ -49,6 +49,7 @@ class BaseStrategy {
   virtual void UpdateTicker();
   virtual void HandleCommand(const Command& shot);
  protected:
+  // void RegisterTicker(const std::vector<std::string> & tickers);
   // BaseStrategy(const std::string& contract_config_path);
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();

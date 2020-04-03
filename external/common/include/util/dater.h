@@ -13,8 +13,8 @@ class Dater {
  public:
   Dater();
   ~Dater();
-  static std::string GetOneZipDataFileNameByDate(const std::string & date);
-  static std::string GetOneDataFileNameByDate(const std::string & date);
+  static std::string GetOneZipDataFileNameByDate(const std::string & date, std::string fixed_path = "");
+  static std::string GetOneDataFileNameByDate(const std::string & date, std::string fixed_path = "");
   static std::vector<std::string> GetDataFilesNameByDate(const std::string & start_date, const std::string & end_date);
   static std::map<std::string, std::vector<std::string> > GetDataFilesNameMapByDate(const std::string & start_date, int num_days);
   static std::vector<std::string> GetDataFilesNameByDate(const std::string & start_date, int num_days, bool reverse = false);
