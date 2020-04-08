@@ -11,9 +11,12 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
     stop_loss_times(0),
     max_close_try(10),
     no_close_today(no_close_today),
-    m_hw(hw) {
-  FillStratConfig(param_setting, no_close_today);
-  RunningSetup(ticker_strat_map, uisender, ordersender, mode);
+    m_hw(hw),
+    max_round(10000),
+    close_round(0) {
+  if (FillStratConfig(param_setting, no_close_today)) {
+    RunningSetup(ticker_strat_map, uisender, ordersender, mode);
+  }
 }
 
 Strategy::~Strategy() {
@@ -35,12 +38,17 @@ void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStra
   }
 }
 
-void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today) {
+bool Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today) {
   try {
     std::string unique_name = param_setting["unique_name"];
     const libconfig::Setting & contract_setting = m_ct.Lookup(unique_name);
     m_strat_name = unique_name;
     std::vector<std::string> v = m_hw->GetTicker(unique_name);
+    if (v.size() < 2) {
+      printf("no enough ticker for %s\n", unique_name.c_str());
+      PrintVector(v);
+      return false;
+    }
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];
@@ -61,6 +69,7 @@ void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_
     range_width = param_setting["range_width"];
     std::string con = GetCon(main_ticker);
     cancel_limit = contract_setting["cancel_limit"];
+    max_round = param_setting["max_round"];
     printf("[%s %s] try over!\n", main_ticker.c_str(), hedge_ticker.c_str());
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
@@ -76,6 +85,7 @@ void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_
   down_diff = 0.0;
   stop_loss_up_line = 0.0;
   stop_loss_down_line = 0.0;
+  return true;
 }
 
 /*
@@ -384,7 +394,7 @@ bool Strategy::OpenLogic() {
 }
 
 void Strategy::Run() {
-  if (IsAlign()) {
+  if (IsAlign() && close_round < max_round) {
       if (!OpenLogic()) {
         CloseLogic();
       }
@@ -569,8 +579,10 @@ void Strategy::UpdateBuildPosTime() {
 void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
   if (strcmp(o->ticker, main_ticker.c_str()) == 0) {
     // get hedged right now
-    // std::string a = o->tbd;
-    // a.find("close") == string::npos ? open_count++ : close_count++;
+    std::string a = o->tbd;
+    if (a.find("close") != string::npos) {
+      close_round++;
+    }
     std::string oc = (position_map[hedge_ticker] == 0 ? "open" : "close");
     Order* order = NewOrder(hedge_ticker, (o->side == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, "", no_close_today);
     double slip = (o->side == OrderSide::Buy)? shot_map[hedge_ticker].asks[0] - next_shot_map[hedge_ticker].asks[0] : next_shot_map[hedge_ticker].bids[0] - shot_map[hedge_ticker].bids[0];
