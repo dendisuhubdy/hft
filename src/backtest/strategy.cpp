@@ -355,7 +355,7 @@ void Strategy::CloseLogic() {
 }
 
 void Strategy::Flatting() {
-  if (!IsAlign()) {
+  if (IsAlign()) {
     CloseLogic();
   }
 }
@@ -414,6 +414,10 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
   current_spread = shot_map[main_ticker].asks[0] - shot_map[main_ticker].bids[0] + shot_map[hedge_ticker].asks[0] - shot_map[hedge_ticker].bids[0];
   if (IsAlign()) {
     double mid = GetPairMid();
+    map_vector.emplace_back(mid);  // map_vector saved the aligned mid, all the elements here are safe to trade
+    if (map_vector.size() > min_train_sample && map_vector.size() % (2*min_train_sample) == 1) {
+      CalParams();
+    }
     if (mode != "test" && mode != "nexttest") {
       printf("%ld [%s, %s]mid_diff is %lf\n", shot.time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
     }
@@ -435,10 +439,6 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
     std::string label = main_ticker + '|' + hedge_ticker;
     snprintf(shot.ticker, sizeof(shot.ticker), "%s", label.c_str());
     shot.last_trade = mid;
-    map_vector.emplace_back(mid);  // map_vector saved the aligned mid, all the elements here are safe to trade
-    if (map_vector.size() > min_train_sample && map_vector.size() % (2*min_train_sample) == 1) {
-      CalParams();
-    }
     ui_sender->Send(shot);
   }
 }
