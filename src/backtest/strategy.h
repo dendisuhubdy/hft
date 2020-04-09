@@ -65,7 +65,11 @@ class Strategy : public BaseStrategy {
   void Open(OrderSide::Enum side);
   bool Close(bool force_flat = false);
 
+  void RecordSlip(const std::string & ticker, OrderSide::Enum side, bool is_close = false);
+  void RecordPnl(Order* o, bool force_flat = false);
+
   void CalParams();
+  std::tuple<double, double> CalMeanStd(const std::vector<double> & v, int head, int num);
   bool HitMean();
 
   double GetPairMid();
@@ -117,6 +121,8 @@ class Strategy : public BaseStrategy {
   HistoryWorker* m_hw;
   int max_round;
   int close_round;
+  int split_num;
+  std::vector<double> param_v;
 };
 
 #endif  // SRC_BACKTEST_STRATEGY_H_
