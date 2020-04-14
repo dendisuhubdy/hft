@@ -11,7 +11,7 @@ class Backtester : public DataHandler {
 
   ~Backtester();
 
-  void HandleShot(MarketSnapshot* shot) override;
+  void HandleShot(MarketSnapshot* this_shot, MarketSnapshot* next_shot) override;
 
  private:
   BaseStrategy * bs;

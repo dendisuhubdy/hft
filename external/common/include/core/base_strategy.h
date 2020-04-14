@@ -3,7 +3,8 @@
 
 #include "struct/market_snapshot.h"
 #include "struct/order.h"
-#include "util/sender.h"
+#include "util/sender.hpp"
+#include "util/shm_sender.hpp"
 #include "util/dater.h"
 #include "define.h"
 #include "struct/command.h"
@@ -34,6 +35,7 @@ class BaseStrategy {
   virtual void Start() = 0;
   virtual void Stop() = 0;
   void UpdateData(const MarketSnapshot& shot);
+  void UpdateData(const MarketSnapshot& this_shot, const MarketSnapshot& next_shot);
   void UpdateExchangeInfo(const ExchangeInfo& info);
   void RequestQryPos();
   virtual void Print() const;
@@ -47,6 +49,7 @@ class BaseStrategy {
   virtual void UpdateTicker();
   virtual void HandleCommand(const Command& shot);
  protected:
+  // void RegisterTicker(const std::vector<std::string> & tickers);
   // BaseStrategy(const std::string& contract_config_path);
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();
@@ -67,9 +70,10 @@ class BaseStrategy {
   void UpdatePos(Order* o, const ExchangeInfo& info);
   
   bool position_ready;
-  Sender* order_sender;
-  Sender* ui_sender;
+  ShmSender<Order>* order_sender;
+  Sender<MarketSnapshot>* ui_sender;
   unordered_map<std::string, MarketSnapshot> shot_map;
+  unordered_map<std::string, MarketSnapshot> next_shot_map;
   unordered_map<std::string, Order*> order_map;
   unordered_map<std::string, Order*> sleep_order_map;
   unordered_map<std::string, int> position_map;

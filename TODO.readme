@@ -1,12 +1,8 @@
-1.order show still be 4k align, even use flush every time
-2.encapsulate config handler
-3.deconstructor release resource
-4.backtest framework need simlify
-5.Data interface
-6.Time performance test
-7.more complex backtest function in
+1.basestrategey: template to switch commun mode easily
+2.data_handler: template to load different kind of struct
+3.test latency of different mode of communicate
+4.more flexible backtester
 
-
-current:
-backtest and simplearb main.cpp is not compatible
-backtest need map config
+test:
+the slip cost is mainly rely on the hedge ticker
+foucs on hedge ticker, if this_shot changed a lot compared to last, disable this oppounity because hedge may slip a lot

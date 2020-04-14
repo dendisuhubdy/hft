@@ -2,14 +2,16 @@
 #include <stdio.h>
 #include <zmq.hpp>
 #include <struct/order.h>
-#include <util/recver.h>
-#include <util/sender.h>
+#include <util/recver.hpp>
+#include <util/sender.hpp>
 #include <struct/market_snapshot.h>
-#include <core/strategy_container.h>
+#include <core/strategy_container.hpp>
 #include <util/common_tools.h>
 #include <core/base_strategy.h>
 #include <util/history_worker.h>
 #include <util/dater.h>
+#include <util/shm_recver.hpp>
+#include <util/shm_sender.hpp>
 #include <thread>
 #include <unordered_map>
 
@@ -37,10 +39,11 @@ int main() {
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   TimeController tc(time_config_path);
 
-  std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
-  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
+  // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
+  std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
+  std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>("order_pub", 100000, "order.dat"));
 
-  HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
+  HistoryWorker hw(Dater::FindOneValid(Dater::GetCurrentDate(), -20));
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
   const libconfig::Setting & strategies = param_cfg.lookup("strategy");
@@ -54,7 +57,7 @@ int main() {
     s->Print();
   }
 
-  StrategyContainer sc(ticker_strat_map);
+  StrategyContainer<ShmRecver> sc(ticker_strat_map);
   sc.Start();
   HandleLeft();
   PrintResult();

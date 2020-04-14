@@ -6,8 +6,8 @@
 #include "core/backtester.h"
 #include "util/ThreadPool.h"
 #include "util/time_controller.h"
-#include "util/sender.h"
-#include "util/recver.h"
+#include "util/sender.hpp"
+#include "util/recver.hpp"
 #include "util/dater.h"
 #include "util/history_worker.h"
 #include "./strategy.h"
@@ -24,7 +24,7 @@ int main() {
 
   std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
   std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
-  HistoryWorker hw(Dater::GetValidFile(Dater::GetCurrentDate(), -20));
+  HistoryWorker hw(Dater::FindOneValid(Dater::GetCurrentDate(), -20));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/contract.config";

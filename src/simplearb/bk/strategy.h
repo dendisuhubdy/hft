@@ -1,5 +1,5 @@
-#ifndef SRC_BACKTEST_STRATEGY_H_
-#define SRC_BACKTEST_STRATEGY_H_
+#ifndef SRC_SIMPLEARB_STRATEGY_H_
+#define SRC_SIMPLEARB_STRATEGY_H_
 
 #include <struct/market_snapshot.h>
 #include <struct/strategy_status.h>
@@ -37,7 +37,7 @@ class Strategy : public BaseStrategy {
   void HandleCommand(const Command& shot) override;
   // void UpdateTicker() override;
  private:
-  bool FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today);
+  void FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today);
   void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, ShmSender<Order>* ordersender, const std::string & mode);
   void ClearPositionRecord();
   void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
@@ -65,11 +65,7 @@ class Strategy : public BaseStrategy {
   void Open(OrderSide::Enum side);
   bool Close(bool force_flat = false);
 
-  void RecordSlip(const std::string & ticker, OrderSide::Enum side, bool is_close = false);
-  void RecordPnl(Order* o, bool force_flat = false);
-
   void CalParams();
-  std::tuple<double, double> CalMeanStd(const std::vector<double> & v, int head, int num);
   bool HitMean();
 
   double GetPairMid();
@@ -119,10 +115,6 @@ class Strategy : public BaseStrategy {
   // int open_count;
   // int close_count;
   HistoryWorker* m_hw;
-  int max_round;
-  int close_round;
-  int split_num;
-  std::vector<double> param_v;
 };
 
-#endif  // SRC_BACKTEST_STRATEGY_H_
+#endif  // SRC_SIMPLEARB_STRATEGY_H_

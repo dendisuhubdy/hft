@@ -7,7 +7,8 @@
 #include <util/contractor.h>
 #include <struct/order.h>
 #include <struct/command.h>
-#include <util/sender.h>
+#include <util/sender.hpp>
+#include <util/shm_sender.hpp>
 #include <util/caler.h>
 #include <util/dater.h>
 #include <struct/exchange_info.h>
@@ -26,7 +27,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, HistoryWorker* hw, const std::string & mode = "real", bool no_close_today = false);
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, ShmSender<Order>* ordersender, HistoryWorker* hw, const std::string & mode = "real", bool no_close_today = false);
   ~Strategy();
 
   void Start() override;
@@ -36,8 +37,8 @@ class Strategy : public BaseStrategy {
   void HandleCommand(const Command& shot) override;
   // void UpdateTicker() override;
  private:
-  void FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today);
-  void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender* uisender, Sender* ordersender, const std::string & mode);
+  bool FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today);
+  void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, ShmSender<Order>* ordersender, const std::string & mode);
   void ClearPositionRecord();
   void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
   void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
@@ -114,6 +115,8 @@ class Strategy : public BaseStrategy {
   // int open_count;
   // int close_count;
   HistoryWorker* m_hw;
+  int max_round;
+  int close_round;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_

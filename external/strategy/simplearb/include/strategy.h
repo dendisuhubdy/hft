@@ -5,7 +5,7 @@
 #include <struct/strategy_status.h>
 #include <timecontroller.h>
 #include <struct/order.h>
-#include <util/sender.h>
+#include <util/sender.hpp>
 #include <struct/exchange_info.h>
 #include <struct/order_status.h>
 #include <util/common_tools.h>

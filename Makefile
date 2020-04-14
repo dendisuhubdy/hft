@@ -6,12 +6,6 @@ all:
 easy_strat:
 	$(WAF) configure easy_strat $(PARAMS)
 
-simdata:
-	$(WAF) configure simdata $(PARAMS)
-
-simorder:
-	$(WAF) configure simorder $(PARAMS)
-
 pricer:
 	$(WAF) configure pricer $(PARAMS)
 
