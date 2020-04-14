@@ -11,6 +11,7 @@
 #include <sys/types.h>
 
 #include <unordered_map>
+#include <chrono>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -21,9 +22,12 @@
 #include <cctype>
 #include <queue>
 #include <stack>
+#include <chrono>
+#include <thread>
 
 #include "struct/market_snapshot.h"
 using namespace std;
+using namespace std::chrono;
 
 // std::vector<std::string> Split(std::string raw_string, char split_char=' ');
 bool CheckAddressLegal(std::string address);
@@ -161,5 +165,6 @@ void SaveBin(std::ofstream &stream, const T& t) {
 }
 
 void EnsureDir(const std::string & dir);
+void busy_sleep(std::chrono::nanoseconds t);
 
 #endif // COMMON_TOOLS_H_
