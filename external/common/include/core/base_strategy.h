@@ -70,7 +70,7 @@ class BaseStrategy {
   void UpdatePos(Order* o, const ExchangeInfo& info);
   
   bool position_ready;
-  ShmSender<Order>* order_sender;
+  Sender<Order>* order_sender;
   Sender<MarketSnapshot>* ui_sender;
   unordered_map<std::string, MarketSnapshot> shot_map;
   unordered_map<std::string, MarketSnapshot> next_shot_map;

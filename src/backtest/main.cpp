@@ -20,7 +20,7 @@
 
 // std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
 // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
-// std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>("order_sub", 100000, "order.dat"));
+// std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", 100000, "order.dat"));
 
 std::map<std::string, std::string> GetBacktestFile() {
   std::string default_path = GetDefaultPath();
@@ -67,7 +67,7 @@ std::unordered_map<std::string, std::vector<BaseStrategy*> > GetStratMap(std::st
 
   // std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file));
   // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
-  // std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>(order_address, 100000, order_file));
+  // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>(order_address, 100000, order_file));
 
   try {
     std::string fixed_path = param_cfg.lookup("fixed_path");
@@ -79,7 +79,7 @@ std::unordered_map<std::string, std::vector<BaseStrategy*> > GetStratMap(std::st
     std::string ui_file = backtest_outputdir + "/mid_" + date + ".dat";
     std::string order_file = backtest_outputdir + "/order_" + date + ".dat";
     auto ui_sender = new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file);
-    auto order_sender = new ShmSender<Order>(order_address, 100000, order_file);
+    auto order_sender = new Sender<Order>(order_address, order_file);
     std::string test_mode = param_cfg.lookup("test_mode");
     const libconfig::Setting & strategies = param_cfg.lookup("strategy");
     for (int i = 0; i < strategies.getLength(); i++) {

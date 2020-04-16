@@ -32,11 +32,11 @@ class DataTransformer {
   static void GzToCsv(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
   static void GzToLog(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
 
-  static void CsvCatContract(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
-  static void BinCatContract(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
-  static void GzCatContract(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
-  static void GzDirectCat(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
-  static void BinDirectCat(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
+  static bool CsvCatContract(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
+  static bool BinCatContract(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
+  static bool GzCatContract(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
+  static bool GzDirectCat(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
+  static bool BinDirectCat(const std::string & source_path, const std::string & dest_dir="", const std::string & file_name = "");
 
   void BatchRun();
 

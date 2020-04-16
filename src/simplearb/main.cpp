@@ -41,7 +41,7 @@ int main() {
 
   // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
   std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
-  std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>("order_pub", 100000, "order.dat"));
+  std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_pub", "bind", "ipc", "order.dat"));
 
   HistoryWorker hw(Dater::FindOneValid(Dater::GetCurrentDate(), -20));
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
@@ -57,7 +57,7 @@ int main() {
     s->Print();
   }
 
-  StrategyContainer<ShmRecver> sc(ticker_strat_map);
+  StrategyContainer<Recver> sc(ticker_strat_map);
   sc.Start();
   HandleLeft();
   PrintResult();
