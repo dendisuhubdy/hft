@@ -564,17 +564,32 @@ void Strategy::RecordPnl(Order* o, bool force_flat) {
   OrderSide::Enum pos_side = o->side == OrderSide::Sell ? OrderSide::Buy: OrderSide::Sell;
   OrderSide::Enum close_side = o->side;
   double hedge_price = pos > 0 ? shot_map[hedge_ticker].asks[0] : shot_map[hedge_ticker].bids[0];
-  cout << "main pnl param:" << main_ticker <<" " <<  avgcost_map[main_ticker]<< " " <<  abs(pos) << " " << o->price << " " << abs(pos) << endl;
-  cout << "hedge pnl param:" << hedge_ticker <<" " <<  avgcost_map[hedge_ticker]<< " " <<  abs(pos) << " " << hedge_price << " " << abs(pos) << endl;
+  // cout << "main pnl param:" << main_ticker <<" " <<  avgcost_map[main_ticker]<< " " <<  abs(pos) << " " << o->price << " " << abs(pos) << endl;
+  // cout << "hedge pnl param:" << hedge_ticker <<" " <<  avgcost_map[hedge_ticker]<< " " <<  abs(pos) << " " << hedge_price << " " << abs(pos) << endl;
   double this_round_pnl = m_cal.CalNetPnl(main_ticker, avgcost_map[main_ticker], abs(pos), o->price, abs(pos), close_side, no_close_today) + m_cal.CalNetPnl(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), pos_side, no_close_today);
+  /*
   Fee main_fee = m_cal.CalFee(main_ticker, avgcost_map[main_ticker], abs(pos), shot_map[main_ticker].  bids[0], abs(pos), no_close_today);
   Fee hedge_fee = m_cal.CalFee(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), no_close_today);
   double this_round_fee = main_fee.open_fee + main_fee.close_fee + hedge_fee.open_fee + hedge_fee.close_fee;
+  */
+  std::string str = GetCon(main_ticker);
+  std::string split_c = ",";
+  char buffer[32];
+  snprintf(buffer, sizeof(buffer), "%lf", this_round_pnl);
+  str += split_c + buffer;
+  for (auto i : param_v) {
+    snprintf(buffer, sizeof(buffer), "%lf", i);
+    str += split_c + buffer;
+  }
+  str += "\n";
+  cout << "recordpnl," << str;
+  /*
   printf("%ld [%s %s]%sThis round close pnl: %lf, fee_cost: %lf pos is %d, holding second is %ld, param is ", shot_map[hedge_ticker].time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), force_flat ? "[Time up] " : "", this_round_pnl, this_round_fee, pos, shot_map[hedge_ticker].time.tv_sec - build_position_time);
   for (auto i : param_v) {
     printf("%lf ", i);
   }
   printf("\n");
+  */
 }
 
 void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
