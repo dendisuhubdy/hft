@@ -32,7 +32,7 @@ class Listener : public CThostFtdcMdSpi {
       record_stdout(show_stdout),
       record_file(file_record) {
     // sender = new Sender("data_source");
-    sender = new ShmSender<MarketSnapshot> ("data_pub", 100000);
+    sender = new Sender<MarketSnapshot> ("data_pub");
     // data_file = fopen("data.txt", "w");
     time_t time_seconds = time(0);
     struct tm now_time;
@@ -244,7 +244,7 @@ class Listener : public CThostFtdcMdSpi {
   bool record_file;
   std::ofstream binary_file;
   // Sender* sender;
-  ShmSender<MarketSnapshot> * sender;
+  Sender<MarketSnapshot> * sender;
 };
 
 int main() {

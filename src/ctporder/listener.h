@@ -90,7 +90,7 @@ class Listener : public CThostFtdcTraderSpi {
   // only DCE will auto combine, CZCE won't. we didn't trade combo instrument, so just call it if got combo instrument position
   // bool HandleComboPosition(const CThostFtdcInvestorPositionField* investor_position);
 
-  ShmSender<ExchangeInfo>* sender;
+  Sender<ExchangeInfo>* sender;
   MessageSender* message_sender_;
 
   TThostFtdcFrontIDType front_id_;
