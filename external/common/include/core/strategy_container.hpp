@@ -72,7 +72,6 @@ class StrategyContainer {
     while (true) {
       MarketSnapshot shot;
       marketdata_recver->Recv(shot);
-      shot.Show(stdout);
       auto sv = m[shot.ticker];
       for (auto s : sv) {
         s->UpdateData(shot);
