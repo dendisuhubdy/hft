@@ -23,7 +23,7 @@ int main() {
   TimeController tc(time_config_path);
 
   std::unique_ptr<Sender> ui_sender(new Sender("*:33333", "bind", "tcp", "mid.dat"));
-  std::unique_ptr<Sender> order_sender(new Sender("order_sub", "connect", "ipc", "order.dat"));
+  std::unique_ptr<Sender> order_sender(new Sender("order_sender", "connect", "ipc", "order.dat"));
   HistoryWorker hw(Dater::FindOneValid(Dater::GetCurrentDate(), -20));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;

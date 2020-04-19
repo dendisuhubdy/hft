@@ -8,7 +8,7 @@
 
 class Contractor {
  public:
-  explicit Contractor(const std::string & config_path);
+  explicit Contractor(const std::string & config_path, const std::string & key = "map");
   ~Contractor();
   const libconfig::Setting& Lookup(const std::string& ticker);
   std::vector<std::string> GetTicker() const;

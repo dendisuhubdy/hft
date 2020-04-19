@@ -1,17 +1,19 @@
-#ifndef SRC_SIMPLEARB_STRATEGY_H_
-#define SRC_SIMPLEARB_STRATEGY_H_
+#ifndef SRC_BACKTEST_STRATEGY_H_
+#define SRC_BACKTEST_STRATEGY_H_
 
 #include <struct/market_snapshot.h>
 #include <struct/strategy_status.h>
 #include <util/time_controller.h>
+#include <util/contractor.h>
 #include <struct/order.h>
 #include <struct/command.h>
 #include <util/sender.hpp>
+#include <util/sender.hpp>
+#include <util/caler.h>
 #include <util/dater.h>
 #include <struct/exchange_info.h>
 #include <struct/order_status.h>
 #include <util/history_worker.h>
-#include <util/contract_worker.h>
 #include <util/common_tools.h>
 #include <core/base_strategy.h>
 #include <libconfig.h++>
@@ -25,7 +27,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, TimeController* tc, ContractWorker* cw, const std::string & mode = "real");
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, const std::string & mode = "real", bool no_close_today = false);
   ~Strategy();
 
   void Start() override;
@@ -35,7 +37,7 @@ class Strategy : public BaseStrategy {
   void HandleCommand(const Command& shot) override;
   // void UpdateTicker() override;
  private:
-  bool FillStratConfig(const libconfig::Setting& param_setting);
+  bool FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today);
   void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, const std::string & mode);
   void ClearPositionRecord();
   void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
@@ -98,7 +100,7 @@ class Strategy : public BaseStrategy {
   std::vector<double> map_vector;
   int current_pos;
   double min_profit;
-  int min_train_sample;
+  unsigned int min_train_sample;
   double min_range;
   double increment;
   std::string mode;
@@ -121,8 +123,6 @@ class Strategy : public BaseStrategy {
   int close_round;
   int split_num;
   std::vector<double> param_v;
-  int sample_head;
-  int sample_tail;
 };
 
-#endif  // SRC_SIMPLEARB_STRATEGY_H_
+#endif  // SRC_BACKTEST_STRATEGY_H_

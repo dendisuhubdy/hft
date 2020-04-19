@@ -2,8 +2,6 @@
 #include <zmq.hpp>
 #include <util/recver.hpp>
 #include <util/sender.hpp>
-#include <util/shm_sender.hpp>
-#include <util/shm_recver.hpp>
 #include <ThostFtdcTraderApi.h>
 #include <unordered_map>
 
@@ -38,7 +36,7 @@ std::unordered_map<std::string, std::string> RegisterExchange() {
 
 void* RunOrderCommandListener(void *param) {
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
-  auto r = new ShmRecver<Order>("order_pub");
+  auto r = new Recver<Order>("order_recver");
   std::shared_ptr<Sender<Order> > sender(new Sender<Order>("*:33335", "bind", "tcp"));
   while (true) {
     Order o;

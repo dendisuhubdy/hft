@@ -47,7 +47,7 @@ int main() {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   TimeController tc("/root/hft/config/prod/time.config");
 
-  Recver<MarketSnapshot> data_recver("data_pub");
+  Recver<MarketSnapshot> data_recver("data_recver");
   std::vector<BaseStrategy*> sv;
   sv.emplace_back(new Strategy("ni1905", "ni1903", 5, 10, tc, 1, "ni", &ticker_strat_map));
   sv.emplace_back(new Strategy("cu1903", "cu1902", 5, 10, tc, 5, "cu", &ticker_strat_map));

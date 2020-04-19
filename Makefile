@@ -33,6 +33,9 @@ simplearb:
 demostrat:
 	$(WAF) configure demostrat $(PARAMS)
 
+simdata:
+	$(WAF) configure simdata $(PARAMS)
+
 backtest:
 	$(WAF) configure backtest $(PARAMS)
 

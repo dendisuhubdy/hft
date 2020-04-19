@@ -11,9 +11,12 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
     stop_loss_times(0),
     max_close_try(10),
     no_close_today(no_close_today),
-    m_hw(hw) {
-  FillStratConfig(param_setting, no_close_today);
-  RunningSetup(ticker_strat_map, uisender, ordersender, mode);
+    m_hw(hw),
+    max_round(10000),
+    close_round(0) {
+  if (FillStratConfig(param_setting, no_close_today)) {
+    RunningSetup(ticker_strat_map, uisender, ordersender, mode);
+  }
 }
 
 Strategy::~Strategy() {
@@ -35,12 +38,17 @@ void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStra
   }
 }
 
-void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today) {
+bool Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_close_today) {
   try {
     std::string unique_name = param_setting["unique_name"];
     const libconfig::Setting & contract_setting = m_ct.Lookup(unique_name);
     m_strat_name = unique_name;
     std::vector<std::string> v = m_hw->GetTicker(unique_name);
+    if (v.size() < 2) {
+      printf("no enough ticker for %s\n", unique_name.c_str());
+      PrintVector(v);
+      return false;
+    }
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];
@@ -61,6 +69,7 @@ void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_
     range_width = param_setting["range_width"];
     std::string con = GetCon(main_ticker);
     cancel_limit = contract_setting["cancel_limit"];
+    max_round = param_setting["max_round"];
     printf("[%s %s] try over!\n", main_ticker.c_str(), hedge_ticker.c_str());
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
@@ -76,68 +85,8 @@ void Strategy::FillStratConfig(const libconfig::Setting& param_setting, bool no_
   down_diff = 0.0;
   stop_loss_up_line = 0.0;
   stop_loss_down_line = 0.0;
+  return true;
 }
-
-/*
-void Strategy::UpdateTicker() {
-    std::string old_main = main_ticker;
-    std::string old_hedge = hedge_ticker;
-    std::string unique_name = GetCon(main_ticker);
-    std::vector<std::string> v = m_hw.GetTicker(unique_name);
-    if (v.size() < 2) {
-      printf("no enough ticker for %s to update\n", unique_name.c_str());
-      for (auto i:m_hw.GetAllTick()) {
-        PrintVector(m_hw.GetTicker(i));
-      }
-      return;
-    }
-    main_ticker = v[1];
-    hedge_ticker = v[0];
-    if (main_ticker == old_main && hedge_ticker == old_hedge) {
-      return;
-    }
-    printf("print vector for %s\n", unique_name.c_str());
-    PrintVector(v);
-    ticker_map[main_ticker] = false;
-    ticker_map[hedge_ticker] = false;
-    auto i = tsm->find(main_ticker);
-    if (i != tsm->end()) {
-      tsm->erase(i);
-    }
-    auto j = tsm->find(hedge_ticker);
-    if (j != tsm->end()) {
-      tsm->erase(j);
-    }
-    ticker_map[main_ticker] = true;
-    ticker_map[hedge_ticker] = true;
-    // tsm->insert(make_pair(main_ticker, this));
-    (*tsm)[main_ticker].push_back(this);
-    (*tsm)[hedge_ticker].push_back(this);
-    printf("[%s %s]Updated ticker from [%s %s]\n", main_ticker.c_str(), hedge_ticker.c_str(), old_main.c_str(), old_hedge.c_str());
-}
-
-void Strategy::Clear() {
-  // printf("[%s %s] %ld mid_value size is %zu\n", main_ticker.c_str(), hedge_ticker.c_str(), shot_map[hedge_ticker].time.tv_sec, map_vector.size());
-  ss = StrategyStatus::Init;
-  ClearPositionRecord();
-  mid_map.clear();
-  map_vector.clear();
-  build_position_time = MAX_UNIX_TIME;
-  stop_loss_times = 0;
-  m_hw.Clear();
-  if (close_count != open_count) {
-    printf("[%s %s]not flat in %s when cleared, open_close %d %d\n",
-               main_ticker.c_str(), hedge_ticker.c_str(), m_tc.TimevalStr(shot_map[main_ticker].time).c_str(),
-               open_count, close_count);
-  } else {
-    printf("[%s %s] no position in %s when cleared, open %d\n",
-               main_ticker.c_str(), hedge_ticker.c_str(), m_tc.TimevalStr(shot_map[main_ticker].time).c_str(),
-               open_count);
-  }
-  printf("[%s %s] open_close max is %d\n", main_ticker.c_str(), hedge_ticker.c_str(), open_count);
-  open_count = close_count = 0;
-}
-*/
 
 void Strategy::Stop() {
   CancelAll(main_ticker);
@@ -177,12 +126,14 @@ void Strategy::DoOperationAfterCancelled(Order* o) {
 
 double Strategy::OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) {
   if (mode == "nexttest") {
+      double slip = (side == OrderSide::Buy)? shot_map[ticker].asks[0] - next_shot_map[ticker].asks[0] : next_shot_map[ticker].bids[0] - shot_map[ticker].bids[0];
     if (ticker == hedge_ticker) {
-      printf("[%s] %s: %lf %lf ->> %lf %lf\n", hedge_ticker.c_str(), OrderSide::ToString(side), shot_map[hedge_ticker].asks[0], shot_map[hedge_ticker].bids[0], next_shot_map[hedge_ticker].asks[0], next_shot_map[hedge_ticker].bids[0]);
+      printf("Slip hedge[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", hedge_ticker.c_str(), OrderSide::ToString(side), shot_map[hedge_ticker].asks[0], shot_map[hedge_ticker].bids[0], next_shot_map[hedge_ticker].asks[0], next_shot_map[hedge_ticker].bids[0], slip);
       return (side == OrderSide::Buy)?next_shot_map[hedge_ticker].asks[0]:next_shot_map[hedge_ticker].bids[0];
     } else if (ticker == main_ticker) {
-      printf("[%s] %s: %lf %lf ->> %lf %lf\n", main_ticker.c_str(), OrderSide::ToString(side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0]);
-      return (side == OrderSide::Buy)?next_shot_map[main_ticker].asks[0]:next_shot_map[main_ticker].bids[0];
+      printf("Slip main[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", main_ticker.c_str(), OrderSide::ToString(side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0], slip);
+      // return (side == OrderSide::Buy)?next_shot_map[main_ticker].asks[0]:next_shot_map[main_ticker].bids[0];
+      return (side == OrderSide::Buy)?shot_map[main_ticker].asks[0]:shot_map[main_ticker].bids[0];
     } else {
       printf("error ticker %s\n", ticker.c_str());
       return -1.0;
@@ -258,7 +209,7 @@ void Strategy::ForceFlat() {
       Close();
     }
   }
-  CalParams();
+  // CalParams();
 }
 
 bool Strategy::Close(bool force_flat) {
@@ -274,6 +225,8 @@ bool Strategy::Close(bool force_flat) {
   if (order_map.empty()) {
     PrintMap(avgcost_map);
     Order* o = NewOrder(main_ticker, close_side, abs(pos), false, false, force_flat ? "force_flat_close" : "close", no_close_today);  // close
+    double slip = (o->side == OrderSide::Buy)? shot_map[main_ticker].asks[0] - next_shot_map[main_ticker].asks[0] : next_shot_map[main_ticker].bids[0] - shot_map[main_ticker].bids[0];
+    printf("Slip close main[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", main_ticker.c_str(), OrderSide::ToString(o->side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0], slip);
     o->Show(stdout);
     HandleTestOrder(o);
     if (mode == "real") {
@@ -334,7 +287,7 @@ void Strategy::CloseLogic() {
 
   if (HitMean()) {
     if (Close()) {
-      CalParams();
+      // CalParams();
     }
     return;
   }
@@ -351,6 +304,8 @@ void Strategy::Open(OrderSide::Enum side) {
   printf("[%s %s] open %s: pos is %d, diff is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(side), pos, GetPairMid());
   if (order_map.empty()) {  // no block order, can add open
     Order* o = NewOrder(main_ticker, side, 1, false, false, "", no_close_today);
+    double slip = (o->side == OrderSide::Buy)? shot_map[main_ticker].asks[0] - next_shot_map[main_ticker].asks[0] : next_shot_map[main_ticker].bids[0] - shot_map[main_ticker].bids[0];
+    printf("Slip open main[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", main_ticker.c_str(), OrderSide::ToString(o->side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0], slip);
     o->Show(stdout);
     // printf("spread is %lf %lf min_profit is %lf, next open will be %lf\n", shot_map[main_ticker].asks[0]-shot_map[main_ticker].bids[0], shot_map[hedge_ticker].asks[0]-shot_map[hedge_ticker].bids[0], min_profit, side == OrderSide::Buy ? down_diff: up_diff);
     HandleTestOrder(o);
@@ -378,7 +333,7 @@ bool Strategy::OpenLogic() {
 }
 
 void Strategy::Run() {
-  if (IsAlign()) {
+  if (IsAlign() && close_round < max_round) {
       if (!OpenLogic()) {
         CloseLogic();
       }
@@ -563,9 +518,15 @@ void Strategy::UpdateBuildPosTime() {
 void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
   if (strcmp(o->ticker, main_ticker.c_str()) == 0) {
     // get hedged right now
-    // std::string a = o->tbd;
-    // a.find("close") == string::npos ? open_count++ : close_count++;
+    std::string a = o->tbd;
+    if (a.find("close") != string::npos) {
+      close_round++;
+      CalParams();
+    }
+    std::string oc = (position_map[hedge_ticker] == 0 ? "open" : "close");
     Order* order = NewOrder(hedge_ticker, (o->side == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, "", no_close_today);
+    double slip = (o->side == OrderSide::Buy)? shot_map[hedge_ticker].asks[0] - next_shot_map[hedge_ticker].asks[0] : next_shot_map[hedge_ticker].bids[0] - shot_map[hedge_ticker].bids[0];
+    printf("Slip %s hedge[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", oc.c_str(), hedge_ticker.c_str(), OrderSide::ToString(o->side), shot_map[hedge_ticker].asks[0], shot_map[hedge_ticker].bids[0], next_shot_map[hedge_ticker].asks[0], next_shot_map[hedge_ticker].bids[0], slip);
     order->Show(stdout);
     HandleTestOrder(order);
   } else if (strcmp(o->ticker, hedge_ticker.c_str()) == 0) {

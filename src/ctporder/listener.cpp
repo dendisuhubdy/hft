@@ -37,8 +37,8 @@ Listener::Listener(const std::string & exchange_info_address,
   if (e_f) {
     exchange_file = fopen("ctporder_exchange.txt", "w");
   }
-  // sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
-  sender = new ShmSender<ExchangeInfo>(exchange_info_address.c_str(), 100000, "exchange.dat");
+  sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
+  // sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), 100000, "exchange.dat");
 }
 
 Listener::~Listener() {
@@ -355,7 +355,7 @@ void Listener::OnRspSettlementInfoConfirm(
   bool is_last) {
   // Now, query all our outstanding positions so we can figure out if we
   // can net orders.
-  // message_sender_->SendQueryInvestorPosition();
+  message_sender_->SendQueryInvestorPosition();
 }
 
 void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investor_position,
@@ -366,7 +366,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
     return;
   }
 
-  // printf("%s, Ydposition is %d, position is %d, positioncost is %lf, opencost is %lf\n", investor_position->InstrumentID, investor_position->YdPosition, investor_position->Position, investor_position->PositionCost, investor_position->OpenCost);
+  printf("%s, Ydposition is %d, position is %d, positioncost is %lf, opencost is %lf\n", investor_position->InstrumentID, investor_position->YdPosition, investor_position->Position, investor_position->PositionCost, investor_position->OpenCost);
   // std::cout << investor_position->InstrumentID << " Ydposition is " << investor_position->InstrumentID <<" position is  " << investor_position->Position << " positioncost is " << investor_position->PositionCost << " opencost is " << investor_position->OpenCost << endl;
 
   /*
@@ -386,7 +386,6 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
     } else {
       printf("Got unexpected position: %s %c %d\n", investor_position->InstrumentID, investor_position->PosiDirection, investor_position->Position);
       result = false;
-      // return;
     }
 
     const std::string & symbol = investor_position->InstrumentID;

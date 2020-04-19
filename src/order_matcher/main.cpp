@@ -10,7 +10,7 @@
 
 void* RunOrderCommandListener(void *param) {
   OrderHandler* order_handler = reinterpret_cast<OrderHandler*>(param);
-  Recver<Order>* r = new Recver<Order>("order_pub");
+  Recver<Order>* r = new Recver<Order>("order_recver");
   while (true) {
     Order o;
     r->Recv(o);

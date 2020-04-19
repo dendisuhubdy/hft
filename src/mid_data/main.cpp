@@ -13,7 +13,7 @@
 
 int main() {
   Recver<MarketSnapshot> recver("data_source");
-  Sender<MarketSnapshot> sender("data_sub", "connect");
+  Sender<MarketSnapshot> sender("data_sender", "connect");
   while (true) {
     MarketSnapshot shot;
     recver.Recv(shot);

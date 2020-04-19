@@ -20,7 +20,7 @@ class StrategyContainer {
  public:
   StrategyContainer(unordered_map<string, vector<BaseStrategy*> > &m)
     : m(m),
-      marketdata_recver(new T<MarketSnapshot>("data_pub")),
+      marketdata_recver(new T<MarketSnapshot>("data_recver")),
       exchangeinfo_recver(new T<ExchangeInfo>("exchange_info")),
       command_recver(new Recver<Command>("*:33334", "tcp", "bind")) {
 
@@ -72,6 +72,7 @@ class StrategyContainer {
     while (true) {
       MarketSnapshot shot;
       marketdata_recver->Recv(shot);
+      shot.Show(stdout);
       auto sv = m[shot.ticker];
       for (auto s : sv) {
         s->UpdateData(shot);

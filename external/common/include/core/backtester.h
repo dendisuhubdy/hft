@@ -2,10 +2,10 @@
 #define BACKTESTER_H_
 
 #include "core/base_strategy.h"
-#include "util/data_handler.h"
+#include "util/data_handler.hpp"
 
 // thread_pool compatible
-class Backtester : public DataHandler {
+class Backtester : public DataHandler<MarketSnapshot> {
  public:
   Backtester(const std::unordered_map<std::string, std::vector<BaseStrategy*> > & m);
 

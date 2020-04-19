@@ -40,7 +40,7 @@ void* RunExchangeListener(void *param) {
 
 int main() {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-  Recver<MarketSnapshot> data_recver("data_pub");
+  Recver<MarketSnapshot> data_recver("data_recver");
   std::vector<BaseStrategy*> sv;
   sv.emplace_back(new Strategy(&ticker_strat_map));
   pthread_t exchange_thread;

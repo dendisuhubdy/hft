@@ -51,6 +51,8 @@ class order_matcher_class(BuildContext):
   cmd = "order_matcher"
 class demostrat_class(BuildContext):
   cmd = "demostrat"
+class simdata_class(BuildContext):
+  cmd = "simdata"
 from lint import add_lint_ignore
 
 def build(bld):
@@ -91,6 +93,9 @@ def build(bld):
     return
   if bld.cmd == "demostrat":
     run_demostrat(bld)
+    return
+  if bld.cmd == "simdata":
+    run_simdata(bld)
     return
   else:
     print "error! " + str(bld.cmd)
@@ -217,6 +222,15 @@ def run_demostrat(bld):
               'src/demostrat/strategy.cpp'],
     includes = ['external/zeromq/include'],
     use = 'zmq nick pthread config++'
+  )
+
+def run_demostrat(bld):
+  bld.read_shlib('nick', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/simdata',
+    source = ['src/simdata/main.cpp'],
+    includes = ['external/zeromq/include'],
+    use = 'zmq nick pthread config++ z'
   )
 
 def run_all(bld):

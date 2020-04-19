@@ -10,28 +10,52 @@
 #include "util/time_controller.h"
 #include "util/sender.hpp"
 #include "util/recver.hpp"
-#include "util/shm_sender.hpp"
-#include "util/shm_recver.hpp"
 #include "util/dater.h"
 #include "util/history_worker.h"
+#include "util/contract_worker.h"
 #include "util/common_tools.h"
 #include "struct/market_snapshot.h"
 #include "./strategy.h"
 
 // std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
-// std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
-// std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>("order_sub", 100000, "order.dat"));
+// std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sender", "connect", "ipc", "order.dat"));
+// std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sender", 100000, "order.dat"));
 
-std::map<std::string, std::string> GetBacktestFile() {
+struct BTConfig {
+  std::string fixed_path;
+  std::string backtest_outputdir;
+  std::string start_date;
+  int period;
+  std::string test_mode;
+  // std::vector<const libconfig::Setting> strats;
+  ContractWorker* strat_cw;
+  ContractWorker* cw;
+  TimeController* tc;
+  inline std::pair<Sender<MarketSnapshot> *, Sender<Order> *> GenSender(const std::string& date) {
+    std::string ui_address = "backtest_ui_" + date;
+    std::string order_address = "order_sender_" + date;
+    std::string ui_file = backtest_outputdir + "/mid_" + date + ".dat";
+    std::string order_file = backtest_outputdir + "/order_" + date + ".dat";
+    return std::make_pair(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file), new Sender<Order>(order_address, "connect",  "ipc", order_file));
+  }
+  inline HistoryWorker* GenHw(const std::string & date) {
+    return new HistoryWorker(Dater::FindOneValid(date, -20, fixed_path));
+  }
+} bt_config;
+
+void LoadConfig() {
   std::string default_path = GetDefaultPath();
-
   libconfig::Config param_cfg;
   std::string config_path = default_path + "/hft/config/backtest/backtest.config";
+  std::string contract_config_path = default_path + "/hft/config/contract/bk_contract.config";
   param_cfg.readFile(config_path.c_str());
   try {
     std::string fixed_path = param_cfg.lookup("fixed_path");
-    Dater dt;
     std::string start_date = param_cfg.lookup("start_date");
+    std::string backtest_outputdir = param_cfg.lookup("backtest_outputdir");
+    std::string test_mode = param_cfg.lookup("test_mode");
+    EnsureDir(backtest_outputdir);
+    Dater dt;
     if (start_date == "today") {
       start_date = dt.GetDate();
     }
@@ -39,7 +63,11 @@ std::map<std::string, std::string> GetBacktestFile() {
       start_date = dt.GetDate("", -1);
     }
     int period = param_cfg.lookup("period");
-    return dt.GetValidMap(start_date, period, fixed_path);
+    bt_config.backtest_outputdir = backtest_outputdir;
+    bt_config.fixed_path = fixed_path;
+    bt_config.start_date = start_date;
+    bt_config.period = period;
+    bt_config.test_mode = test_mode;
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
     exit(1);
@@ -50,71 +78,44 @@ std::map<std::string, std::string> GetBacktestFile() {
     printf("EXCEPTION: %s\n", ex.what());
     exit(1);
   }
+
+  std::string time_config_path = default_path + "/hft/config/prod/time.config";
+  bt_config.tc = new TimeController(time_config_path);
+  bt_config.cw = new ContractWorker(contract_config_path);
+  bt_config.strat_cw = new ContractWorker(config_path, "strategy");
+}
+
+std::map<std::string, std::string> GetBacktestFile() {
+  auto dt = Dater();
+  return dt.GetValidMap(bt_config.start_date, bt_config.period, bt_config.fixed_path);
 }
 
 std::unordered_map<std::string, std::vector<BaseStrategy*> > GetStratMap(std::string date) {
-  std::string default_path = GetDefaultPath();
-
-  libconfig::Config param_cfg;
-  std::string config_path = default_path + "/hft/config/backtest/backtest.config";
-  param_cfg.readFile(config_path.c_str());
-
-  std::string time_config_path = default_path + "/hft/config/prod/time.config";
-  TimeController tc(time_config_path);
-
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-  std::string contract_config_path = default_path + "/hft/config/contract/contract.config";
-
-  // std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file));
-  // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sub", "connect", "ipc", "order.dat"));
-  // std::unique_ptr<ShmSender<Order> > order_sender(new ShmSender<Order>(order_address, 100000, order_file));
-
-  try {
-    std::string fixed_path = param_cfg.lookup("fixed_path");
-    HistoryWorker hw(Dater::FindOneValid(date, -20, fixed_path));
-    std::string backtest_outputdir = param_cfg.lookup("backtest_outputdir");
-    EnsureDir(backtest_outputdir);
-    std::string ui_address = "backtest_ui_" + date;
-    std::string order_address = "order_sub_" + date;
-    std::string ui_file = backtest_outputdir + "/mid_" + date + ".dat";
-    std::string order_file = backtest_outputdir + "/order_" + date + ".dat";
-    auto ui_sender = new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file);
-    auto order_sender = new ShmSender<Order>(order_address, 100000, order_file);
-    std::string test_mode = param_cfg.lookup("test_mode");
-    const libconfig::Setting & strategies = param_cfg.lookup("strategy");
-    for (int i = 0; i < strategies.getLength(); i++) {
-      const libconfig::Setting & param_setting = strategies[i];
-      bool no_close_today = false;
-      if (param_setting.exists("no_close_today")) {
-        no_close_today = param_setting["no_close_today"];
-      }
-      // auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &hw, test_mode, no_close_today);
-      auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender, order_sender, &hw, test_mode, no_close_today);
-      s->Print();
-    }
-  } catch(const libconfig::SettingNotFoundException &nfex) {
-    printf("Setting '%s' is missing", nfex.getPath());
-    exit(1);
-  } catch(const libconfig::SettingTypeException &tex) {
-    printf("Setting '%s' has the wrong type", tex.getPath());
-    exit(1);
-  } catch (const std::exception& ex) {
-    printf("EXCEPTION: %s\n", ex.what());
-    exit(1);
+  auto senders = bt_config.GenSender(date);
+  auto hw = bt_config.GenHw(date);
+  for (auto ticker : bt_config.strat_cw->GetTicker()) {
+    const libconfig::Setting & p = bt_config.strat_cw->Lookup(ticker);
+    auto s = new Strategy(p, &ticker_strat_map, senders.first, senders.second, hw, bt_config.tc, bt_config.cw, bt_config.test_mode);
+    s->Print();
   }
   return ticker_strat_map;
 }
 
 void RunBacktest(const std::string& date, const std::string& f) {
+  TimeController tc;
+  tc.StartTimer();
   auto tsm = GetStratMap(date);
   Backtester bt(tsm);
   bt.LoadData(f);
+  tc.EndTimer("Run@" + date);
 }
 
 int main() {
+  LoadConfig();
   auto file_v = GetBacktestFile();
   PrintMap(file_v);
-  ThreadPool pool(8);
+  ThreadPool pool(6);
   for (auto i: file_v) {
     pool.enqueue(RunBacktest, i.first, i.second);
   }

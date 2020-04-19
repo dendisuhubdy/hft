@@ -10,12 +10,13 @@
 #include "struct/command.h"
 #include "struct/exchange_info.h"
 #include "struct/order_status.h"
-#include "util/caler.h"
+// #include "util/caler.h"
 #include "util/common_tools.h"
 #include "struct/strategy_status.h"
-#include "util/contractor.h"
+// #include "util/contractor.h"
 #include "util/time_controller.h"
 #include "util/history_worker.h"
+#include "util/contract_worker.h"
 #include <libconfig.h++>
 #include <unordered_map>
 
@@ -70,7 +71,7 @@ class BaseStrategy {
   void UpdatePos(Order* o, const ExchangeInfo& info);
   
   bool position_ready;
-  ShmSender<Order>* order_sender;
+  Sender<Order>* order_sender;
   Sender<MarketSnapshot>* ui_sender;
   unordered_map<std::string, MarketSnapshot> shot_map;
   unordered_map<std::string, MarketSnapshot> next_shot_map;
@@ -83,7 +84,7 @@ class BaseStrategy {
   std::mutex order_ref_mutex;
   std::mutex mod_mutex;
   std::string m_strat_name;
-  TimeController m_tc;
+  TimeController* m_tc;
   int ticker_size;
   std::unordered_map<std::string, int> cancel_map;
   StrategyStatus::Enum ss;
@@ -91,8 +92,9 @@ class BaseStrategy {
   MarketSnapshot last_shot;
   long int build_position_time;
   int max_holding_sec;
-  Contractor m_ct;
-  CALER m_cal;
+  // Contractor m_ct;
+  // CALER m_cal;
+  ContractWorker * m_cw;
   HistoryWorker m_hw;
   bool init_ticker;
  private:

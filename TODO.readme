@@ -6,3 +6,9 @@
 test:
 the slip cost is mainly rely on the hedge ticker
 foucs on hedge ticker, if this_shot changed a lot compared to last, disable this oppounity because hedge may slip a lot
+
+2020.4.16
+1.backtest speed up - calparam part
+2.check status optimize
+3.dangerous operation check - delete.....
+4.pair trading, main logic rewrite

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <util/sender.hpp>
 #include <util/shm_worker.hpp>
-#include <util/shm_sender.hpp>
 #include <sys/time.h>
 #include <unordered_map>
 #include <struct/market_snapshot.h>
@@ -31,9 +30,7 @@ class Listener : public CThostFtdcMdSpi {
       record_binary(binary_record),
       record_stdout(show_stdout),
       record_file(file_record) {
-    // sender = new Sender("data_source");
-    sender = new ShmSender<MarketSnapshot> ("data_pub", 100000);
-    // data_file = fopen("data.txt", "w");
+    sender = new Sender<MarketSnapshot> ("data_sender");
     time_t time_seconds = time(0);
     struct tm now_time;
     localtime_r(&time_seconds, &now_time);
@@ -244,7 +241,7 @@ class Listener : public CThostFtdcMdSpi {
   bool record_file;
   std::ofstream binary_file;
   // Sender* sender;
-  ShmSender<MarketSnapshot> * sender;
+  Sender<MarketSnapshot> * sender;
 };
 
 int main() {

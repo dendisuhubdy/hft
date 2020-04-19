@@ -26,7 +26,8 @@ void Strategy::Init() {
   std::vector<string> sleep_time_v;
   std::vector<string> close_time_v;
   std::vector<string> force_close_time_v;
-  // m_tc = new TimeController("/root/hft/config/prod/time.config");
+  m_tc = new TimeController("/root/hft/config/prod/time.config");
+  m_cw = new ContractWorker("/root/hft/config/contract/bk_contract.config");
 }
 
 bool Strategy::Ready() {
