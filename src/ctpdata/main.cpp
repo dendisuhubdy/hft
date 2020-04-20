@@ -30,7 +30,7 @@ class Listener : public CThostFtdcMdSpi {
       record_binary(binary_record),
       record_stdout(show_stdout),
       record_file(file_record) {
-    sender = new Sender<MarketSnapshot> ("data_sender");
+    sender = new Sender<MarketSnapshot> ("data_sender", "connect");
     time_t time_seconds = time(0);
     struct tm now_time;
     localtime_r(&time_seconds, &now_time);
