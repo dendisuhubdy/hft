@@ -21,6 +21,9 @@ ctpdata:
 ctporder:
 	$(WAF) configure ctporder $(PARAMS)
 
+manual_ctp:
+	$(WAF) configure manual_ctp $(PARAMS)
+
 getins:
 	$(WAF) configure getins $(PARAMS)
 

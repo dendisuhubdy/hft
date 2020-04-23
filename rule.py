@@ -39,6 +39,8 @@ class ctpdata_class(BuildContext):
   cmd = "ctpdata"
 class ctporder_class(BuildContext):
   cmd = "ctporder"
+class manual_ctp_class(BuildContext):
+  cmd = "manual_ctp"
 class getins_class(BuildContext):
   cmd = "get_ins"
 class simplemaker_class(BuildContext):
@@ -75,6 +77,9 @@ def build(bld):
     return
   if bld.cmd == "ctporder":
     run_ctporder(bld)
+    return
+  if bld.cmd == "manual_ctp":
+    run_manual_ctp(bld)
     return
   if bld.cmd == "getins":
     run_getins(bld)
@@ -130,6 +135,19 @@ def run_ctporder(bld):
     includes = ['external/ctp/include', 'external/zeromq/include'],
     use = 'zmq thosttraderapi nick pthread config++'
   )
+def run_manual_ctp(bld):
+  bld.read_shlib('nick', paths=['external/common/lib'])
+  bld.read_shlib('thosttraderapi', paths=['external/ctp/lib'])
+  bld.program(
+    target = 'bin/manual_ctp',
+    source = ['src/manual_ctp/main.cpp',
+              'src/manual_ctp/listener.cpp',
+              'src/manual_ctp/token_manager.cpp',
+              'src/manual_ctp/message_sender.cpp'],
+    includes = ['external/ctp/include', 'external/zeromq/include'],
+    use = 'zmq thosttraderapi nick pthread config++'
+  )
+
 def run_proxy(bld):
   bld.program(
     target = 'bin/data_proxy',
