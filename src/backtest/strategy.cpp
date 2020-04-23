@@ -399,7 +399,6 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
     if (mode != "test" && mode != "nexttest") {
       printf("%ld [%s, %s]mid_diff is %lf\n", shot.time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
     }
-    printf("%ld [%s, %s]mid_diff is %lf\n", shot.time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
     if (ss == StrategyStatus::Training) {
       mean = down_diff = up_diff = stop_loss_down_line = stop_loss_up_line = mid;
     }

@@ -140,11 +140,7 @@ def run_manual_ctp(bld):
   bld.read_shlib('thosttraderapi', paths=['external/ctp/lib'])
   bld.program(
     target = 'bin/manual_ctp',
-    source = ['src/manual_ctp/main.cpp',
-              'src/manual_ctp/listener.cpp',
-              'src/manual_ctp/token_manager.cpp',
-              'src/manual_ctp/manual_controller.cpp',
-              'src/manual_ctp/message_sender.cpp'],
+    source = ['src/manual_ctp/main.cpp'],
     includes = ['external/ctp/include', 'external/zeromq/include'],
     use = 'zmq thosttraderapi nick pthread config++'
   )

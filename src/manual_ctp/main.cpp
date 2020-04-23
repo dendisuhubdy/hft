@@ -1,123 +1,73 @@
 #include <stdio.h>
-#include <zmq.hpp>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
-#include <ThostFtdcTraderApi.h>
-#include <unordered_map>
 
+#include <struct/order.h>
+#include <struct/exchange_info.h>
+#include <struct/order_side.h>
+
+#include <util/sender.hpp>
+#include <util/recver.hpp>
+
+#include <thread>
 #include <iostream>
 #include <string>
-#include <vector>
-#include <memory>
 
-#include "./message_sender.h"
-#include "./listener.h"
-#include "./token_manager.h"
-#include "./manual_controller.h"
-
-FILE* order_file;
-bool enable_stdout = true;
-bool enable_file = true;
-
-std::unordered_map<std::string, std::string> RegisterExchange() {
-  std::unordered_map<std::string, std::vector<std::string> > exchange_ticker;
-  exchange_ticker["SHFE"] = {"cu", "ni", "au"};
-  exchange_ticker["CFFEX"] = {"IH", "IC", "IF", "T"};
-  exchange_ticker["CZCE"] = {};
-  exchange_ticker["DCE"] = {};
-  std::unordered_map<std::string, std::string> ticker_exchange;
-  for (auto i : exchange_ticker) {
-    std::vector<std::string> c_v = i.second;
-    for (auto j : c_v) {
-      ticker_exchange[j] = i.first;
+void RunSend(Sender<Order> * sender) {
+  int count = 0;
+  std::string ticker;
+  std::string buffer;
+  while (ticker != "quit") {
+    std::cout << "ticker:";
+    std::getline(std::cin, buffer);
+    ticker = buffer;
+    std::cout << "price:";
+    std::getline(std::cin, buffer);
+    double price = atof(buffer.c_str());
+    std::cout << "size:";
+    std::getline(std::cin, buffer);
+    int size = atoi(buffer.c_str());
+    std::cout << "side:(1-buy, 2-sell)";
+    std::getline(std::cin, buffer);
+    int side_int = atoi(buffer.c_str());
+    if (side_int != 1 and side_int != 2) {
+      cout << "wrong side, 1->buy 2->sell!" << endl;
+      continue;
+    }
+    OrderSide::Enum side = (side_int == 1) ? OrderSide::Buy : OrderSide::Sell;
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "Confirm OrderInfo:%s %lf@%d; 1-confirmed other-quit:", ticker.c_str(), price, size);
+    std::cout << buf;
+    std::getline(std::cin, buffer);
+    int confirmed = atoi(buffer.c_str());
+    if (confirmed == 1) {
+      Order* o = new Order;
+      snprintf(o->ticker, sizeof(o->ticker), "%s", ticker.c_str());
+      o->price = price;
+      o->side = side;
+      o->size = size;
+      snprintf(o->order_ref, sizeof(o->order_ref), "%s%d", ticker.c_str(), count++);
+      sender->Send(*o);
+      std::cout << "*****************" <<  o->order_ref << " sent*****************\n";
+      sleep(3);
+    } else {
+      std::cout << "*****************Order Quit!*****************" << std::endl;
+      continue;
     }
   }
-  return ticker_exchange;
+  exit(1);
 }
 
-void* RunOrderCommandListener(void *param) {
-  MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
-  auto r = new Recver<Order>("order_recver");
-  std::shared_ptr<Sender<Order> > sender(new Sender<Order>("*:33335", "bind", "tcp"));
+void RunRecv(Recver<ExchangeInfo> * recver) {
+  ExchangeInfo info;
   while (true) {
-    Order o;
-    r->Recv(o);
-    sender.get()->Send(o);
-    if (enable_stdout) {
-      o.Show(stdout);
-    }
-    if (enable_file) {
-      o.Show(order_file);
-    }
-    // check order's correct
-    if (!message_sender->Handle(o)) {
-      printf("Handle Order %s failed!\n", o.order_ref);
-      // handle error
-    }
+    recver->Recv(info);
+    info.Show(stdout);
   }
-  return NULL;
 }
 
 int main() {
-  enable_file = true;
-  enable_stdout = true;
-  if (enable_file) {
-    order_file = fopen("ctporder_order.txt", "w");
-  }
-  CThostFtdcTraderApi* user_api = CThostFtdcTraderApi::CreateFtdcTraderApi();
-
-  /*
-  std::string broker = "9999";
-  std::string username = "116909";
-  std::string password = "yifeng";
-  */
-  std::string broker = "9999";
-  std::string username = "115686";
-  std::string password = "fz567789";
-  ::unordered_map<int, int> order_id_map;
-
-  TokenManager tm;
-  std::unordered_map<std::string, std::string> exchange_map = RegisterExchange();
-  MessageSender message_sender(user_api,
-                               broker,
-                               username,
-                               password,
-                               false,
-                               &order_id_map,
-                               &tm,
-                               exchange_map);
-
-  Listener listener("exchange_info",
-                    &message_sender,
-                    "error_list",
-                    &order_id_map,
-                    &tm,
-                    enable_stdout,
-                    enable_file);
-
-  pthread_t order_thread;
-  if (pthread_create(&order_thread,
-                     NULL,
-                     &RunOrderCommandListener,
-                     &message_sender) != 0) {
-    perror("pthread_create");
-    exit(1);
-  }
-
-  user_api->RegisterSpi(&listener);
-  printf("register spi sent\n");
-
-  user_api->SubscribePrivateTopic(THOST_TERT_QUICK);
-  user_api->SubscribePublicTopic(THOST_TERT_QUICK);
-  std::string counterparty_host = "tcp://180.168.146.187:10100";
-  user_api->RegisterFront(const_cast<char*>(counterparty_host.c_str()));
-  user_api->Init();
-  if (enable_file) {
-    fclose(order_file);
-  }
-  ManualController mc;
-  mc.Start();
-  while (true) {
-  }
-  user_api->Release();
+  std::unique_ptr<Recver<ExchangeInfo> > exchange_recver(new Recver<ExchangeInfo>("exchange_info"));
+  std::thread recv_thread(RunRecv, exchange_recver.get());
+  std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_recver"));
+  RunSend(order_sender.get());
+  recv_thread.join();
 }

@@ -69,7 +69,6 @@ class DataHandler {
             all[shot.ticker] = temp_v;
           }
           all[shot.ticker].push_back(shot);
-          printf("capacity is %zu\n", all[shot.ticker].capacity());
         }
         tc.EndTimer("LoadAllShot");
         for (auto i : all) {
