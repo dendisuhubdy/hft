@@ -1,5 +1,5 @@
-#ifndef SRC_CTPORDER_MESSAGE_SENDER_H_
-#define SRC_CTPORDER_MESSAGE_SENDER_H_
+#ifndef SRC_MANUAL_CTP_MESSAGE_SENDER_H_
+#define SRC_MANUAL_CTP_MESSAGE_SENDER_H_
 
 #include <ThostFtdcTraderApi.h>
 #include <struct/order_side.h>
@@ -57,4 +57,4 @@ class MessageSender {
   std::unordered_map<std::string, std::string> exchange_map;
 };
 
-#endif  // SRC_CTPORDER_MESSAGE_SENDER_H_
+#endif  // SRC_MANUAL_CTP_MESSAGE_SENDER_H_

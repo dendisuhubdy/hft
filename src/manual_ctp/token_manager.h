@@ -1,5 +1,5 @@
-#ifndef SRC_CTPORDER_TOKEN_MANAGER_H_
-#define SRC_CTPORDER_TOKEN_MANAGER_H_
+#ifndef SRC_MANUAL_CTP_TOKEN_MANAGER_H_
+#define SRC_MANUAL_CTP_TOKEN_MANAGER_H_
 
 #include <struct/order.h>
 #include <stdio.h>
@@ -85,4 +85,4 @@ class TokenManager {
   int ctp_id;
 };
 
-#endif  // SRC_CTPORDER_TOKEN_MANAGER_H_
+#endif  // SRC_MANUAL_CTP_TOKEN_MANAGER_H_

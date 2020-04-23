@@ -13,6 +13,7 @@
 #include "./message_sender.h"
 #include "./listener.h"
 #include "./token_manager.h"
+#include "./manual_controller.h"
 
 FILE* order_file;
 bool enable_stdout = true;
@@ -114,6 +115,8 @@ int main() {
   if (enable_file) {
     fclose(order_file);
   }
+  ManualController mc;
+  mc.Start();
   while (true) {
   }
   user_api->Release();

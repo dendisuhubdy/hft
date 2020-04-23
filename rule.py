@@ -143,6 +143,7 @@ def run_manual_ctp(bld):
     source = ['src/manual_ctp/main.cpp',
               'src/manual_ctp/listener.cpp',
               'src/manual_ctp/token_manager.cpp',
+              'src/manual_ctp/manual_controller.cpp',
               'src/manual_ctp/message_sender.cpp'],
     includes = ['external/ctp/include', 'external/zeromq/include'],
     use = 'zmq thosttraderapi nick pthread config++'
@@ -257,6 +258,7 @@ def run_all(bld):
   run_proxy(bld)
   run_ctpdata(bld)
   run_ctporder(bld)
+  run_manual_ctp(bld)
   run_getins(bld)
   run_simplearb(bld)
   run_backtest(bld)

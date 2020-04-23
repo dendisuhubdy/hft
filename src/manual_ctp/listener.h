@@ -1,5 +1,5 @@
-#ifndef SRC_CTPORDER_LISTENER_H_
-#define SRC_CTPORDER_LISTENER_H_
+#ifndef SRC_MANUAL_CTP_LISTENER_H_
+#define SRC_MANUAL_CTP_LISTENER_H_
 
 #include <ThostFtdcTraderApi.h>
 #include <stdint.h>
@@ -108,4 +108,4 @@ class Listener : public CThostFtdcTraderSpi {
   bool e_f;
 };
 
-#endif  // SRC_CTPORDER_LISTENER_H_
+#endif  // SRC_MANUAL_CTP_LISTENER_H_
