@@ -31,12 +31,12 @@ struct BTConfig {
   ContractWorker* strat_cw;
   ContractWorker* cw;
   TimeController* tc;
-  inline std::pair<Sender<MarketSnapshot> *, Sender<Order> *> GenSender(const std::string& date) {
+  inline std::tuple<Sender<MarketSnapshot> *, Sender<Order> *, std::ofstream*> GenSender(const std::string& date) {
     std::string ui_address = "backtest_ui_" + date;
     std::string order_address = "order_sender_" + date;
     std::string ui_file = backtest_outputdir + "/mid_" + date + ".dat";
     std::string order_file = backtest_outputdir + "/order_" + date + ".dat";
-    return std::make_pair(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file), new Sender<Order>(order_address, "connect",  "ipc", order_file));
+    return std::make_tuple(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file), new Sender<Order>(order_address, "connect",  "ipc", order_file), new std::ofstream(backtest_outputdir + "/exchange_" + date + ".dat", ios::out | ios::binary));
   }
   inline HistoryWorker* GenHw(const std::string & date) {
     return new HistoryWorker(Dater::FindOneValid(date, -20, fixed_path));
@@ -92,11 +92,14 @@ std::map<std::string, std::string> GetBacktestFile() {
 
 std::unordered_map<std::string, std::vector<BaseStrategy*> > GetStratMap(std::string date) {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-  auto senders = bt_config.GenSender(date);
+  Sender<MarketSnapshot> * data_sender;
+  Sender<Order> * order_sender;
+  std::ofstream* f;
+  std::tie(data_sender, order_sender, f) = bt_config.GenSender(date);
   auto hw = bt_config.GenHw(date);
   for (auto ticker : bt_config.strat_cw->GetTicker()) {
     const libconfig::Setting & p = bt_config.strat_cw->Lookup(ticker);
-    auto s = new Strategy(p, &ticker_strat_map, senders.first, senders.second, hw, bt_config.tc, bt_config.cw, bt_config.test_mode);
+    auto s = new Strategy(p, &ticker_strat_map, data_sender, order_sender, hw, bt_config.tc, bt_config.cw, bt_config.test_mode, f);
     s->Print();
   }
   return ticker_strat_map;

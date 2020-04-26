@@ -31,6 +31,7 @@ class Listener : public CThostFtdcTraderSpi {
   virtual void OnFrontConnected();
   virtual void OnFrontDisconnected(int reason);
   virtual void OnHeartBeatWarning(int time_lapse);
+  virtual void OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
   virtual void OnRspUserLogin(CThostFtdcRspUserLoginField* user_login,
                               CThostFtdcRspInfoField* info,

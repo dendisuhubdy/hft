@@ -27,6 +27,7 @@ class MessageSender {
   void SetSessionId(int session_id) { session_id_ = session_id; }
 
   void SendLogin();
+  void Auth();
   void SendQueryTradingAccount();
   void SendSettlementInfoConfirm();
   void SendQueryInvestorPosition();
