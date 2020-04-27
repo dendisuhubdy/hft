@@ -24,17 +24,22 @@ MessageSender::MessageSender(CThostFtdcTraderApi* user_api,
 }
 
 void MessageSender::Auth() {
-  CThostFtdcReqAuthenticateField request;
-  memset(&request, 0, sizeof(request));
-  strncpy(request.UserProductInfo, "N160414LEO", sizeof(request.UserProductInfo));
-  strncpy(request.BrokerID, broker_id_.c_str(), sizeof(request.BrokerID));
-  strncpy(request.UserID, user_id_.c_str(), sizeof(request.UserID));
-  snprintf(request.AuthCode, sizeof(request.AuthCode), "%s", "NI7NO9SMB0MWYN56");
-  int ret = user_api_->ReqAuthenticate(&request, 0);
-  if (ret) {
+  static const char *version = user_api_->GetApiVersion();
+  printf("Version is %s\n", version);
+
+  CThostFtdcReqAuthenticateField reqauth;
+  memset(&reqauth, 0, sizeof(reqauth));
+  strncpy(reqauth.BrokerID, broker_id_.c_str(), sizeof(reqauth.BrokerID));
+  strncpy(reqauth.UserID, user_id_.c_str(), sizeof(reqauth.UserID));
+  strncpy(reqauth.AppID, "client_wmby_1.0", sizeof(reqauth.AppID));
+  strncpy(reqauth.AuthCode, "NI7NO9SMB0MWYN56", sizeof(reqauth.AuthCode));
+
+  printf("Get Auth...\n");
+  int result = user_api_->ReqAuthenticate(&reqauth, ++request_id_);
+  if (result != 0) {
+    printf("Get Auth failed!(%d)\n", result);
+    sleep(1);
     throw std::runtime_error("Auth failed");
-  } else {
-    std::cout << "auth success!\n";
   }
 }
 

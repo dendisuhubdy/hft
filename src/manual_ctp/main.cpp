@@ -3,6 +3,7 @@
 #include <struct/order.h>
 #include <struct/exchange_info.h>
 #include <struct/order_side.h>
+#include <struct/offset.h>
 
 #include <util/sender.hpp>
 #include <util/recver.hpp>
@@ -41,9 +42,14 @@ void RunSend(Sender<Order> * sender) {
     if (confirmed == 1) {
       Order* o = new Order;
       snprintf(o->ticker, sizeof(o->ticker), "%s", ticker.c_str());
+      gettimeofday(&o->send_time, nullptr);
+      o->traded_size = 0;
       o->price = price;
       o->side = side;
       o->size = size;
+      o->offset = Offset::NO_TODAY;
+      o->action = OrderAction::NewOrder;
+      o->status = OrderStatus::SubmitNew;
       snprintf(o->order_ref, sizeof(o->order_ref), "%s%d", ticker.c_str(), count++);
       sender->Send(*o);
       std::cout << "*****************" <<  o->order_ref << " sent*****************\n";
