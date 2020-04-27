@@ -48,13 +48,18 @@ Listener::~Listener() {
   }
 }
 
+void Listener::OnRspAuthenticate(CThostFtdcRspAuthenticateField *pRspAuthenticateField, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+  sleep(2);
+  message_sender_->SendLogin();
+}
+
 void Listener::OnRspError(CThostFtdcRspInfoField *info, int request_id, bool is_last) {
   CheckError("OnRspError", info);
 }
 
 void Listener::OnFrontConnected() {
   printf("enter onfrontconnected\n");
-  message_sender_->SendLogin();
+  message_sender_->Auth();
 }
 
 void Listener::OnFrontDisconnected(int reason) {
@@ -114,7 +119,7 @@ void Listener::OnRspOrderInsert(CThostFtdcInputOrderField* order,
   printf("on errinsert for %s\n", order->OrderRef);
   if (CheckError("OnRspOrderInsert", info, order->OrderRef)) {
     ExchangeInfo exchangeinfo;
-    gettimeofday(&exchangeinfo.time, NULL);
+    gettimeofday(&exchangeinfo.show_time, NULL);
     exchangeinfo.type = InfoType::Rej;
     int ctp_order_ref = atoi(order->OrderRef);
     Order o = t_m->GetOrder(ctp_order_ref);
@@ -173,7 +178,7 @@ void Listener::OnRspOrderAction(CThostFtdcInputOrderActionField* order_action,
     int ctp_order_ref = atoi(order_action->OrderRef);
     Order o = t_m->GetOrder(ctp_order_ref);
     ExchangeInfo exchangeinfo;
-    gettimeofday(&exchangeinfo.time, NULL);
+    gettimeofday(&exchangeinfo.show_time, NULL);
     exchangeinfo.type = InfoType::CancelRej;
     snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", o.order_ref);
     snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", o.ticker);
@@ -206,7 +211,7 @@ void Listener::OnRtnOrder(CThostFtdcOrderField* order) {
   }
 
   ExchangeInfo exchangeinfo;
-  gettimeofday(&exchangeinfo.time, NULL);
+  gettimeofday(&exchangeinfo.show_time, NULL);
   exchangeinfo.type = InfoType::Unknown;
   int ctp_order_ref = atoi(order->OrderRef);
   Order o = t_m->GetOrder(ctp_order_ref);
@@ -309,7 +314,7 @@ void Listener::OnRtnTrade(CThostFtdcTradeField* trade) {
   */
 
   ExchangeInfo exchangeinfo;
-  gettimeofday(&exchangeinfo.time, NULL);
+  gettimeofday(&exchangeinfo.show_time, NULL);
   int ctp_order_ref = atoi(trade->OrderRef);
   std::string orderref = t_m->GetOrderRef(ctp_order_ref);
   Order o = t_m->GetOrder(ctp_order_ref);
@@ -391,7 +396,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
     const std::string & symbol = investor_position->InstrumentID;
     if (result) {
       ExchangeInfo info;
-      gettimeofday(&info.time, NULL);
+      gettimeofday(&info.show_time, NULL);
       snprintf(info.ticker, sizeof(info.ticker), "%s", symbol.c_str());
       // info.trade_price = (investor_position->PositionCost*investor_position->YdPosition + investor_position->OpenCost*investor_position->Position) / (investor_position->Position+investor_position->YdPosition);
       if (investor_position->YdPosition > 0 && investor_position->PositionCost > 0.1) {
@@ -414,7 +419,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
   if (is_last) {
     initialized_ = true;
     ExchangeInfo endinfo;
-    gettimeofday(&endinfo.time, NULL);
+    gettimeofday(&endinfo.show_time, NULL);
     snprintf(endinfo.ticker, sizeof(endinfo.ticker), "%s", "positionend");
     endinfo.type = InfoType::Position;
     endinfo.trade_price = 0.0;

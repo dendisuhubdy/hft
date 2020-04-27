@@ -25,7 +25,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, TimeController* tc, ContractWorker* cw, const std::string & mode = "real");
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, TimeController* tc, ContractWorker* cw, const std::string & mode = "real", std::ofstream* exchange_file = nullptr);
   ~Strategy();
 
   void Start() override;
@@ -102,6 +102,7 @@ class Strategy : public BaseStrategy {
   double min_range;
   double increment;
   std::string mode;
+  std::string date;
   double spread_threshold;
   int closed_size;
   double last_valid_mid;
@@ -123,6 +124,7 @@ class Strategy : public BaseStrategy {
   std::vector<double> param_v;
   int sample_head;
   int sample_tail;
+  std::ofstream* exchange_file;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_

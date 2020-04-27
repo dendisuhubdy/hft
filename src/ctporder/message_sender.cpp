@@ -23,6 +23,21 @@ MessageSender::MessageSender(CThostFtdcTraderApi* user_api,
     exchange_map(e_map) {
 }
 
+void MessageSender::Auth() {
+  CThostFtdcReqAuthenticateField request;
+  memset(&request, 0, sizeof(request));
+  strncpy(request.UserProductInfo, "N160414LEO", sizeof(request.UserProductInfo));
+  strncpy(request.BrokerID, broker_id_.c_str(), sizeof(request.BrokerID));
+  strncpy(request.UserID, user_id_.c_str(), sizeof(request.UserID));
+  snprintf(request.AuthCode, sizeof(request.AuthCode), "%s", "NI7NO9SMB0MWYN56");
+  int ret = user_api_->ReqAuthenticate(&request, 0);
+  if (ret) {
+    throw std::runtime_error("Auth failed");
+  } else {
+    std::cout << "auth success!\n";
+  }
+}
+
 void MessageSender::SendLogin() {
   CThostFtdcReqUserLoginField request;
   memset(&request, 0, sizeof(request));
