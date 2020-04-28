@@ -413,8 +413,14 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
     shot.asks[0] = up_diff + current_spread/2;
     shot.asks[1] = stop_loss_up_line;
     shot.asks[2] = mean + current_spread/2;
-    shot.bids[3] = GetMid(main_ticker);
-    shot.asks[3] = GetMid(hedge_ticker);
+    shot.bids[3] = shot_map[main_ticker].bids[0];
+    shot.asks[3] = shot_map[main_ticker].asks[0];
+    shot.bids[4] = shot_map[hedge_ticker].bids[0];
+    shot.asks[4] = shot_map[hedge_ticker].asks[0];
+    shot.bid_sizes[3] = shot_map[main_ticker].bid_sizes[0];
+    shot.ask_sizes[3] = shot_map[main_ticker].ask_sizes[0];
+    shot.bid_sizes[4] = shot_map[hedge_ticker].bid_sizes[0];
+    shot.ask_sizes[4] = shot_map[hedge_ticker].ask_sizes[0];
     shot.open_interest = mean;
     std::string label = main_ticker + '|' + hedge_ticker;
     snprintf(shot.ticker, sizeof(shot.ticker), "%s", label.c_str());

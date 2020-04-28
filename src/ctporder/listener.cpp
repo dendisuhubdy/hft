@@ -37,6 +37,8 @@ Listener::Listener(const std::string & exchange_info_address,
   if (e_f) {
     exchange_file = fopen("ctporder_exchange.txt", "w");
   }
+  position_file = fopen("position.csv", "w");
+  setbuf(position_file, NULL);
   sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
   // sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), 100000, "exchange.dat");
 }
@@ -374,12 +376,6 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
   printf("%s, Ydposition is %d, position is %d, positioncost is %lf, opencost is %lf\n", investor_position->InstrumentID, investor_position->YdPosition, investor_position->Position, investor_position->PositionCost, investor_position->OpenCost);
   // std::cout << investor_position->InstrumentID << " Ydposition is " << investor_position->InstrumentID <<" position is  " << investor_position->Position << " positioncost is " << investor_position->PositionCost << " opencost is " << investor_position->OpenCost << endl;
 
-  /*
-  if (initialized_) {
-    return;
-  }
-  */
-
   if (investor_position) {
     bool result = true;
     // init to ignore compile error
@@ -402,9 +398,14 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
       if (investor_position->YdPosition > 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterYesToken(symbol, investor_position->YdPosition, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position->YdPosition;
+        int yd_trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position  ->YdPosition;
+        fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, yd_trade_size, "yes");
+        fflush(position_file);
       } else if (investor_position->YdPosition == 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterToken(symbol, investor_position->Position, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->Position:-investor_position->Position;
+        fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, info.trade_size, "today");
+        fflush(position_file);
       } else {
         info.trade_size = 0;
       }
