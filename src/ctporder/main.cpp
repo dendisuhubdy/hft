@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <zmq.hpp>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
 #include <ThostFtdcTraderApi.h>
 #include <unordered_map>
 
@@ -10,6 +8,10 @@
 #include <vector>
 #include <memory>
 
+#include "util/dater.h"
+#include "util/contract_worker.h"
+#include "util/recver.hpp"
+#include "util/sender.hpp"
 #include "./message_sender.h"
 #include "./listener.h"
 #include "./token_manager.h"
@@ -89,11 +91,15 @@ int main() {
                                &tm,
                                exchange_map);
 
+  std::string default_path = GetDefaultPath();
+  std::string contract_config_path = default_path + "/hft/config/contract/bk_contract.config";
+  ContractWorker cw(contract_config_path);
   Listener listener("exchange_info",
                     &message_sender,
                     "error_list",
                     &order_id_map,
                     &tm,
+                    &cw,
                     enable_stdout,
                     enable_file);
 

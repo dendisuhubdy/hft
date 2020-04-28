@@ -4,13 +4,14 @@
 #include <ThostFtdcTraderApi.h>
 #include <stdint.h>
 #include <unordered_map>
-#include <struct/exchange_info.h>
-#include <struct/info_type.h>
-#include <util/sender.hpp>
 
 #include <map>
 #include <string>
 
+#include "struct/exchange_info.h"
+#include "struct/info_type.h"
+#include "util/sender.hpp"
+#include "util/contract_worker.h"
 #include "./token_manager.h"
 
 class MessageSender;
@@ -22,6 +23,7 @@ class Listener : public CThostFtdcTraderSpi {
            const std::string & error_list,
            std::unordered_map<int, int>* id_map,
            TokenManager* tm,
+           ContractWorker* cw,
            bool enable_stdout = true,
            bool enable_file = true);
   ~Listener();
@@ -104,6 +106,7 @@ class Listener : public CThostFtdcTraderSpi {
   std::map<int, std::string> error_list_;
   std::unordered_map<int, int>* order_id_map;
   TokenManager* t_m;
+  ContractWorker* cw;
   FILE* exchange_file;
   FILE* position_file;
   bool e_s;

@@ -17,12 +17,14 @@ Listener::Listener(const std::string & exchange_info_address,
                    const std::string & error_list,
                    std::unordered_map<int, int>*id_map,
                    TokenManager* tm,
+                   ContractWorker* cw,
                    bool enable_stdout,
                    bool enable_file)
   : message_sender_(message_sender),
     initialized_(false),
     order_id_map(id_map),
     t_m(tm),
+    cw(cw),
     e_s(enable_stdout),
     e_f(enable_file) {
   /*
@@ -397,21 +399,24 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
       gettimeofday(&info.show_time, NULL);
       snprintf(info.ticker, sizeof(info.ticker), "%s", symbol.c_str());
       // info.trade_price = (investor_position->PositionCost*investor_position->YdPosition + investor_position->OpenCost*investor_position->Position) / (investor_position->Position+investor_position->YdPosition);
+      double contract_size =cw->Lookup(symbol)["contract_size"];
       if (investor_position->YdPosition > 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterYesToken(symbol, investor_position->YdPosition, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position->YdPosition;
         int yd_trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position  ->YdPosition;
+        info.trade_price = investor_position->PositionCost/abs(info.trade_size)/contract_size;
         fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, yd_trade_size, "yes");
         fflush(position_file);
       } else if (investor_position->YdPosition == 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterToken(symbol, investor_position->Position, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->Position:-investor_position->Position;
+        info.trade_price = investor_position->PositionCost/abs(info.trade_size)/contract_size;
         fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, info.trade_size, "today");
         fflush(position_file);
       } else {
         info.trade_size = 0;
+        info.trade_price = 0.0;
       }
-      info.trade_price = investor_position->PositionCost/abs(info.trade_size);
       info.type = InfoType::Position;
       SendExchangeInfo(info);
       info.Show(stdout);
