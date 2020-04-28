@@ -149,9 +149,9 @@ double Strategy::OrderPrice(const std::string & ticker, OrderSide::Enum side, bo
     }
   } else {
     if (ticker == hedge_ticker) {
-      return (side == OrderSide::Buy)?shot_map[hedge_ticker].asks[0] + 20:shot_map[hedge_ticker].bids[0] -20;
+      return (side == OrderSide::Buy)?shot_map[hedge_ticker].asks[0]:shot_map[hedge_ticker].bids[0];
     } else if (ticker == main_ticker) {
-      return (side == OrderSide::Buy)?shot_map[main_ticker].asks[0]+0.2:shot_map[main_ticker].bids[0]-0.2;
+      return (side == OrderSide::Buy)?shot_map[main_ticker].asks[0]:shot_map[main_ticker].bids[0];
     } else {
       printf("error ticker %s\n", ticker.c_str());
       return -1.0;
