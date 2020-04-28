@@ -105,6 +105,7 @@ class Listener : public CThostFtdcTraderSpi {
   std::unordered_map<int, int>* order_id_map;
   TokenManager* t_m;
   FILE* exchange_file;
+  FILE* position_file;
   bool e_s;
   bool e_f;
 };
