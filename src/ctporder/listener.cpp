@@ -326,14 +326,15 @@ void Listener::OnRtnTrade(CThostFtdcTradeField* trade) {
     return;
   }
 
+  t_m->HandleFilled(o);
   snprintf(exchangeinfo.ticker, sizeof(exchangeinfo.ticker), "%s", o.ticker);
   snprintf(exchangeinfo.order_ref, sizeof(exchangeinfo.order_ref), "%s", orderref.c_str());
-  printf("received onRtnTrade for %d, and map it into %s\n", ctp_order_ref, orderref.c_str());
-
-  t_m->HandleFilled(o);
   exchangeinfo.type = InfoType::Filled;
+  exchangeinfo.side = o.side;
   exchangeinfo.trade_price = trade->Price;
   exchangeinfo.trade_size = trade->Volume;
+  printf("received onRtnTrade for %d, and map it into %s\n", ctp_order_ref, orderref.c_str());
+
   if (e_s) {
     exchangeinfo.Show(stdout);
   }
