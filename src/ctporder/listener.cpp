@@ -399,7 +399,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
       gettimeofday(&info.show_time, NULL);
       snprintf(info.ticker, sizeof(info.ticker), "%s", symbol.c_str());
       // info.trade_price = (investor_position->PositionCost*investor_position->YdPosition + investor_position->OpenCost*investor_position->Position) / (investor_position->Position+investor_position->YdPosition);
-      double contract_size =cw->Lookup(symbol)["contract_size"];
+      double contract_size =cw->GetConSize(symbol);
       if (investor_position->YdPosition > 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterYesToken(symbol, investor_position->YdPosition, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position->YdPosition;
