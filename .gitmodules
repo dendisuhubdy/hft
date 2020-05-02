@@ -1,0 +1,3 @@
+[submodule "lib-hft"]
+	path = lib-hft
+	url = git@github.com:nickhuangxinyu/lib-hft.git
