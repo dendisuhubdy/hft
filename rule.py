@@ -16,10 +16,9 @@ def configure(conf):
   conf.load('defaults')
   conf.load('compiler_c')
   conf.load('compiler_cxx')
-  conf.env.INCLUDES += [ 'backend/src', 'src' ]
   conf.env.INCLUDES += [ 'external/common/include', 'include' ]
+  conf.env.INCLUDES += [ 'backend/src', 'src' ]
   conf.env.CXXFLAGS += [ '-g', '-ldl', '-std=c++11']
-  #conf.env.CXXFLAGS += [ '-g', '-lpthread', '-ldl']
   conf.check(lib='pthread', uselib_store='pthread')
   conf.check(lib='config++', uselib_store='config++')
   conf.check(lib='python2.7', uselib_store='python2.7')
