@@ -1,5 +1,5 @@
-#ifndef SRC_SIMPLEARB_STRATEGY_H_
-#define SRC_SIMPLEARB_STRATEGY_H_
+#ifndef SRC_PAIRTRADING_STRATEGY_H_
+#define SRC_PAIRTRADING_STRATEGY_H_
 
 #include <struct/market_snapshot.h>
 #include <struct/strategy_status.h>
@@ -25,7 +25,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, const std::string & mode = "real", std::ofstream* exchange_file = nullptr);
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, TimeController* tc, ContractWorker* cw, const std::string & mode = "real", std::ofstream* exchange_file = nullptr);
   ~Strategy();
 
   void Start() override;
@@ -77,18 +77,14 @@ class Strategy : public BaseStrategy {
   bool Spread_Good();
 
   bool IsAlign();
-
-  void UpdateBound(OrderSide::Enum side);
-  void StopLossLogic();
   void HandleTestOrder(Order *o);
 
-  char order_ref[MAX_ORDERREF_SIZE];
-  std::string main_ticker;
-  std::string hedge_ticker;
   int max_pos;
   double min_price_move;
 
   // std::unordered_map<std::string, std::vector<BaseStrategy*> >*tsm;
+  std::string main_ticker;
+  std::string hedge_ticker;
   int cancel_limit;
   std::unordered_map<std::string, double> mid_map;
   double up_diff;
@@ -117,13 +113,19 @@ class Strategy : public BaseStrategy {
   bool no_close_today;
   // int open_count;
   // int close_count;
+  HistoryWorker* m_hw;
   int max_round;
   int close_round;
   int split_num;
   std::vector<double> param_v;
+  std::ofstream* exchange_file;
+
+  std::vector<double> long_vector;
+  std::vector<double> short_vector;
   int sample_head;
   int sample_tail;
-  std::ofstream* exchange_file;
+  int update_samples;
+  void UpdateParams();
 };
 
-#endif  // SRC_SIMPLEARB_STRATEGY_H_
+#endif  // SRC_PAIRTRADING_STRATEGY_H_

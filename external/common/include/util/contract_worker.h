@@ -4,6 +4,8 @@
 #include "util/common_tools.h"
 #include "struct/order_side.h"
 #include <unordered_map>
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <assert.h>
 #include <libconfig.h++>
 #include <string>
 #include <iostream>
@@ -35,6 +37,10 @@ class ContractWorker {
   double CalNetPnl(std::string ticker, float open_price, int open_size, float close_price, int close_size, OrderSide::Enum close_side = OrderSide::Buy, bool no_close_today = false);
   double GetMinPriceMove(std::string ticker);
   int GetConSize(std::string ticker);
+
+  std::string GenContract(const std::string & pro, int year, int month);
+
+  std::vector<std::string> GetActiveContracts(const std::string & pro, const std::string & date, int switch_day = 3);
  private:
   std::unordered_map<std::string, int> contract_size_map;
   std::unordered_map<std::string, double> min_price_move_map;
@@ -55,6 +61,7 @@ class ContractWorker {
   const libconfig::Setting& setting;
   std::unordered_map<std::string, int> ticker_index_map;
   std::unordered_map<std::string, libconfig::Setting &> m_ticker_setting_map;
+  std::unordered_map<std::string, std::string> exchange_map;
   
 };
 
