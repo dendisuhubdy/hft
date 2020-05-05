@@ -1,6 +1,6 @@
 #include <ThostFtdcMdApi.h>
 #include <stdlib.h>
-#include <util/sender.hpp>
+#include <util/zmq_sender.hpp>
 #include <util/shm_worker.hpp>
 #include <sys/time.h>
 #include <unordered_map>
@@ -30,7 +30,7 @@ class Listener : public CThostFtdcMdSpi {
       record_binary(binary_record),
       record_stdout(show_stdout),
       record_file(file_record) {
-    sender = new Sender<MarketSnapshot> ("data_sender", "connect");
+    sender = new ZmqSender<MarketSnapshot> ("data_sender", "connect");
     time_t time_seconds = time(0);
     struct tm now_time;
     localtime_r(&time_seconds, &now_time);
@@ -240,8 +240,8 @@ class Listener : public CThostFtdcMdSpi {
   bool record_stdout;
   bool record_file;
   std::ofstream binary_file;
-  // Sender* sender;
-  Sender<MarketSnapshot> * sender;
+  // ZmqSender* sender;
+  ZmqSender<MarketSnapshot> * sender;
 };
 
 int main() {

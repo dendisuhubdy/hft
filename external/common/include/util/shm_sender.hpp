@@ -3,9 +3,10 @@
 
 #include <mutex>
 #include "shm_worker.hpp"
+#include "base_sender.hpp"
 
 template <typename T>
-class ShmSender: public ShmWorker {
+class ShmSender: public ShmWorker, public BaseSender<T> {
  public:
   ShmSender(const std::string& key, int size = 100000, const std::string& file_name = "")
     : f(file_name.empty() ? nullptr : new std::ofstream(file_name.c_str(), ios::out | ios::binary)) {
@@ -18,7 +19,7 @@ class ShmSender: public ShmWorker {
 
   }
 
-  void Send(const T& shot) {
+  void Send(const T& shot) override {
     pthread_mutex_lock(mutex);
     auto tail = (atomic_int*)(m_data + 2*sizeof(atomic_int));
     memcpy(m_data+header_size+(tail->load()%m_size)*sizeof(T), &shot, sizeof(T));

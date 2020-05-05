@@ -5,7 +5,7 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, const std::string & mode, std::ofstream* exchange_file)
+Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, const std::string & mode, std::ofstream* exchange_file)
   : mode(mode),
     date(date),
     last_valid_mid(0.0),
@@ -27,7 +27,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
 Strategy::~Strategy() {
 }
 
-void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, const std::string & mode) {
+void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, const std::string & mode) {
   ui_sender = uisender;
   order_sender = ordersender;
   (*ticker_strat_map)[main_ticker].emplace_back(this);

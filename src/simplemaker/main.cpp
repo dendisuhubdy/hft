@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <zmq.hpp>
 #include <struct/order.h>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
+#include <util/zmq_recver.hpp>
+#include <util/zmq_sender.hpp>
 #include <struct/market_snapshot.h>
 #include <util/common_tools.h>
 #include <core/base_strategy.h>
@@ -26,7 +26,7 @@ void PrintResult() {
 
 void* RunExchangeListener(void *param) {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > * sv_map = reinterpret_cast<std::unordered_map<std::string, std::vector<BaseStrategy*> >* >(param);
-  Recver<ExchangeInfo> recver("exchange_info");
+  ZmqRecver<ExchangeInfo> recver("exchange_info");
   while (true) {
     ExchangeInfo info;
     recver.Recv(info);
@@ -47,7 +47,7 @@ int main() {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   TimeController tc("/root/hft/config/prod/time.config");
 
-  Recver<MarketSnapshot> data_recver("data_recver");
+  ZmqRecver<MarketSnapshot> data_recver("data_recver");
   std::vector<BaseStrategy*> sv;
   sv.emplace_back(new Strategy("ni1905", "ni1903", 5, 10, tc, 1, "ni", &ticker_strat_map));
   sv.emplace_back(new Strategy("cu1903", "cu1902", 5, 10, tc, 5, "cu", &ticker_strat_map));

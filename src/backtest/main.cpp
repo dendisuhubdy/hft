@@ -8,8 +8,8 @@
 #include "core/backtester.h"
 #include "util/ThreadPool.h"
 #include "util/time_controller.h"
-#include "util/sender.hpp"
-#include "util/recver.hpp"
+#include "util/zmq_sender.hpp"
+#include "util/zmq_recver.hpp"
 #include "util/dater.h"
 #include "util/history_worker.h"
 #include "util/contract_worker.h"
@@ -17,9 +17,9 @@
 #include "struct/market_snapshot.h"
 #include "./strategy.h"
 
-// std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
-// std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sender", "connect", "ipc", "order.dat"));
-// std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sender", 100000, "order.dat"));
+// std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new ZmqSender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
+// std::unique_ptr<Sender<Order> > order_sender(new ZmqSender<Order>("order_sender", "connect", "ipc", "order.dat"));
+// std::unique_ptr<Sender<Order> > order_sender(new ZmqSender<Order>("order_sender", 100000, "order.dat"));
 
 struct BTConfig {
   std::string fixed_path;
@@ -31,12 +31,12 @@ struct BTConfig {
   ContractWorker* strat_cw;
   ContractWorker* cw;
   TimeController* tc;
-  inline std::tuple<Sender<MarketSnapshot> *, Sender<Order> *, std::ofstream*> GenSender(const std::string& date) {
+  inline std::tuple<ZmqSender<MarketSnapshot> *, ZmqSender<Order> *, std::ofstream*> GenSender(const std::string& date) {
     std::string ui_address = "backtest_ui_" + date;
     std::string order_address = "order_sender_" + date;
     std::string ui_file = backtest_outputdir + "/mid_" + date + ".dat";
     std::string order_file = backtest_outputdir + "/order_" + date + ".dat";
-    return std::make_tuple(new Sender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file), new Sender<Order>(order_address, "connect",  "ipc", order_file), new std::ofstream(backtest_outputdir + "/exchange_" + date + ".dat", ios::out | ios::binary));
+    return std::make_tuple(new ZmqSender<MarketSnapshot>(ui_address, "bind", "ipc", ui_file), new ZmqSender<Order>(order_address, "connect",  "ipc", order_file), new std::ofstream(backtest_outputdir + "/exchange_" + date + ".dat", ios::out | ios::binary));
   }
   inline HistoryWorker* GenHw(const std::string & date) {
     return new HistoryWorker(Dater::FindOneValid(date, -20, fixed_path));
@@ -92,8 +92,8 @@ std::map<std::string, std::string> GetBacktestFile() {
 
 std::unordered_map<std::string, std::vector<BaseStrategy*> > GetStratMap(std::string date) {
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
-  Sender<MarketSnapshot> * data_sender;
-  Sender<Order> * order_sender;
+  ZmqSender<MarketSnapshot> * data_sender;
+  ZmqSender<Order> * order_sender;
   std::ofstream* f;
   std::tie(data_sender, order_sender, f) = bt_config.GenSender(date);
   for (auto ticker : bt_config.strat_cw->GetTicker()) {

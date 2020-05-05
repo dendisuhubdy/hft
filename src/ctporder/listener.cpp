@@ -41,8 +41,8 @@ Listener::Listener(const std::string & exchange_info_address,
   }
   position_file = fopen("position.csv", "w");
   setbuf(position_file, NULL);
-  sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
-  // sender = new Sender<ExchangeInfo>(exchange_info_address.c_str(), 100000, "exchange.dat");
+  sender = new ZmqSender<ExchangeInfo>(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
+  // sender = new ZmqSender<ExchangeInfo>(exchange_info_address.c_str(), 100000, "exchange.dat");
 }
 
 Listener::~Listener() {

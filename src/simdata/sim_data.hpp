@@ -4,12 +4,12 @@
 #include <memory>
 
 #include "util/data_handler.hpp"
-#include "util/sender.hpp"
+#include "util/zmq_sender.hpp"
 
 class SimData : public DataHandler<MarketSnapshot> {
  public:
   SimData()
-   : up(new Sender<MarketSnapshot> ("data_sender", "connect")),
+   : up(new ZmqSender<MarketSnapshot> ("data_sender", "connect")),
      count(0) {
   }
 
@@ -23,7 +23,7 @@ class SimData : public DataHandler<MarketSnapshot> {
     }
   }
  private:
-  std::unique_ptr<Sender<MarketSnapshot> > up;
+  std::unique_ptr<ZmqSender<MarketSnapshot> > up;
   int count;
 };
 

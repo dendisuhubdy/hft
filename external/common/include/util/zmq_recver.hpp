@@ -1,5 +1,5 @@
-#ifndef RECVER_HPP_
-#define RECVER_HPP_
+#ifndef ZMQRECVER_HPP_
+#define ZMQRECVER_HPP_
 
 #include <zmq.hpp>
 #include <unistd.h>
@@ -9,13 +9,14 @@
 #include "struct/market_snapshot.h"
 #include "define.h"
 #include "struct/order.h"
+#include "base_recver.hpp"
 
 using namespace std;
 
 template <typename T>
-class Recver {
+class ZmqRecver : public BaseRecver <T> {
  public:
-  Recver(const std::string& name, const std::string& mode = "ipc", const std::string& bc = "connect")
+  ZmqRecver(const std::string& name, const std::string& mode = "ipc", const std::string& bc = "connect")
     : con(new zmq::context_t(1)),
       sock(new zmq::socket_t(*con, ZMQ_SUB)) {
     sock->setsockopt(ZMQ_RCVHWM, 0);
@@ -36,12 +37,12 @@ class Recver {
   }
 
 
-  ~Recver() {
+  ~ZmqRecver() {
     sock.get()->close();
     con.get()->close();
   }
 
-  inline void Recv(T& t) {
+  inline void Recv(T& t) override {
     sock.get()->recv(&t, sizeof(T));
   }
 
@@ -50,4 +51,4 @@ class Recver {
   unique_ptr<zmq::socket_t> sock;
 };
 
-#endif  //  RECVER_HPP_
+#endif  //  ZMQRECVER_HPP_

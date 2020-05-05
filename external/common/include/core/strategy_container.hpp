@@ -8,7 +8,7 @@
 #include <string>
 
 #include "core/base_strategy.h"
-#include "util/recver.hpp"
+#include "util/zmq_recver.hpp"
 #include "util/shm_recver.hpp"
 
 using namespace std;
@@ -22,7 +22,7 @@ class StrategyContainer {
     : m(m),
       marketdata_recver(new T<MarketSnapshot>("data_recver")),
       exchangeinfo_recver(new T<ExchangeInfo>("exchange_info")),
-      command_recver(new Recver<Command>("*:33334", "tcp", "bind")) {
+      command_recver(new ZmqRecver<Command>("*:33334", "tcp", "bind")) {
 
 }
   // explicit StrategyContainer(const StrategyContainer& sc) {}  // unable copy constructor
@@ -38,7 +38,7 @@ class StrategyContainer {
     marketdata_thread.join();
   }
  private:
-  static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, Recver<Command>* command_recver) {
+  static void RunCommandListener(unordered_map<string, vector<BaseStrategy*> > &m, ZmqRecver<Command>* command_recver) {
     while (true) {
       Command shot;
       command_recver->Recv(shot);
@@ -82,7 +82,7 @@ class StrategyContainer {
   unordered_map<string, vector<BaseStrategy*> > &m;
   unique_ptr<T<MarketSnapshot> > marketdata_recver;
   unique_ptr<T<ExchangeInfo> > exchangeinfo_recver;
-  unique_ptr<Recver<Command> > command_recver;
+  unique_ptr<ZmqRecver<Command> > command_recver;
 };
 
 #endif  // STRATEGY_CONTAINER_HPP_

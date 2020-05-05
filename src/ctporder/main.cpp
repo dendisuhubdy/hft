@@ -10,8 +10,8 @@
 
 #include "util/dater.h"
 #include "util/contract_worker.h"
-#include "util/recver.hpp"
-#include "util/sender.hpp"
+#include "util/zmq_recver.hpp"
+#include "util/zmq_sender.hpp"
 #include "./message_sender.h"
 #include "./listener.h"
 #include "./token_manager.h"
@@ -38,8 +38,8 @@ std::unordered_map<std::string, std::string> RegisterExchange() {
 
 void* RunOrderCommandListener(void *param) {
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
-  auto r = new Recver<Order>("order_recver");
-  std::shared_ptr<Sender<Order> > sender(new Sender<Order>("*:33335", "bind", "tcp"));
+  auto r = new ZmqRecver<Order>("order_recver");
+  std::shared_ptr<ZmqSender<Order> > sender(new ZmqSender<Order>("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
     r->Recv(o);

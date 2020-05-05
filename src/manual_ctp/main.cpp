@@ -6,14 +6,14 @@
 #include <struct/offset.h>
 #include <struct/order_action.h>
 
-#include <util/sender.hpp>
-#include <util/recver.hpp>
+#include <util/zmq_sender.hpp>
+#include <util/zmq_recver.hpp>
 
 #include <thread>
 #include <iostream>
 #include <string>
 
-void RunSend(Sender<Order> * sender) {
+void RunSend(ZmqSender<Order> * sender) {
   int count = 0;
   std::string ticker;
   std::string buffer;
@@ -80,7 +80,7 @@ void RunSend(Sender<Order> * sender) {
   exit(1);
 }
 
-void RunRecv(Recver<ExchangeInfo> * recver) {
+void RunRecv(ZmqRecver<ExchangeInfo> * recver) {
   ExchangeInfo info;
   while (true) {
     recver->Recv(info);
@@ -89,9 +89,9 @@ void RunRecv(Recver<ExchangeInfo> * recver) {
 }
 
 int main() {
-  std::unique_ptr<Recver<ExchangeInfo> > exchange_recver(new Recver<ExchangeInfo>("exchange_info"));
+  std::unique_ptr<ZmqRecver<ExchangeInfo> > exchange_recver(new ZmqRecver<ExchangeInfo>("exchange_info"));
   std::thread recv_thread(RunRecv, exchange_recver.get());
-  std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_recver"));
+  std::unique_ptr<ZmqSender<Order> > order_sender(new ZmqSender<Order>("order_recver"));
   RunSend(order_sender.get());
   recv_thread.join();
 }

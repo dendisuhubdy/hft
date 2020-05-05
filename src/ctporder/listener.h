@@ -10,7 +10,7 @@
 
 #include "struct/exchange_info.h"
 #include "struct/info_type.h"
-#include "util/sender.hpp"
+#include "util/zmq_sender.hpp"
 #include "util/contract_worker.h"
 #include "./token_manager.h"
 
@@ -92,7 +92,7 @@ class Listener : public CThostFtdcTraderSpi {
   // only DCE will auto combine, CZCE won't. we didn't trade combo instrument, so just call it if got combo instrument position
   // bool HandleComboPosition(const CThostFtdcInvestorPositionField* investor_position);
 
-  Sender<ExchangeInfo>* sender;
+  ZmqSender<ExchangeInfo>* sender;
   MessageSender* message_sender_;
 
   TThostFtdcFrontIDType front_id_;

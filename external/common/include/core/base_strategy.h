@@ -3,8 +3,8 @@
 
 #include "struct/market_snapshot.h"
 #include "struct/order.h"
-#include "util/sender.hpp"
-#include "util/shm_sender.hpp"
+#include "util/base_sender.hpp"
+#include "util/base_sender.hpp"
 #include "util/dater.h"
 #include "define.h"
 #include "struct/command.h"
@@ -71,8 +71,8 @@ class BaseStrategy {
   void UpdatePos(Order* o, const ExchangeInfo& info);
   
   bool position_ready;
-  Sender<Order>* order_sender;
-  Sender<MarketSnapshot>* ui_sender;
+  BaseSender<Order>* order_sender;
+  BaseSender<MarketSnapshot>* ui_sender;
   unordered_map<std::string, MarketSnapshot> shot_map;
   unordered_map<std::string, MarketSnapshot> next_shot_map;
   unordered_map<std::string, Order*> order_map;
@@ -92,8 +92,6 @@ class BaseStrategy {
   MarketSnapshot last_shot;
   long int build_position_time;
   int max_holding_sec;
-  // Contractor m_ct;
-  // CALER m_cal;
   ContractWorker * m_cw;
   HistoryWorker m_hw;
   bool init_ticker;
