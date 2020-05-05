@@ -61,7 +61,6 @@ bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
     double m_r = param_setting["min_range"];
     double m_p = param_setting["min_profit"];
     min_price_move = contract_setting["min_price_move"];
-    printf("[%s, %s] mpv is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), min_price_move);
     min_profit = m_p * min_price_move;
     min_range = m_r * min_price_move;
     double add_margin = param_setting["add_margin"];
@@ -79,7 +78,6 @@ bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
     if (param_setting.exists("no_close_today")) {
       no_close_today = param_setting["no_close_today"];
     }
-    printf("[%s %s] try over!\n", main_ticker.c_str(), hedge_ticker.c_str());
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
     exit(1);
