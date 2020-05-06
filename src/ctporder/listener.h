@@ -3,6 +3,10 @@
 
 #include <ThostFtdcTraderApi.h>
 #include <stdint.h>
+
+#include <fcntl.h>
+#include<sys/mman.h>
+#include<sys/types.h>
 #include <unordered_map>
 
 #include <map>
@@ -13,6 +17,16 @@
 #include "util/zmq_sender.hpp"
 #include "util/contract_worker.h"
 #include "./token_manager.h"
+
+#define POS_SIZE 100
+
+struct PositionInfo {
+  char ticker[32];
+  int pos;
+  double price;
+  PositionInfo() : pos(0), price(0.0) {
+  }
+};
 
 class MessageSender;
 
@@ -84,6 +98,7 @@ class Listener : public CThostFtdcTraderSpi {
   void HandleFailedCancel();
   */
 
+  void UpdatePosMmap(const ExchangeInfo& info);
   void SendExchangeInfo(const ExchangeInfo& info);
   bool CheckError(const std::string & location,
                   CThostFtdcRspInfoField* info,
@@ -109,8 +124,13 @@ class Listener : public CThostFtdcTraderSpi {
   ContractWorker* cw;
   FILE* exchange_file;
   FILE* position_file;
+  int position_fd;
+  PositionInfo* pos_p;
+  int pos_tail;
   bool e_s;
   bool e_f;
+  std::unordered_map<std::string, PositionInfo> pos_map;
+  std::unordered_map<std::string, int> pos_index;
 };
 
 #endif  // SRC_CTPORDER_LISTENER_H_

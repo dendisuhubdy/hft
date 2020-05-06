@@ -46,12 +46,9 @@ class BaseStrategy {
   virtual void Clear();
   void debug() const;
   double GetMid(const std::string & ticker);
-  // void UpdateCT(const HistoryWorker& ct);
   virtual void UpdateTicker();
   virtual void HandleCommand(const Command& shot);
  protected:
-  // void RegisterTicker(const std::vector<std::string> & tickers);
-  // BaseStrategy(const std::string& contract_config_path);
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
   std::string GenOrderRef();
   Order* NewOrder(const std::string & ticker, OrderSide::Enum side, int size, bool control_price, bool sleep_order, const std::string & tbd, bool no_today = false);
@@ -69,6 +66,8 @@ class BaseStrategy {
   bool TimeUp() const;
 
   void UpdatePos(Order* o, const ExchangeInfo& info);
+
+  void LoadPosition();
   
   bool position_ready;
   BaseSender<Order>* order_sender;

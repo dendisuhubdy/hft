@@ -25,6 +25,7 @@ Listener::Listener(const std::string & exchange_info_address,
     order_id_map(id_map),
     t_m(tm),
     cw(cw),
+    pos_tail(0),
     e_s(enable_stdout),
     e_f(enable_file) {
   /*
@@ -41,12 +42,29 @@ Listener::Listener(const std::string & exchange_info_address,
   }
   position_file = fopen("position.csv", "w");
   setbuf(position_file, NULL);
+  position_fd = open("position.dat", O_RDWR|O_CREAT|O_EXCL);
+  if (position_fd == -1) {
+    printf("open position file failed!\n");
+    exit(1);
+  }
+  PositionInfo temp;
+  lseek(position_fd, sizeof(pos_tail) + sizeof(temp)*POS_SIZE - 1, SEEK_SET);
+  write(position_fd, "", 1);
+  pos_p = reinterpret_cast<PositionInfo*>(mmap(NULL, sizeof(pos_tail) + sizeof(temp)*POS_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, position_fd, 0));
+  if (pos_p == nullptr || pos_p == reinterpret_cast<void*>(-1)) {
+    printf("mmap failed!\n");
+    exit(1);
+  }
+  memcpy(pos_p, &pos_tail, sizeof(pos_tail));
   sender = new ZmqSender<ExchangeInfo>(exchange_info_address.c_str(), "bind", "ipc", "exchange.dat");
   // sender = new ZmqSender<ExchangeInfo>(exchange_info_address.c_str(), 100000, "exchange.dat");
 }
 
 Listener::~Listener() {
   delete sender;
+  close(position_fd);
+  PositionInfo temp;
+  munmap(pos_p, sizeof(temp)*100);
   if (e_f) {
     fclose(exchange_file);
   }
@@ -304,20 +322,32 @@ void Listener::OnRtnOrder(CThostFtdcOrderField* order) {
     order->VolumeTotal);
 }
 
-void Listener::OnRtnTrade(CThostFtdcTradeField* trade) {
-  /*
-  OrderSide::Enum side;
-  if (trade->Direction == THOST_FTDC_D_Buy) {
-    side = OrderSide::Buy;
-  } else if (trade->Direction == THOST_FTDC_D_Sell) {
-    side = OrderSide::Sell;
-  } else {
-    side = OrderSide::Buy;
-    printf("Unexpected OrderSide!");
+void Listener::UpdatePosMmap(const ExchangeInfo& info) {
+  if (pos_index.find(info.ticker) == pos_index.end()) {
+    PositionInfo pi;
+    snprintf(pi.ticker, sizeof(pi.ticker), "%s", info.ticker);
+    pi.pos = info.trade_size;
+    pi.price = info.trade_price;
+    memcpy(pos_p + sizeof(pos_tail) + pos_tail++ * sizeof(pi), &pi, sizeof(pi));
+    pos_map[info.ticker] = pi;
+    pos_index[info.ticker] = pos_tail;
+    memcpy(pos_p, &pos_tail, sizeof(pos_tail));
     return;
   }
-  */
+  PositionInfo& temp = pos_map[info.ticker];
+  int trade_size = (info.side == OrderSide::Buy) ? info.trade_size : -info.trade_size;
+  if (temp.pos * trade_size < 0) {  // close
+    if (abs(trade_size) > abs(temp.pos)) {
+      temp.price = info.trade_price;
+    }
+  } else {  // open
+    temp.price = (temp.price * temp.pos + info.trade_price * trade_size) / (trade_size + temp.pos);
+  }
+  temp.pos += trade_size;
+  memcpy(pos_p + sizeof(pos_tail) + pos_index[info.ticker] * sizeof(temp), &temp, sizeof(temp));
+}
 
+void Listener::OnRtnTrade(CThostFtdcTradeField* trade) {
   ExchangeInfo exchangeinfo;
   gettimeofday(&exchangeinfo.show_time, NULL);
   int ctp_order_ref = atoi(trade->OrderRef);
@@ -337,6 +367,8 @@ void Listener::OnRtnTrade(CThostFtdcTradeField* trade) {
   exchangeinfo.trade_price = trade->Price;
   exchangeinfo.trade_size = trade->Volume;
   printf("received onRtnTrade for %d, and map it into %s\n", ctp_order_ref, orderref.c_str());
+
+  UpdatePosMmap(exchangeinfo);
 
   if (e_s) {
     exchangeinfo.Show(stdout);
@@ -366,7 +398,7 @@ void Listener::OnRspSettlementInfoConfirm(
   bool is_last) {
   // Now, query all our outstanding positions so we can figure out if we
   // can net orders.
-  // message_sender_->SendQueryInvestorPosition();
+  message_sender_->SendQueryInvestorPosition();
 }
 
 void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investor_position,
@@ -405,12 +437,14 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position->YdPosition;
         int yd_trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position  ->YdPosition;
         info.trade_price = investor_position->PositionCost/abs(info.trade_size)/contract_size;
+        snprintf(pos_map[symbol].ticker, sizeof(pos_map[symbol].ticker), "%s", symbol.c_str());
         fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, yd_trade_size, "yes");
         fflush(position_file);
       } else if (investor_position->YdPosition == 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterToken(symbol, investor_position->Position, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->Position:-investor_position->Position;
         info.trade_price = investor_position->PositionCost/abs(info.trade_size)/contract_size;
+        snprintf(pos_map[symbol].ticker, sizeof(pos_map[symbol].ticker), "%s", symbol.c_str());
         fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, info.trade_size, "today");
         fflush(position_file);
       } else {
@@ -420,6 +454,7 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
       info.type = InfoType::Position;
       SendExchangeInfo(info);
       info.Show(stdout);
+      UpdatePosMmap(info);
       // printf("opencost is %lf, openamount is %lf marginrate is %lf %lf\n", investor_position->OpenCost, investor_position->OpenAmount, investor_position->MarginRateByMoney, investor_position->MarginRateByVolume);
     }
   }
