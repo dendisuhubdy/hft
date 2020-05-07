@@ -545,6 +545,7 @@ void Strategy::HandleTestOrder(Order* o) {
     return;
   }
   ExchangeInfo info;
+  info.show_time = o->shot_time;
   info.shot_time = o->shot_time;
   info.type = InfoType::Filled;
   info.trade_size = o->size;
