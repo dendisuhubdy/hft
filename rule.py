@@ -273,7 +273,7 @@ def run_all(bld):
   run_manual_ctp(bld)
   run_getins(bld)
   run_simplearb(bld)
-  #run_pairtrading(bld)
+  run_pairtrading(bld)
   run_backtest(bld)
   run_order_matcher(bld)
   run_demostrat(bld)

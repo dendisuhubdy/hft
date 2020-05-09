@@ -32,6 +32,13 @@ struct ExchangeInfo {
     fprintf(stream, "%lf,%s,%s,%s,%d,%lf,%s,%s\n", time_sec, InfoType::ToString(type),ticker,order_ref,trade_size,trade_price,reason,OrderSide::ToString(side));
   }
 
+  void Show(std::ostream& stream) const {
+    stream << show_time.tv_sec << " " << show_time.tv_usec << " ";
+    stream << shot_time.tv_sec << " " << shot_time.tv_usec << " ";
+    stream << "Exchangeinfo |" << order_ref  << " " << trade_price << "@" << trade_size << " ";
+    stream << InfoType::ToString(type) << " " << ticker << " " << OrderSide::ToString(side) << std::endl;
+  }
+
   void Show(FILE* stream) const {
     fprintf(stream, "%ld %06ld %ld %06ld exchangeinfo %s |",
             show_time.tv_sec, show_time.tv_usec, shot_time.tv_sec, shot_time.tv_usec, order_ref);

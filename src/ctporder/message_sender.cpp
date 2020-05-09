@@ -115,6 +115,10 @@ void MessageSender::SendQueryInvestorPosition() {
 }
 
 bool MessageSender::Handle(const Order & order) {
+  if (strcmp(order.exchange, "simulate") == 0) {
+    printf("messagesender recived simulated order\n");
+    return false;
+  }
   if (order.action == OrderAction::NewOrder) {
     return NewOrder(order);
   }

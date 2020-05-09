@@ -167,4 +167,21 @@ void SaveBin(std::ofstream &stream, const T& t) {
 void EnsureDir(const std::string & dir);
 void busy_sleep(std::chrono::nanoseconds t);
 
+template <typename T>
+std::tuple<double, double> CalMeanStd(const T & v, int head, int num) {
+  T cal_v(v.begin() + head, v.begin() + head + num);
+  double mean = 0.0;
+  double std = 0.0;
+  for (auto i : cal_v) {
+    mean += i;
+  }
+  mean /= num;
+  for (auto i : cal_v) {
+    std += (i-mean) * (i-mean);
+  }
+  std /= num;
+  std = sqrt(std);
+  return std::tie(mean, std);
+}
+
 #endif // COMMON_TOOLS_H_

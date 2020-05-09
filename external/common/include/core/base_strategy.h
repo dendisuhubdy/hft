@@ -1,22 +1,21 @@
 #ifndef BASE_STRATEGY_H_
 #define BASE_STRATEGY_H_
 
-#include "struct/market_snapshot.h"
-#include "struct/order.h"
 #include "util/base_sender.hpp"
 #include "util/base_sender.hpp"
 #include "util/dater.h"
+#include "util/common_tools.h"
+#include "util/time_controller.h"
+#include "util/history_worker.h"
+#include "util/contract_worker.h"
 #include "define.h"
 #include "struct/command.h"
 #include "struct/exchange_info.h"
 #include "struct/order_status.h"
-// #include "util/caler.h"
-#include "util/common_tools.h"
+#include "struct/strategy_mode.h"
+#include "struct/market_snapshot.h"
+#include "struct/order.h"
 #include "struct/strategy_status.h"
-// #include "util/contractor.h"
-#include "util/time_controller.h"
-#include "util/history_worker.h"
-#include "util/contract_worker.h"
 #include <libconfig.h++>
 #include <unordered_map>
 
@@ -53,8 +52,9 @@ class BaseStrategy {
   // void RegisterTicker(const std::vector<std::string> & tickers);
   // BaseStrategy(const std::string& contract_config_path);
   void UpdateAvgCost(const std::string & ticker, double trade_price, int size);
-  std::string GenOrderRef();
+  std::string GenUniqueId();
   Order* NewOrder(const std::string & ticker, OrderSide::Enum side, int size, bool control_price, bool sleep_order, const std::string & tbd, bool no_today = false);
+  Order* PlaceOrder(const std::string & ticker, double price, int size, bool no_today = false, const std::string & orderinfo = "");
   void ModOrder(Order* o, bool sleep=false);
   void CancelAll(const std::string & ticker);
   void CancelAll();
@@ -69,6 +69,8 @@ class BaseStrategy {
   bool TimeUp() const;
 
   void UpdatePos(Order* o, const ExchangeInfo& info);
+  virtual void SimulateTrade(Order* o);
+  void SetStrategyMode(StrategyMode::Enum mode, std::ofstream* exchange_file);
   
   bool position_ready;
   BaseSender<Order>* order_sender;
@@ -95,11 +97,13 @@ class BaseStrategy {
   ContractWorker * m_cw;
   HistoryWorker m_hw;
   bool init_ticker;
+  StrategyMode::Enum mode_;
+  std::ofstream* sim_exchange_file_;
  private:
   virtual void DoOperationAfterCancelled(Order* o);
   virtual void Run() = 0;
-  virtual void Resume() = 0;
-  virtual void Pause() = 0;
+  virtual void Resume();
+  virtual void Pause();
   virtual void Train();
   virtual void Flatting();
   virtual void ForceFlat();

@@ -8,6 +8,8 @@
 #include "offset.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <fstream>
 
@@ -27,11 +29,15 @@ struct Order {
   char exchange[32];
 
   Order()
-    : size(0),
+    : 
+      price(0.0),
+      size(0),
       traded_size(0),
       offset(Offset::UNINITED) {
-    snprintf(tbd, sizeof(tbd), "%s", "null");
-    snprintf(exchange, sizeof(exchange), "%s", "null");
+    snprintf(ticker, sizeof(ticker), "%s", "");
+    snprintf(order_ref, sizeof(order_ref), "%s", "");
+    snprintf(tbd, sizeof(tbd), "%s", "");
+    snprintf(exchange, sizeof(exchange), "%s", "");
   }
 
   bool Valid() const {
@@ -39,6 +45,10 @@ struct Order {
       return true;
     }
     return false;
+  }
+
+  inline bool Check() const {
+    return shot_time.tv_sec >  1000000000 && shot_time.tv_sec < 2000000000 && strlen(ticker) > 0 && price > 0.0 && abs(size) > 0 && traded_size <= size && side != OrderSide::Unknown && strlen(order_ref) > 0 ;
   }
 
   void ShowCsv(FILE* stream) const {
@@ -49,6 +59,15 @@ struct Order {
     snprintf(send_time_s, sizeof(send_time_s), "%ld.%ld", send_time.tv_sec, send_time.tv_usec);
     double send_time_sec = atof(send_time_s);
     fprintf(stream, "%lf,%lf,%s,%lf,%d,%d,%s,%s,%s,%s,%s,%s,%s\n",shot_time_sec,send_time_sec,ticker,price,size,traded_size,OrderSide::ToString(side),order_ref,OrderAction::ToString(action),OrderStatus::ToString(status),Offset::ToString(offset),exchange,tbd);
+  }
+
+  void Show(std::ostream& stream) const {
+    stream << send_time.tv_sec << " " << send_time.tv_usec << " ";
+    stream << shot_time.tv_sec << " " << shot_time.tv_usec << " ";
+    stream << "Order " << ticker << " " << price << "@" << size << " ";
+    stream << traded_size << " " << OrderSide::ToString(side) << " " << order_ref << " ";
+    stream << OrderAction::ToString(action) << " " << OrderStatus::ToString(status) << " ";
+    stream << Offset::ToString(offset) << " " << exchange << " " << tbd << std::endl;
   }
 
   void Show(FILE* stream) const {
