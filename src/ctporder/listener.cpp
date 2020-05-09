@@ -364,7 +364,7 @@ void Listener::OnRspSettlementInfoConfirm(
   bool is_last) {
   // Now, query all our outstanding positions so we can figure out if we
   // can net orders.
-  // message_sender_->SendQueryInvestorPosition();
+  message_sender_->SendQueryInvestorPosition();
 }
 
 void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investor_position,
@@ -401,17 +401,19 @@ void Listener::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* investo
         t_m->RegisterYesToken(symbol, investor_position->YdPosition, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position->YdPosition;
         int yd_trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->YdPosition:-investor_position  ->YdPosition;
+        info.trade_price = investor_position->PositionCost/abs(info.trade_size);
         fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, yd_trade_size, "yes");
         fflush(position_file);
       } else if (investor_position->YdPosition == 0 && investor_position->PositionCost > 0.1) {
         t_m->RegisterToken(symbol, investor_position->Position, side);
         info.trade_size = (investor_position->PosiDirection == THOST_FTDC_PD_Long)?investor_position->Position:-investor_position->Position;
+        info.trade_price = investor_position->PositionCost/abs(info.trade_size);
         fprintf(position_file, "%s,%lf,%d,%s\n", symbol.c_str(), info.trade_price, info.trade_size, "today");
         fflush(position_file);
       } else {
         info.trade_size = 0;
+        info.trade_price = 0.0;
       }
-      info.trade_price = investor_position->PositionCost/abs(info.trade_size);
       info.type = InfoType::Position;
       SendExchangeInfo(info);
       info.Show(stdout);
