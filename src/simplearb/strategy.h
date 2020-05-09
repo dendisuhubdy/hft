@@ -6,7 +6,7 @@
 #include <util/time_controller.h>
 #include <struct/order.h>
 #include <struct/command.h>
-#include <util/sender.hpp>
+#include <util/zmq_sender.hpp>
 #include <util/dater.h>
 #include <struct/exchange_info.h>
 #include <struct/order_status.h>
@@ -25,7 +25,7 @@
 
 class Strategy : public BaseStrategy {
  public:
-  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, TimeController* tc, ContractWorker* cw, const std::string & mode = "real", std::ofstream* exchange_file = nullptr);
+  explicit Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, const std::string & mode = "real", std::ofstream* exchange_file = nullptr);
   ~Strategy();
 
   void Start() override;
@@ -36,7 +36,7 @@ class Strategy : public BaseStrategy {
   // void UpdateTicker() override;
  private:
   bool FillStratConfig(const libconfig::Setting& param_setting);
-  void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, const std::string & mode);
+  void RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, const std::string & mode);
   void ClearPositionRecord();
   void DoOperationAfterUpdateData(const MarketSnapshot& shot) override;
   void DoOperationAfterUpdatePos(Order* o, const ExchangeInfo& info) override;
@@ -117,7 +117,6 @@ class Strategy : public BaseStrategy {
   bool no_close_today;
   // int open_count;
   // int close_count;
-  HistoryWorker* m_hw;
   int max_round;
   int close_round;
   int split_num;

@@ -16,10 +16,9 @@ def configure(conf):
   conf.load('defaults')
   conf.load('compiler_c')
   conf.load('compiler_cxx')
-  conf.env.INCLUDES += [ 'backend/src', 'src' ]
   conf.env.INCLUDES += [ 'external/common/include', 'include' ]
+  conf.env.INCLUDES += [ 'backend/src', 'src' ]
   conf.env.CXXFLAGS += [ '-g', '-ldl', '-std=c++11']
-  #conf.env.CXXFLAGS += [ '-g', '-lpthread', '-ldl']
   conf.check(lib='pthread', uselib_store='pthread')
   conf.check(lib='config++', uselib_store='config++')
   conf.check(lib='python2.7', uselib_store='python2.7')
@@ -47,6 +46,8 @@ class simplemaker_class(BuildContext):
   cmd = "simplemaker"
 class simplearb_class(BuildContext):
   cmd = "simplearb"
+class pairtrading_class(BuildContext):
+  cmd = "pairtrading"
 class backtest_class(BuildContext):
   cmd = "backtest"
 class order_matcher_class(BuildContext):
@@ -89,6 +90,9 @@ def build(bld):
     return
   if bld.cmd == "simplearb":
     run_simplearb(bld)
+    return
+  if bld.cmd == "pairtrading":
+    run_pairtrading(bld)
     return
   if bld.cmd == "backtest":
     run_backtest(bld)
@@ -204,6 +208,19 @@ def run_simplearb(bld):
     use = 'zmq nick pthread config++ shm' # simplearb'
   )
 
+def run_pairtrading(bld):
+  bld.read_shlib('nick', paths=['external/common/lib'])
+  bld.program(
+    target = 'bin/pairtrading',
+    source = ['src/pairtrading/main.cpp',
+              'src/pairtrading/strategy.cpp'
+             ],
+    includes = [
+                'external/zeromq/include'
+               ],
+    use = 'zmq nick pthread config++ shm'
+  )
+
 def run_backtest(bld):
   bld.read_shlib('nick', paths=['external/common/lib'])
   #bld.read_shlib('backtest', paths=['external/strategy/backtest/lib'])
@@ -249,7 +266,6 @@ def run_demostrat(bld):
   )
 
 def run_all(bld):
-  #run_pricer(bld)
   run_mid_data(bld)
   run_proxy(bld)
   run_ctpdata(bld)
@@ -257,6 +273,7 @@ def run_all(bld):
   run_manual_ctp(bld)
   run_getins(bld)
   run_simplearb(bld)
+  #run_pairtrading(bld)
   run_backtest(bld)
   run_order_matcher(bld)
   run_demostrat(bld)

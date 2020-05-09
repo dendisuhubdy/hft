@@ -1,5 +1,5 @@
-#ifndef SENDER_HPP_
-#define SENDER_HPP_
+#ifndef ZMQ_SENDER_HPP_
+#define ZMQ_SENDER_HPP_
 
 #include <zmq.hpp>
 #include <unistd.h>
@@ -12,13 +12,14 @@
 #include "define.h"
 #include "struct/order.h"
 #include "struct/command.h"
+#include "base_sender.hpp"
 
 using namespace std;
 
 template <typename T>
-class Sender {
+class ZmqSender : public BaseSender <T> {
  public:
-  explicit Sender(const std::string& name, const std::string & bs_mode = "bind", const std::string & zmq_mode = "ipc", const std::string& file_name = "")
+  explicit ZmqSender(const std::string& name, const std::string & bs_mode = "bind", const std::string & zmq_mode = "ipc", const std::string& file_name = "")
     : con(new zmq::context_t(1)),
       sock(new zmq::socket_t(*(con), ZMQ_PUB)),
       f(file_name.empty() ? nullptr : new std::ofstream(file_name.c_str(), ios::out | ios::binary)) {
@@ -32,19 +33,19 @@ class Sender {
       printf("bind address is %s\n", address.c_str());
       sock.get()->bind(address.c_str());
     } else {
-      printf("Sender wrong zmq_mode %s\n", bs_mode.c_str());
+      printf("ZmqSender wrong zmq_mode %s\n", bs_mode.c_str());
       exit(1);
     }
     sleep(1);
   }
 
 
-  ~Sender() {
+  ~ZmqSender() {
     sock.get()->close();
     con.get()->close();
   }
 
-  inline void Send(const T & t) {
+  inline void Send(const T & t) override {
     sock.get()->send(&t, sizeof(T));
     if (f.get()) {
       std::lock_guard<std::mutex> lck(mtx);  // for mutli-thread backtest file writting
@@ -60,4 +61,4 @@ class Sender {
   unique_ptr<std::ofstream> f;
 };
 
-#endif // SENDER_HPP_
+#endif // ZMQ_SENDER_HPP_

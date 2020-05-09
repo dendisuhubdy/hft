@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <zmq.hpp>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
 #include <ThostFtdcTraderApi.h>
 #include <unordered_map>
 
@@ -10,6 +8,10 @@
 #include <vector>
 #include <memory>
 
+#include "util/dater.h"
+#include "util/contract_worker.h"
+#include "util/zmq_recver.hpp"
+#include "util/zmq_sender.hpp"
 #include "./message_sender.h"
 #include "./listener.h"
 #include "./token_manager.h"
@@ -36,8 +38,8 @@ std::unordered_map<std::string, std::string> RegisterExchange() {
 
 void* RunOrderCommandListener(void *param) {
   MessageSender* message_sender = reinterpret_cast<MessageSender*>(param);
-  auto r = new Recver<Order>("order_recver");
-  std::shared_ptr<Sender<Order> > sender(new Sender<Order>("*:33335", "bind", "tcp"));
+  auto r = new ZmqRecver<Order>("order_recver");
+  std::shared_ptr<ZmqSender<Order> > sender(new ZmqSender<Order>("*:33335", "bind", "tcp"));
   while (true) {
     Order o;
     r->Recv(o);
@@ -89,11 +91,15 @@ int main() {
                                &tm,
                                exchange_map);
 
+  std::string default_path = GetDefaultPath();
+  std::string contract_config_path = default_path + "/hft/config/contract/bk_contract.config";
+  ContractWorker cw(contract_config_path);
   Listener listener("exchange_info",
                     &message_sender,
                     "error_list",
                     &order_id_map,
                     &tm,
+                    &cw,
                     enable_stdout,
                     enable_file);
 

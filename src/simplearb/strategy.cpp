@@ -5,13 +5,13 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, HistoryWorker* hw, TimeController* tc, ContractWorker* cw, const std::string & mode, std::ofstream* exchange_file)
+Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, const std::string & mode, std::ofstream* exchange_file)
   : mode(mode),
+    date(date),
     last_valid_mid(0.0),
     stop_loss_times(0),
     max_close_try(10),
     no_close_today(false),
-    m_hw(hw),
     max_round(10000),
     close_round(0),
     sample_head(0),
@@ -27,7 +27,7 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
 Strategy::~Strategy() {
 }
 
-void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, Sender<MarketSnapshot>* uisender, Sender<Order>* ordersender, const std::string & mode) {
+void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, const std::string & mode) {
   ui_sender = uisender;
   order_sender = ordersender;
   (*ticker_strat_map)[main_ticker].emplace_back(this);
@@ -48,7 +48,7 @@ bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
     std::string unique_name = param_setting["unique_name"];
     const libconfig::Setting & contract_setting = m_cw->Lookup(unique_name);
     m_strat_name = unique_name;
-    std::vector<std::string> v = m_hw->GetTicker(unique_name);
+    auto v = m_cw->GetActiveContracts(unique_name, date);
     if (v.size() < 2) {
       printf("no enough ticker for %s\n", unique_name.c_str());
       PrintVector(v);
@@ -61,7 +61,6 @@ bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
     double m_r = param_setting["min_range"];
     double m_p = param_setting["min_profit"];
     min_price_move = contract_setting["min_price_move"];
-    printf("[%s, %s] mpv is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), min_price_move);
     min_profit = m_p * min_price_move;
     min_range = m_r * min_price_move;
     double add_margin = param_setting["add_margin"];
@@ -79,7 +78,6 @@ bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
     if (param_setting.exists("no_close_today")) {
       no_close_today = param_setting["no_close_today"];
     }
-    printf("[%s %s] try over!\n", main_ticker.c_str(), hedge_ticker.c_str());
   } catch(const libconfig::SettingNotFoundException &nfex) {
     printf("Setting '%s' is missing", nfex.getPath());
     exit(1);
@@ -622,7 +620,9 @@ void Strategy::DoOperationAfterFilled(Order* o, const ExchangeInfo& info) {
     } else {
     }
     // std::string oc = (position_map[hedge_ticker] == 0 ? "open" : "close");
-    Order* order = NewOrder(hedge_ticker, (o->side == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy, info.trade_size, false, false, o->tbd, no_close_today);
+    OrderSide::Enum hedge_side = (o->side == OrderSide::Buy) ? OrderSide::Sell : OrderSide::Buy;
+    Order* order = NewOrder(hedge_ticker, hedge_side, info.trade_size, false, false, o->tbd, no_close_today);
+    RecordSlip(hedge_ticker, hedge_side, a.find("close") != string::npos);
     HandleTestOrder(order);
     order->Show(stdout);
   } else if (strcmp(o->ticker, hedge_ticker.c_str()) == 0) {

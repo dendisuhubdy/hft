@@ -1,8 +1,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <zmq.hpp>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
+#include <util/zmq_recver.hpp>
+#include <util/zmq_sender.hpp>
 #include <struct/market_snapshot.h>
 
 #include <iostream>
@@ -12,8 +12,8 @@
 #include <string>
 
 int main() {
-  Recver<MarketSnapshot> recver("data_source");
-  Sender<MarketSnapshot> sender("data_sender", "connect");
+  ZmqRecver<MarketSnapshot> recver("data_source");
+  ZmqSender<MarketSnapshot> sender("data_sender", "connect");
   while (true) {
     MarketSnapshot shot;
     recver.Recv(shot);

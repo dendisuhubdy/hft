@@ -1,10 +1,10 @@
 #/bin/bash
-cd /root/lib-hft
+cd /root/hft
 for f in `find . -name "*.h" -or -name "*.cpp" -or -name "*.hpp"`
 do
 	echo handling $f
-        sed -i "s/data_sub/data_sender/g" $f
-        sed -i "s/data_pub/data_recver/g" $f
-        sed -i "s/order_sub/order_sender/g" $f
-        sed -i "s/order_pub/order_recver/g" $f
+        sed -i "s/util\/sender.hpp/util\/zmq_sender.hpp/g" $f
+        sed -i "s/util\/recver.hpp/util\/zmq_recver.hpp/g" $f
+        sed -i "s/ Recver/ ZmqRecver/g" $f
+        sed -i "s/ Sender/ ZmqSender/g" $f
 done

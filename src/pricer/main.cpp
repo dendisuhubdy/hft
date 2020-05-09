@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <zmq.hpp>
 #include <struct/order.h>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
+#include <util/zmq_recver.hpp>
+#include <util/zmq_sender.hpp>
 #include <pricer_data.h>
 #include <struct/market_snapshot.h>
 #include <unordered_map>
@@ -31,8 +31,8 @@ int GetNextCalTime(int sec, int calculate_frequency) {
 int main() {
   int interval = 10;
   int calculate_frequency = 10;
-  Recver recver("data");
-  Sender sender("pricer", "connect");
+  ZmqRecver recver("data");
+  ZmqSender sender("pricer", "connect");
   std::vector<double>ema_v;
   ::unordered_map<std::string, std::vector<double> >ema_map;
   ::unordered_map<std::string, bool>notfirst_map;

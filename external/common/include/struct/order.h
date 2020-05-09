@@ -23,13 +23,15 @@ struct Order {
   OrderAction::Enum action;
   OrderStatus::Enum status;
   Offset::Enum offset;
-  char tbd[128];
+  char tbd[96];
+  char exchange[32];
 
   Order()
     : size(0),
       traded_size(0),
       offset(Offset::UNINITED) {
     snprintf(tbd, sizeof(tbd), "%s", "null");
+    snprintf(exchange, sizeof(exchange), "%s", "null");
   }
 
   bool Valid() const {
@@ -46,7 +48,7 @@ struct Order {
     char send_time_s[32];
     snprintf(send_time_s, sizeof(send_time_s), "%ld.%ld", send_time.tv_sec, send_time.tv_usec);
     double send_time_sec = atof(send_time_s);
-    fprintf(stream, "%lf,%lf,%s,%lf,%d,%d,%s,%s,%s,%s,%s,%s\n",shot_time_sec,send_time_sec,ticker,price,size,traded_size,OrderSide::ToString(side),order_ref,OrderAction::ToString(action),OrderStatus::ToString(status),Offset::ToString(offset),tbd);
+    fprintf(stream, "%lf,%lf,%s,%lf,%d,%d,%s,%s,%s,%s,%s,%s,%s\n",shot_time_sec,send_time_sec,ticker,price,size,traded_size,OrderSide::ToString(side),order_ref,OrderAction::ToString(action),OrderStatus::ToString(status),Offset::ToString(offset),exchange,tbd);
   }
 
   void Show(FILE* stream) const {
@@ -55,7 +57,7 @@ struct Order {
     fprintf(stream, "%ld %04ld %ld %04ld Order %s |",
             send_time.tv_sec, send_time.tv_usec, shot_time.tv_sec, shot_time.tv_usec, ticker);
 
-      fprintf(stream, " %lf@%d %d %s %s %s %s %s %s\n", price, size, traded_size, OrderSide::ToString(side), order_ref, OrderAction::ToString(action), OrderStatus::ToString(status), Offset::ToString(offset), tbd);
+      fprintf(stream, " %lf@%d %d %s %s %s %s %s %s %s\n", price, size, traded_size, OrderSide::ToString(side), order_ref, OrderAction::ToString(action), OrderStatus::ToString(status), Offset::ToString(offset), exchange, tbd);
   }
 };
 

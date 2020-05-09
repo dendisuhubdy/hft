@@ -8,8 +8,8 @@
 #include <core/base_strategy.h>
 #include <util/history_worker.h>
 #include <util/dater.h>
-#include <util/recver.hpp>
-#include <util/sender.hpp>
+#include <util/zmq_recver.hpp>
+#include <util/zmq_sender.hpp>
 #include <thread>
 #include <unordered_map>
 
@@ -37,9 +37,9 @@ int main() {
   std::string time_config_path = default_path + "/hft/config/prod/time.config";
   TimeController tc(time_config_path);
 
-  std::unique_ptr<Sender<MarketSnapshot> > ui_sender(new Sender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
-  std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_sender", "connect", "ipc", "order.dat"));
-  // std::unique_ptr<Sender<Order> > order_sender(new Sender<Order>("order_recver", 100000, "order.dat"));
+  std::unique_ptr<ZmqSender<MarketSnapshot> > ui_sender(new ZmqSender<MarketSnapshot>("*:33333", "bind", "tcp", "mid.dat"));
+  std::unique_ptr<ZmqSender<Order> > order_sender(new ZmqSender<Order>("order_sender", "connect", "ipc", "order.dat"));
+  // std::unique_ptr<Sender<Order> > order_sender(new ZmqSender<Order>("order_recver", 100000, "order.dat"));
 
   std::unordered_map<std::string, std::vector<BaseStrategy*> > ticker_strat_map;
   std::string contract_config_path = default_path + "/hft/config/contract/bk_contract.config";
@@ -48,11 +48,11 @@ int main() {
   const libconfig::Setting & strategies = param_cfg.lookup("strategy");
   for (int i = 0; i < strategies.getLength(); i++) {
     const libconfig::Setting & param_setting = strategies[i];
-    auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &hw, &tc, &cw, "real");
+    auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &tc, &cw, Dater::GetCurrentDate(), "real");
     s->Print();
   }
 
-  StrategyContainer<Recver> sc(ticker_strat_map);
+  StrategyContainer<ZmqRecver> sc(ticker_strat_map);
   sc.Start();
   HandleLeft();
   PrintResult();

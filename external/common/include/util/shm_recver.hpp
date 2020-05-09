@@ -2,9 +2,10 @@
 #define SHM_RECVER_HPP_
 
 #include "shm_worker.hpp"
+#include "base_recver.hpp"
 
 template <typename T>
-class ShmRecver : public ShmWorker {
+class ShmRecver : public ShmWorker, BaseRecver <T> {
  public:
   ShmRecver(const std::string & key, int size = 100000) {
     init <T> (key, size);
@@ -18,7 +19,7 @@ class ShmRecver : public ShmWorker {
 
   }
 
-  inline void Recv(T& t) {
+  inline void Recv(T& t) override {
     while (read_index.load() == ((atomic_int*)(m_data + 2*sizeof(int)))->load()) {
     }
     t = *reinterpret_cast<T*>(m_data+header_size+(read_index.load()%m_size)*sizeof(T));
