@@ -48,7 +48,7 @@ int main() {
   const libconfig::Setting & strategies = param_cfg.lookup("strategy");
   for (int i = 0; i < strategies.getLength(); i++) {
     const libconfig::Setting & param_setting = strategies[i];
-    auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &tc, &cw, Dater::GetCurrentDate(), "real");
+    auto s = new Strategy(param_setting, &ticker_strat_map, ui_sender.get(), order_sender.get(), &tc, &cw, Dater::GetCurrentDate());
     s->Print();
   }
 

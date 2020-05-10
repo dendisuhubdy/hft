@@ -5,9 +5,8 @@
 
 #include "./strategy.h"
 
-Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, const std::string & mode, std::ofstream* exchange_file)
-  : mode(mode),
-    date(date),
+Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, StrategyMode::Enum mode, std::ofstream* exchange_file)
+  : date(date),
     last_valid_mid(0.0),
     stop_loss_times(0),
     max_close_try(10),
@@ -19,15 +18,16 @@ Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<
     exchange_file(exchange_file) {
   m_tc = tc;
   m_cw = cw;
+  SetStrategyMode(mode, exchange_file);
   if (FillStratConfig(param_setting)) {
-    RunningSetup(ticker_strat_map, uisender, ordersender, mode);
+    RunningSetup(ticker_strat_map, uisender, ordersender);
   }
 }
 
 Strategy::~Strategy() {
 }
 
-void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, const std::string & mode) {
+void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender) {
   ui_sender = uisender;
   order_sender = ordersender;
   (*ticker_strat_map)[main_ticker].emplace_back(this);
@@ -38,9 +38,6 @@ void Strategy::RunningSetup(std::unordered_map<std::string, std::vector<BaseStra
   shot_map[hedge_ticker] = shot;
   avgcost_map[main_ticker] = 0.0;
   avgcost_map[hedge_ticker] = 0.0;
-  if (mode == "test" || mode == "nexttest") {
-    position_ready = true;
-  }
 }
 
 bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
@@ -57,7 +54,7 @@ bool Strategy::FillStratConfig(const libconfig::Setting& param_setting) {
     main_ticker = v[1];
     hedge_ticker = v[0];
     max_pos = param_setting["max_position"];
-    min_train_sample = param_setting["min_train_samples"];
+    train_samples = param_setting["train_samples"];
     double m_r = param_setting["min_range"];
     double m_p = param_setting["min_profit"];
     min_price_move = contract_setting["min_price_move"];
@@ -132,7 +129,7 @@ void Strategy::DoOperationAfterCancelled(Order* o) {
 }
 
 double Strategy::OrderPrice(const std::string & ticker, OrderSide::Enum side, bool control_price) {
-  if (mode == "nexttest") {
+  if (mode_ == StrategyMode::NextTest) {
     // double slip = (side == OrderSide::Buy)? shot_map[ticker].asks[0] - next_shot_map[ticker].asks[0] : next_shot_map[ticker].bids[0] - shot_map[ticker].bids[0];
     if (ticker == hedge_ticker) {
       // printf("Slip hedge[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", ticker.c_str(), OrderSide::ToString(side), shot_map[ticker].asks[0], shot_map[ticker].bids[0], next_shot_map[ticker].asks[0], next_shot_map[ticker].bids[0], slip);
@@ -175,18 +172,18 @@ std::tuple<double, double> Strategy::CalMeanStd(const std::vector<double> & v, i
 
 void Strategy::CalParams() {
   // int num_sample = sample_tail - sample_head;
-  if (sample_tail < min_train_sample) {
+  if (sample_tail < train_samples) {
     printf("[%s %s]no enough mid data! tail is %d\n", main_ticker.c_str(), hedge_ticker.c_str(), sample_tail);
     exit(1);
   }
   param_v.clear();
-  auto r = CalMeanStd(map_vector, sample_tail - min_train_sample, min_train_sample);
+  auto r = CalMeanStd(map_vector, sample_tail - train_samples, train_samples);
   double avg = std::get<0>(r);
   double std = std::get<1>(r);
   /*
-  unsigned int head = map_vector.size() - min_train_sample;
+  unsigned int head = map_vector.size() - train_samples;
   for (int i = 0; i < split_num; ++i) {
-    param_v.push_back(std::get<0>(CalMeanStd(map_vector, head+i*min_train_sample/split_num, min_train_sample/split_num)));
+    param_v.push_back(std::get<0>(CalMeanStd(map_vector, head+i*train_samples/split_num, train_samples/split_num)));
   }
   */
   FeePoint main_point = m_cw->CalFeePoint(main_ticker, GetMid(main_ticker), 1, GetMid(main_ticker), 1, no_close_today);
@@ -267,7 +264,7 @@ bool Strategy::Close(bool force_flat) {
     // printf("Slip close main[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", main_ticker.c_str(), OrderSide::ToString(o->side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0], slip);
     o->Show(stdout);
     HandleTestOrder(o);
-    if (mode == "real") {
+    if (mode_ == StrategyMode::Real) {
       // RecordPnl(o);
       /*
       double this_round_pnl = m_cal.CalNetPnl(main_ticker, avgcost_map[main_ticker], abs(pos), o->price, abs(pos), close_side, no_close_today) + m_cal.CalNetPnl(hedge_ticker, avgcost_map[hedge_ticker], abs(pos), hedge_price, abs(pos), pos_side, no_close_today);
@@ -320,7 +317,7 @@ void Strategy::CloseLogic() {
   }
 
   if (TimeUp()) {
-    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode == "test" || mode == "nexttest" ? shot_map[main_ticker].time.tv_sec : m_tc->CurrentInt(), max_holding_sec, GetPairMid());
+    printf("[%s %s] holding time up, start from %ld, now is %ld, max_hold is %d close diff is %lf force to close position!\n", main_ticker.c_str(), hedge_ticker.c_str(), build_position_time, mode_ != StrategyMode::Real ? shot_map[main_ticker].time.tv_sec : m_tc->CurrentInt(), max_holding_sec, GetPairMid());
     ForceFlat();
     return;
   }
@@ -393,10 +390,10 @@ void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
     double mid = GetPairMid();
     map_vector.emplace_back(mid);  // map_vector saved the aligned mid, all the elements here are safe to trade
     int num_sample = ++sample_tail - sample_head;
-    if (num_sample > min_train_sample && num_sample % (min_train_sample) == 1) {
+    if (num_sample > train_samples && num_sample % (train_samples) == 1) {
       CalParams();
     }
-    if (mode != "test" && mode != "nexttest") {
+    if (mode_ == StrategyMode::Real) {
       printf("%ld [%s, %s]mid_diff is %lf\n", shot.time.tv_sec, main_ticker.c_str(), hedge_ticker.c_str(), mid_map[main_ticker]-mid_map[hedge_ticker]);
     }
     if (ss == StrategyStatus::Training) {
@@ -460,8 +457,8 @@ void Strategy::Resume() {
 
 bool Strategy::Ready() {
   int num_sample = sample_tail - sample_head;
-  if (position_ready && shot_map[main_ticker].IsGood() && shot_map[hedge_ticker].IsGood() && num_sample >= min_train_sample) {
-    if (num_sample == min_train_sample) {
+  if (position_ready && shot_map[main_ticker].IsGood() && shot_map[hedge_ticker].IsGood() && num_sample >= train_samples) {
+    if (num_sample == train_samples) {
       // first cal params
       CalParams();
     }
@@ -475,7 +472,7 @@ bool Strategy::Ready() {
 
 void Strategy::ModerateOrders(const std::string & ticker) {
   // just make sure the order filled
-  if (mode == "real") {
+  if (mode_ == StrategyMode::Real) {
     for (auto m:order_map) {
       Order* o = m.second;
       if (o->Valid()) {
@@ -541,7 +538,7 @@ void Strategy::UpdateBound(OrderSide::Enum side) {
 }
 
 void Strategy::HandleTestOrder(Order* o) {
-  if (mode != "test" && mode != "nexttest") {
+  if (mode_ == StrategyMode::Real) {
     return;
   }
   ExchangeInfo info;
