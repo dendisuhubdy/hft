@@ -267,6 +267,7 @@ bool Strategy::Close(bool force_flat) {
     // printf("Slip close main[%s] %s: %lf %lf ->> %lf %lf pnl:%lf\n", main_ticker.c_str(), OrderSide::ToString(o->side), shot_map[main_ticker].asks[0], shot_map[main_ticker].bids[0], next_shot_map[main_ticker].asks[0], next_shot_map[main_ticker].bids[0], slip);
     o->Show(stdout);
     HandleTestOrder(o);
+    target_hedge_price = (close_side == OrderSide::Buy) ? shot_map[hedge_ticker].bids[0] : shot_map[hedge_ticker].asks[0];
     if (mode == "real") {
       // RecordPnl(o);
       /*
@@ -347,6 +348,7 @@ void Strategy::Open(OrderSide::Enum side) {
     o->Show(stdout);
     // printf("spread is %lf %lf min_profit is %lf, next open will be %lf\n", shot_map[main_ticker].asks[0]-shot_map[main_ticker].bids[0], shot_map[hedge_ticker].asks[0]-shot_map[hedge_ticker].bids[0], min_profit, side == OrderSide::Buy ? down_diff: up_diff);
     HandleTestOrder(o);
+    target_hedge_price = (side == OrderSide::Buy) ? shot_map[hedge_ticker].bids[0] : shot_map[hedge_ticker].asks[0];
   } else {  // block order exsit, no open, possible reason: no enough margin
     printf("block order exsited! no open \n");
     PrintMap(order_map);
@@ -487,8 +489,11 @@ void Strategy::ModerateOrders(const std::string & ticker) {
           continue;
         }
         if (ticker == main_ticker) {
-          printf("[%s %s]Abandon this oppounity because main ticker price change %lf->%lf mpv=%lf\n", main_ticker.c_str(), hedge_ticker.c_str(), o->price, reasonable_price, min_price_move);
-          CancelOrder(o);
+          if ((o->side == OrderSide::Buy && shot_map[hedge_ticker].bids[0] - this->target_hedge_price < -1e-4) ||
+          (o->side == OrderSide::Sell && shot_map[hedge_ticker].asks[0] - this->target_hedge_price > -1e-4) ) {
+            printf("[%s %s]target hedge price is %s@%lf, now is %lf %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(o->side), target_hedge_price, shot_map[hedge_ticker].bids[0], shot_map[hedge_ticker].asks[0]);
+            CancelOrder(o);
+          }
         } else if (ticker == hedge_ticker) {
           printf("[%s %s]Slip point for :modify %s order %s: %lf->%lf mpv=%lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(o->side), o->order_ref, o->price, reasonable_price, min_price_move);
           ModOrder(o);
