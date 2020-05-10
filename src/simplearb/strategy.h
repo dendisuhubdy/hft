@@ -125,6 +125,7 @@ class Strategy : public BaseStrategy {
   int sample_head;
   int sample_tail;
   std::ofstream* exchange_file;
+  double target_hedge_price;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_
