@@ -2,8 +2,16 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <deque>
 
 #include "./strategy.h"
+void PrintDeque(const std::deque<double> & d) {
+  std::cout << "start print deque: ";
+  for (auto i : d) {
+    std::cout << i << " ";
+  }
+  std::cout << "end print" << std::endl;
+}
 
 Strategy::Strategy(const libconfig::Setting & param_setting, std::unordered_map<std::string, std::vector<BaseStrategy*> >*ticker_strat_map, ZmqSender<MarketSnapshot>* uisender, ZmqSender<Order>* ordersender, TimeController* tc, ContractWorker* cw, const std::string & date, StrategyMode::Enum mode, std::ofstream* exchange_file)
   : date(date),
@@ -252,6 +260,12 @@ bool Strategy::Close(bool force_flat) {
   }
   // OrderSide::Enum pos_side = pos > 0 ? OrderSide::Buy: OrderSide::Sell;
   OrderSide::Enum close_side = pos > 0 ? OrderSide::Sell: OrderSide::Buy;
+  if (NewHigh(close_side)) {
+    printf("[%s %s]%s block orders bc new high appear!\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(close_side));
+    PrintDeque(hedge_ask);
+    PrintDeque(hedge_bid);
+    return true;
+  }
   // double hedge_price = pos > 0 ? shot_map[hedge_ticker].asks[0] : shot_map[hedge_ticker].bids[0];
   printf("close using %s: pos is %d, diff is %lf\n", OrderSide::ToString(close_side), pos, GetPairMid());
   PrintMap(position_map);
@@ -336,7 +350,43 @@ void Strategy::Flatting() {
   }
 }
 
+bool Strategy::NewHigh(OrderSide::Enum side) {
+  if (hedge_bid.size() < 6) {
+    return true;
+  }
+  if (side == OrderSide::Buy) {  // main side buy, hedgeside sell, should be bid
+    auto temp = hedge_bid;
+    temp.pop_back();
+    double second_max_bid = 0.0;
+    for (auto i : temp) {
+      if (i > second_max_bid) {
+        second_max_bid = i;
+      }
+    }
+    return hedge_bid.back() - second_max_bid > 3*min_price_move ? true : false;
+  } else if (side == OrderSide::Sell) {
+    auto temp = hedge_ask;
+    temp.pop_back();
+    double second_min_ask = 10000000;
+    for (auto i : temp) {
+      if (i < second_min_ask) {
+        second_min_ask = i;
+      }
+    }
+    return second_min_ask - hedge_ask.back() > 3*min_price_move ? true : false;
+  } else {
+    return true;
+  }
+}
+
+
 void Strategy::Open(OrderSide::Enum side) {
+  if (NewHigh(side)) {
+    printf("[%s %s]%s block orders bc new high appear!\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(side));
+    PrintDeque(hedge_ask);
+    PrintDeque(hedge_bid);
+    return;
+  }
   int pos = position_map[main_ticker];
   printf("[%s %s] open %s: pos is %d, diff is %lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(side), pos, GetPairMid());
   if (order_map.empty()) {  // no block order, can add open
@@ -388,6 +438,14 @@ void Strategy::Init() {
 
 void Strategy::DoOperationAfterUpdateData(const MarketSnapshot& shot) {
   mid_map[shot.ticker] = (shot.bids[0]+shot.asks[0]) / 2;  // mid_map saved the newest mid, no matter it is aligned or not
+  if (strcmp(shot.ticker, hedge_ticker.c_str()) == 0) {
+    hedge_ask.push_back(shot.asks[0]);
+    hedge_bid.push_back(shot.bids[0]);
+    if (hedge_ask.size() > 8) {
+      hedge_ask.pop_front();
+      hedge_bid.pop_front();
+    }
+  }
   current_spread = shot_map[main_ticker].asks[0] - shot_map[main_ticker].bids[0] + shot_map[hedge_ticker].asks[0] - shot_map[hedge_ticker].bids[0];
   if (IsAlign()) {
     double mid = GetPairMid();
