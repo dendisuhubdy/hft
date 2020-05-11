@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <deque>
 #include <memory>
 
 #include "struct/market_snapshot.h"
@@ -83,6 +84,7 @@ class Strategy : public BaseStrategy {
   void UpdateBound(OrderSide::Enum side);
   void StopLossLogic();
   void HandleTestOrder(Order *o);
+  bool NewHigh(OrderSide::Enum side);
 
   char order_ref[MAX_ORDERREF_SIZE];
   std::string main_ticker;
@@ -126,6 +128,8 @@ class Strategy : public BaseStrategy {
   int sample_tail;
   std::ofstream* exchange_file;
   double target_hedge_price;
+  std::deque<double>  hedge_ask;
+  std::deque<double> hedge_bid;
 };
 
 #endif  // SRC_SIMPLEARB_STRATEGY_H_
