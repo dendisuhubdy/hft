@@ -346,6 +346,7 @@ void Strategy::Open(OrderSide::Enum side) {
     // printf("spread is %lf %lf min_profit is %lf, next open will be %lf\n", shot_map[main_ticker].asks[0]-shot_map[main_ticker].bids[0], shot_map[hedge_ticker].asks[0]-shot_map[hedge_ticker].bids[0], min_profit, side == OrderSide::Buy ? down_diff: up_diff);
     HandleTestOrder(o);
     target_hedge_price = (side == OrderSide::Buy) ? shot_map[hedge_ticker].bids[0] : shot_map[hedge_ticker].asks[0];
+    sample_head = sample_tail;
   } else {  // block order exsit, no open, possible reason: no enough margin
     printf("block order exsited! no open \n");
     PrintMap(order_map);
@@ -492,8 +493,12 @@ void Strategy::ModerateOrders(const std::string & ticker) {
             CancelOrder(o);
           }
         } else if (ticker == hedge_ticker) {
-          printf("[%s %s]Slip point for :modify %s order %s: %lf->%lf mpv=%lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(o->side), o->order_ref, o->price, reasonable_price, min_price_move);
-          ModOrder(o);
+          // printf("[%s %s]Slip point for :modify %s order %s: %lf->%lf mpv=%lf\n", main_ticker.c_str(), hedge_ticker.c_str(), OrderSide::ToString(o->side), o->order_ref, o->price, reasonable_price, min_price_move);
+          if (shot_map[hedge_ticker].time.tv_sec - o->shot_time.tv_sec >= 3) {
+            printf("[%s %s] cancel hedge order, bc not filled in 3s\n", main_ticker.c_str(), hedge_ticker.c_str());
+            shot_map[hedge_ticker].Show(stdout);
+            ModOrder(o);
+          }
         } else {
           continue;
         }
