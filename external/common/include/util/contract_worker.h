@@ -40,7 +40,7 @@ class ContractWorker {
 
   std::string GenContract(const std::string & pro, int year, int month);
 
-  std::vector<std::string> GetActiveContracts(const std::string & pro, const std::string & date, int switch_day = 3);
+  std::vector<std::string> GetActiveContracts(const std::string & pro, const std::string & date, int switch_day = 1);
  private:
   std::unordered_map<std::string, int> contract_size_map;
   std::unordered_map<std::string, double> min_price_move_map;
